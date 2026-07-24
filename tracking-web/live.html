@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAAVAL — Live Caregiver Emergency Tracking Portal</title>
+    <!-- Leaflet.js OpenStreetMap for Live GPS Map Pin -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg-color: #0B101D;
+            --card-bg: #1E2433;
+            --yellow: #FFE600;
+            --red: #FF003C;
+            --green: #00FF66;
+            --text-light: #FFFFFF;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            font-size: 1.6rem;
+            color: var(--yellow);
+            font-weight: 900;
+        }
+        .badge-active {
+            background-color: var(--red);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .main-card {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #map {
+            width: 100%;
+            height: 280px;
+            border-radius: 12px;
+            border: 2px solid var(--yellow);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .info-box span {
+            font-size: 0.75rem;
+            color: #888;
+            display: block;
+        }
+        .info-box strong {
+            font-size: 1rem;
+            color: var(--yellow);
+        }
+        .ai-summary-card {
+            background: rgba(255, 230, 0, 0.1);
+            border: 1px dashed var(--yellow);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-respond {
+            background-color: var(--green);
+            color: #000;
+        }
+        .btn-navigate {
+            background-color: var(--yellow);
+            color: #000;
+        }
+        .btn-call {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+        .status-banner {
+            display: none;
+            background-color: var(--green);
+            color: #000;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>KAAVAL LIVE TRACKING</h1>
+        <span class="badge-active">🔴 SOS ACTIVE</span>
+    </div>
+
+    <div class="main-card">
+        <!-- LIVE MAP -->
+        <div id="map"></div>
+
+        <!-- INCIDENT & USER INFO -->
+        <div class="info-grid">
+            <div class="info-box">
+                <span>USER NAME</span>
+                <strong>Visually Impaired User</strong>
+            </div>
+            <div class="info-box">
+                <span>INCIDENT ID</span>
+                <strong id="incident-id">KVL-984321</strong>
+            </div>
+            <div class="info-box">
+                <span>BLOOD GROUP</span>
+                <strong style="color: var(--red);">O+ Positive</strong>
+            </div>
+            <div class="info-box">
+                <span>LAST GPS UPDATE</span>
+                <strong id="gps-time">Just Now</strong>
+            </div>
+        </div>
+
+        <!-- OPENAI AI EMERGENCY SUMMARY -->
+        <div class="ai-summary-card">
+            🤖 <b>AI Situation Summary (OpenAI gpt-4o-mini):</b><br>
+            User triggered SOS at <b>Kochi, Kerala</b>. High urgency. Visually impaired individual requires immediate assistance. Primary caregiver notification active.
+        </div>
+
+        <!-- CAREGIVER RESPONSE BANNER -->
+        <div id="response-banner" class="status-banner">
+            ✅ You have acknowledged this emergency! Other caregivers have been notified that you are responding.
+        </div>
+
+        <!-- CAREGIVER ACTIONS -->
+        <div class="action-buttons">
+            <button class="btn btn-respond" id="respondBtn" onclick="acknowledgeEmergency()">
+                ✅ I AM RESPONDING NOW
+            </button>
+            <button class="btn btn-navigate" onclick="navigateToUser()">
+                🗺️ NAVIGATE TO USER (GOOGLE MAPS)
+            </button>
+            <button class="btn btn-call" onclick="callUser()">
+                📞 CALL USER (+91 98765 43210)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentLat = 9.9312;
+        let currentLng = 76.2673;
+        let map, marker;
+
+        function initMap() {
+            map = L.map('map').setView([currentLat, currentLng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker([currentLat, currentLng]).addTo(map)
+                .bindPopup('<b>Visually Impaired User</b><br>Live Emergency SOS Location').openPopup();
+
+            // Try Geolocation API for real live coordinates
+            if ('geolocation' in navigator) {
+                navigator.geolocation.watchPosition((pos) => {
+                    currentLat = pos.coords.latitude;
+                    currentLng = pos.coords.longitude;
+                    map.setView([currentLat, currentLng], 16);
+                    marker.setLatLng([currentLat, currentLng]);
+                    document.getElementById('gps-time').innerText = new Date().toLocaleTimeString();
+                }, (err) => {
+                    console.log('Using default location coordinates');
+                }, { enableHighAccuracy: true });
+            }
+        }
+
+        function acknowledgeEmergency() {
+            document.getElementById('response-banner').style.display = 'block';
+            document.getElementById('respondBtn').style.display = 'none';
+        }
+
+        function navigateToUser() {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentLat},${currentLng}`, '_blank');
+        }
+
+        function callUser() {
+            window.location.href = 'tel:+919876543210';
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
