@@ -1,0 +1,254 @@
+package com.kaaval.app.ui.screens
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.kaaval.app.domain.model.EmergencyState
+import com.kaaval.app.ui.theme.ActiveGreen
+import com.kaaval.app.ui.theme.EmergencyRed
+import com.kaaval.app.ui.theme.HighContrastBlack
+import com.kaaval.app.ui.theme.HighContrastYellow
+
+@Composable
+fun MainSosScreen(
+    emergencyState: EmergencyState,
+    onTriggerSos: () -> Unit,
+    onCancelSos: () -> Unit,
+    onResolveSos: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(HighContrastBlack)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        // Header Title (Voice Accessible & TalkBack Enabled)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.semantics {
+                contentDescription = "KAAVAL Emergency SOS System Header"
+            }
+        ) {
+            Text(
+                text = "KAAVAL SOS",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                color = HighContrastYellow
+            )
+            Text(
+                text = "Accessibility Emergency Ecosystem",
+                fontSize = 14.sp,
+                color = Color.LightGray
+            )
+        }
+
+        // Center Content depending on Emergency State
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            when (emergencyState) {
+                is EmergencyState.Idle -> {
+                    // Giant Accessible Tactile SOS Button
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(240.dp)
+                            .clip(CircleShape)
+                            .background(EmergencyRed)
+                            .border(6.dp, HighContrastYellow, CircleShape)
+                            .semantics {
+                                contentDescription = "Emergency SOS Button. Double tap or press and hold to trigger emergency alert."
+                            }
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = { onTriggerSos() },
+                                    onTap = { onTriggerSos() }
+                                )
+                            }
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "SOS",
+                                fontSize = 42.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "TAP TO ALERT",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = HighContrastYellow
+                            )
+                        }
+                    }
+                }
+
+                is EmergencyState.Countdown -> {
+                    // Countdown State
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Emergency activating in ${emergencyState.secondsRemaining} seconds. Tap cancel to stop."
+                        }
+                    ) {
+                        Text(
+                            text = "ACTIVATING IN",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = HighContrastYellow
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(180.dp)
+                                .clip(CircleShape)
+                                .background(HighContrastYellow)
+                        ) {
+                            Text(
+                                text = "${emergencyState.secondsRemaining}",
+                                fontSize = 80.sp,
+                                fontWeight = FontWeight.Black,
+                                color = HighContrastBlack
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onCancelSos,
+                            colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                text = "CANCEL EMERGENCY",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+
+                is EmergencyState.Active -> {
+                    // Active Emergency State
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Emergency Active. Live GPS Location is being shared with caregivers."
+                        }
+                    ) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2433)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null,
+                                        tint = ActiveGreen,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "EMERGENCY ACTIVE",
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = ActiveGreen
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "SMS sent to emergency contacts.\nPrimary Contact Call initiated.",
+                                    fontSize = 14.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "Live Tracking ID: ${emergencyState.incidentId}",
+                                    fontSize = 12.sp,
+                                    color = HighContrastYellow,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onResolveSos,
+                            colors = ButtonDefaults.buttonColors(containerColor = ActiveGreen),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                text = "I AM SAFE NOW",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Black,
+                                color = HighContrastBlack
+                            )
+                        }
+                    }
+                }
+
+                is EmergencyState.Cancelled, EmergencyState.Resolved -> {
+                    Text(
+                        text = "System Ready",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+        // Bottom Accessibility Guidance
+        Text(
+            text = "Voice Commands & TalkBack Enabled",
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
+    }
+}

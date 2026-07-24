@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">KAAVAL</string>
+    <string name="app_tagline">Accessibility-First Emergency Response Ecosystem</string>
+    <string name="sos_title">EMERGENCY SOS</string>
+    <string name="sos_instruction">Tap and hold for 3 seconds to initiate emergency help</string>
+    <string name="sos_countdown">Emergency activating in %d seconds. Tap Cancel to abort.</string>
+    <string name="sos_active">EMERGENCY ACTIVE - Live location is being shared with caregivers.</string>
+    <string name="sos_cancelled">Emergency trigger cancelled.</string>
+    <string name="cancel_sos">CANCEL SOS</string>
+    <string name="mark_safe">I AM SAFE NOW</string>
+    <string name="contacts_title">Emergency Contacts</string>
+    <string name="medical_profile_title">Medical Profile</string>
+    <string name="history_title">Incident History</string>
+    <string name="wearable_title">Wearable Status</string>
+</resources>

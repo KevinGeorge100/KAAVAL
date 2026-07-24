@@ -1,0 +1,229 @@
+package com.kaaval.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import com.kaaval.app.accessibility.HapticFeedbackManager
+import com.kaaval.app.accessibility.VoiceFeedbackManager
+import com.kaaval.app.domain.model.EmergencyContact
+import com.kaaval.app.domain.model.EmergencyState
+import com.kaaval.app.domain.model.MedicalProfile
+import com.kaaval.app.domain.model.WearableDevice
+import com.kaaval.app.service.EmergencyForegroundService
+import com.kaaval.app.service.KaavalLocationManager
+import com.kaaval.app.sos.SosDispatcher
+import com.kaaval.app.ui.screens.ContactsScreen
+import com.kaaval.app.ui.screens.MainSosScreen
+import com.kaaval.app.ui.screens.MedicalProfileScreen
+import com.kaaval.app.ui.screens.WearableStatusScreen
+import com.kaaval.app.ui.theme.HighContrastBlack
+import com.kaaval.app.ui.theme.HighContrastYellow
+import com.kaaval.app.ui.theme.KAAVALTheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+class MainActivity : ComponentActivity() {
+
+    private lateinit var voiceFeedback: VoiceFeedbackManager
+    private lateinit var hapticFeedback: HapticFeedbackManager
+    private lateinit var locationManager: KaavalLocationManager
+    private lateinit var sosDispatcher: SosDispatcher
+
+    private var countdownJob: Job? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate()
+
+        voiceFeedback = VoiceFeedbackManager(this)
+        hapticFeedback = HapticFeedbackManager(this)
+        locationManager = KaavalLocationManager(this)
+        sosDispatcher = SosDispatcher(this)
+
+        setContent {
+            KAAVALTheme {
+                var selectedTab by remember { mutableStateOf(0) }
+                var emergencyState by remember { mutableStateOf<EmergencyState>(EmergencyState.Idle) }
+
+                val sampleContacts = remember {
+                    mutableStateListOf(
+                        EmergencyContact("1", "Primary Caregiver (Mom)", "+919876543210", "Mother", isPrimary = true),
+                        EmergencyContact("2", "Sister", "+919876543211", "Family Member", isPrimary = false)
+                    )
+                }
+
+                val sampleProfile = remember {
+                    MedicalProfile(
+                        fullName = "Visually Impaired User",
+                        age = 26,
+                        bloodGroup = "O+",
+                        allergies = "Penicillin, Dust",
+                        medications = "Daily Vitamin D, Eye Drops",
+                        emergencyNotes = "Visually impaired. Guided assistance required."
+                    )
+                }
+
+                val sampleWearable = remember { WearableDevice() }
+
+                fun startCountdown() {
+                    hapticFeedback.triggerCountdownPulse()
+                    voiceFeedback.speak("Emergency SOS initiated. Activating in 5 seconds.")
+
+                    countdownJob?.cancel()
+                    countdownJob = lifecycleScope.launch {
+                        for (i in 5 downTo 1) {
+                            emergencyState = EmergencyState.Countdown(i)
+                            voiceFeedback.speakCountdown(i)
+                            hapticFeedback.triggerCountdownPulse()
+                            delay(1000)
+                        }
+
+                        // Activate SOS
+                        val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
+                        val trackingUrl = "https://kaaval-tracking.web.app/live/$incidentId"
+
+                        val loc = locationManager.getCurrentLocation()
+                        sosDispatcher.dispatchEmergencyAlert(
+                            contacts = sampleContacts,
+                            latitude = loc?.latitude,
+                            longitude = loc?.longitude,
+                            trackingUrl = trackingUrl
+                        )
+
+                        EmergencyForegroundService.startService(this@MainActivity)
+                        hapticFeedback.triggerSosActivePattern()
+                        voiceFeedback.speak("Emergency activated. Live GPS location is being shared with caregivers.")
+
+                        emergencyState = EmergencyState.Active(
+                            incidentId = incidentId,
+                            timestamp = System.currentTimeMillis(),
+                            latitude = loc?.latitude,
+                            longitude = loc?.longitude,
+                            trackingUrl = trackingUrl,
+                            isPrimaryCalled = true
+                        )
+                    }
+                }
+
+                fun cancelSos() {
+                    countdownJob?.cancel()
+                    EmergencyForegroundService.stopService(this@MainActivity)
+                    emergencyState = EmergencyState.Idle
+                    hapticFeedback.triggerCancellationRumble()
+                    voiceFeedback.speak("Emergency alert cancelled.")
+                }
+
+                fun resolveSos() {
+                    countdownJob?.cancel()
+                    EmergencyForegroundService.stopService(this@MainActivity)
+                    emergencyState = EmergencyState.Idle
+                    voiceFeedback.speak("Emergency closed. You are marked safe.")
+                }
+
+                Scaffold(
+                    bottomBar = {
+                        NavigationBar(containerColor = HighContrastBlack) {
+                            NavigationBarItem(
+                                selected = selectedTab == 0,
+                                onClick = { selectedTab = 0 },
+                                icon = { Icon(Icons.Default.Home, contentDescription = "SOS") },
+                                label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = HighContrastBlack,
+                                    indicatorColor = HighContrastYellow
+                                )
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == 1,
+                                onClick = { selectedTab = 1 },
+                                icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
+                                label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = HighContrastBlack,
+                                    indicatorColor = HighContrastYellow
+                                )
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == 2,
+                                onClick = { selectedTab = 2 },
+                                icon = { Icon(Icons.Default.AccountBox, contentDescription = "Medical Profile") },
+                                label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = HighContrastBlack,
+                                    indicatorColor = HighContrastYellow
+                                )
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == 3,
+                                onClick = { selectedTab = 3 },
+                                icon = { Icon(Icons.Default.Settings, contentDescription = "Wearable") },
+                                label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = HighContrastBlack,
+                                    indicatorColor = HighContrastYellow
+                                )
+                            )
+                        }
+                    }
+                ) { innerPadding ->
+                    when (selectedTab) {
+                        0 -> MainSosScreen(
+                            emergencyState = emergencyState,
+                            onTriggerSos = { startCountdown() },
+                            onCancelSos = { cancelSos() },
+                            onResolveSos = { resolveSos() },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                        1 -> ContactsScreen(
+                            contacts = sampleContacts,
+                            onAddContact = { name, phone, rel ->
+                                sampleContacts.add(
+                                    EmergencyContact(
+                                        id = System.currentTimeMillis().toString(),
+                                        name = name,
+                                        phoneNumber = phone,
+                                        relationship = rel,
+                                        isPrimary = sampleContacts.isEmpty()
+                                    )
+                                )
+                                voiceFeedback.speak("Added contact $name")
+                            },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                        2 -> MedicalProfileScreen(
+                            profile = sampleProfile,
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                        3 -> WearableStatusScreen(
+                            device = sampleWearable,
+                            onTestTactileVibration = {
+                                hapticFeedback.triggerSosActivePattern()
+                                voiceFeedback.speak("Testing tactile wearable vibration feedback.")
+                            },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        voiceFeedback.shutdown()
+    }
+}
