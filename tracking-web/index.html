@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAAVAL — Accessibility Emergency Ecosystem Simulator</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --yellow: #FFE600;
+            --red: #FF003C;
+            --green: #00FF66;
+            --card-bg: #1E2433;
+            --text-light: #FFFFFF;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            color: var(--yellow);
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        .header p {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        .sos-button-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+        .sos-btn {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background-color: var(--red);
+            border: 8px solid var(--yellow);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(255, 0, 60, 0.6);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            user-select: none;
+        }
+        .sos-btn:active {
+            transform: scale(0.95);
+        }
+        .sos-btn h2 {
+            font-size: 3rem;
+            font-weight: 900;
+        }
+        .sos-btn span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--yellow);
+            margin-top: 4px;
+        }
+        .countdown-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .countdown-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background-color: var(--yellow);
+            color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+            font-weight: 900;
+        }
+        .btn-cancel {
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            background-color: var(--red);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+        }
+        .active-alert-box {
+            display: none;
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 2px solid var(--green);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .active-alert-box h3 {
+            color: var(--green);
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+        .card {
+            width: 100%;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #333;
+        }
+        .card h4 {
+            color: var(--yellow);
+            margin-bottom: 10px;
+        }
+        .nav-tabs {
+            display: flex;
+            width: 100%;
+            max-width: 420px;
+            background-color: #111;
+            border-radius: 12px;
+            padding: 6px;
+            margin-top: auto;
+            justify-content: space-around;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .tab-btn.active {
+            background-color: var(--yellow);
+            color: var(--bg-color);
+        }
+        .tab-content {
+            display: none;
+            width: 100%;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .ai-box {
+            background: rgba(255, 230, 0, 0.1);
+            border: 1px dashed var(--yellow);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>KAAVAL SOS</h1>
+        <p>Accessibility Emergency Ecosystem Simulator</p>
+    </div>
+
+    <div class="container">
+        <!-- TAB 1: SOS EMERGENCY -->
+        <div id="tab-sos" class="tab-content active">
+            <div id="idle-state" class="sos-button-wrapper">
+                <div class="sos-btn" id="sosTrigger">
+                    <h2>SOS</h2>
+                    <span>CLICK TO TRIGGER</span>
+                </div>
+            </div>
+
+            <div id="countdown-state" class="countdown-display">
+                <p style="color: var(--yellow); font-weight: bold;">ACTIVATING EMERGENCY IN</p>
+                <div class="countdown-circle" id="countdownNum">5</div>
+                <button class="btn-cancel" id="cancelBtn">CANCEL EMERGENCY</button>
+            </div>
+
+            <div id="active-state" class="active-alert-box">
+                <h3>🚨 EMERGENCY ACTIVE</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 12px;">Live GPS location is being broadcast to emergency contacts.</p>
+                <p id="gps-status" style="color: var(--yellow); font-size: 0.85rem; margin-bottom: 16px;">Fetching GPS...</p>
+
+                <div class="ai-box" id="ai-summary">
+                    🤖 <b>AI Emergency Context Summarizer:</b><br>
+                    Generating incident context via OpenAI API...
+                </div>
+
+                <button class="btn-cancel" style="background-color: var(--green); color: black; margin-top: 16px;" id="safeBtn">I AM SAFE NOW</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: CONTACTS -->
+        <div id="tab-contacts" class="tab-content">
+            <div class="card">
+                <h4>Emergency Contacts</h4>
+                <p><b>1. Mom (Primary Caregiver)</b> — +91 98765 43210 (SMS + Auto Call)</p>
+                <p style="margin-top: 8px;"><b>2. Sister</b> — +91 98765 43211 (SMS Alert)</p>
+            </div>
+        </div>
+
+        <!-- TAB 3: MEDICAL -->
+        <div id="tab-medical" class="tab-content">
+            <div class="card">
+                <h4>Emergency Medical Profile</h4>
+                <p><b>Name:</b> Visually Impaired User</p>
+                <p><b>Blood Group:</b> O+ Positive</p>
+                <p><b>Allergies:</b> Penicillin, Dust</p>
+                <p><b>Notes:</b> Visually impaired. Guided assistance required.</p>
+            </div>
+        </div>
+
+        <!-- TAB 4: WEARABLE -->
+        <div id="tab-wearable" class="tab-content">
+            <div class="card">
+                <h4>BLE Wearable Status</h4>
+                <p><b>Device:</b> KAAVAL Tactile Wristband</p>
+                <p><b>Status:</b> <span style="color: var(--green); font-weight: bold;">CONNECTED</span></p>
+                <p><b>Battery:</b> 92% (USB-C Rechargeable)</p>
+                <button class="btn-cancel" style="background-color: var(--yellow); color: black; margin-top: 12px;" onclick="testVibe()">TEST VIBRATION</button>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('sos', this)">SOS</button>
+            <button class="tab-btn" onclick="switchTab('contacts', this)">Contacts</button>
+            <button class="tab-btn" onclick="switchTab('medical', this)">Medical</button>
+            <button class="tab-btn" onclick="switchTab('wearable', this)">Wearable</button>
+        </div>
+    </div>
+
+    <script>
+        let countdownTimer = null;
+        let count = 5;
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function vibrate(pattern) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        document.getElementById('sosTrigger').addEventListener('click', () => {
+            document.getElementById('idle-state').style.display = 'none';
+            document.getElementById('countdown-state').style.display = 'flex';
+            count = 5;
+            document.getElementById('countdownNum').innerText = count;
+            speak("Emergency SOS initiated. Activating in 5 seconds. Tap cancel to stop.");
+            vibrate([150]);
+
+            countdownTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    document.getElementById('countdownNum').innerText = count;
+                    speak(count.toString());
+                    vibrate([150]);
+                } else {
+                    clearInterval(countdownTimer);
+                    triggerActiveEmergency();
+                }
+            }, 1000);
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            clearInterval(countdownTimer);
+            document.getElementById('countdown-state').style.display = 'none';
+            document.getElementById('idle-state').style.display = 'block';
+            speak("Emergency alert cancelled.");
+            vibrate([400]);
+        });
+
+        function triggerActiveEmergency() {
+            document.getElementById('countdown-state').style.display = 'none';
+            document.getElementById('active-state').style.display = 'block';
+            speak("Emergency activated. Live GPS location is being broadcast to caregivers.");
+            vibrate([200, 100, 200, 100, 400]);
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    document.getElementById('gps-status').innerText = `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`;
+                    document.getElementById('ai-summary').innerHTML = `🤖 <b>AI Emergency Summary (OpenAI):</b><br>Visually impaired user activated SOS at coordinates (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}). Primary caregiver notified.`;
+                }, () => {
+                    document.getElementById('gps-status').innerText = 'Location: GPS Available via Cell Network';
+                });
+            }
+        }
+
+        document.getElementById('safeBtn').addEventListener('click', () => {
+            document.getElementById('active-state').style.display = 'none';
+            document.getElementById('idle-state').style.display = 'block';
+            speak("Emergency closed. You are marked safe.");
+        });
+
+        function testVibe() {
+            speak("Testing tactile wearable vibration feedback.");
+            vibrate([200, 100, 200, 100, 400]);
+        }
+
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
