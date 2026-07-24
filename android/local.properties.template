@@ -1,0 +1,3 @@
+# KAAVAL Local Environment Properties
+# Paste your OpenAI API Key redeemed from IEEE Sensors Council Program below:
+OPENAI_API_KEY=your_openai_api_key_here

@@ -35,9 +35,10 @@ KAAVAL manages the **complete emergency response workflow** — from emergency a
 
 ---
 
-## 👥 Users
-* **Primary User**: Visually impaired individuals (Every feature directly optimizes their emergency experience).
-* **Secondary Users**: Caregivers, Family members, Teachers, NGOs, and Schools for visually impaired individuals.
+## 👥 Team & Acknowledgments
+* **Software Lead & Builder**: Kevin George
+* **Hardware & Electrical Engineering Team**: Navami, Adwaid, Jewel *(Electrical & Electronics Engineering)*
+* **Program Mentorship**: Supported by the **IEEE Sensors Council Industry Mentoring Program** with OpenAI API & Codex support.
 
 ---
 
@@ -52,4 +53,5 @@ KAAVAL manages the **complete emergency response workflow** — from emergency a
 
 ## 🚀 Project Status
 Currently building **Phase 1 MVP (Android Application Foundation, Voice/Haptic engine, SOS State Machine, Contacts & Live Tracking)**.
+
 
