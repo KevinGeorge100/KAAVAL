@@ -1,25 +1,55 @@
 # KAAVAL
+**Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals**
 
-KAAVAL is an accessibility-first emergency response platform for visually impaired individuals.
+---
 
-This repository contains the Android MVP, the supporting backend and recipient tracking page, and the approved project documentation.
+## 👁️ Vision
+> **Our goal is not to build another emergency app.**
+> 
+> Our goal is to build an **accessibility-first emergency response ecosystem** that enables visually impaired individuals to request help instantly and ensures that caregivers coordinate an effective response until the user is safe.
 
-## Project status
+---
 
-The project is beginning Milestone M1 — Foundation. No Android application implementation has been added yet.
+## 🚨 Problem Statement
+Visually impaired individuals face three critical challenges during emergencies because traditional apps assume users can quickly locate, unlock, and navigate a smartphone screen:
 
-## Documentation
+1. **Emergency Activation**: A visually impaired person may not be able to locate or operate a smartphone during high-stress situations.
+2. **Response Assurance**: After triggering an SOS, the user has no feedback or confidence that someone has seen the alert and is responding.
+3. **Caregiver Coordination**: Multiple family members receive the alert, but nobody knows who is actively responding, causing confusion and delayed assistance.
 
-The approved planning documents are organized under [docs](docs/README.md). They are the source of truth for product scope and engineering decisions.
+---
 
-## Repository areas
+## 🛡️ Our Solution & Differentiator
+KAAVAL manages the **complete emergency response workflow** — from emergency activation to caregiver acknowledgement, live tracking, and incident closure.
 
-- `android/` — future Kotlin/Jetpack Compose Android application.
-- `functions/` — future Firebase Cloud Functions.
-- `tracking-web/` — future recipient live-tracking page.
-- `firebase/` — future Firebase configuration, security rules, and emulator files.
-- `docs/` — approved product and engineering documentation.
+* *Android Emergency SOS sends an emergency alert.*
+* **KAAVAL coordinates the entire emergency response.**
 
-## Contributing
+***This is our biggest differentiator.***
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
+### System Ecosystem:
+- ⌚ **BLE Wearable**: Single tactile trigger button with haptic feedback.
+- 📱 **User Mobile Application**: Voice-first, high-contrast, TalkBack accessible interface.
+- 👨‍👩‍👧 **Caregiver Application**: Emergency acknowledgement, live ETA tracking, & coordination.
+- ☁️ **Cloud Coordination Platform**: Incident state engine, push routing, and escalation logs.
+
+---
+
+## 👥 Users
+* **Primary User**: Visually impaired individuals (Every feature directly optimizes their emergency experience).
+* **Secondary Users**: Caregivers, Family members, Teachers, NGOs, and Schools for visually impaired individuals.
+
+---
+
+## 📁 Repository Structure
+- `android/` — Kotlin / Jetpack Compose Android Application (MVVM, Clean Architecture, Hilt, Room, Fused Location).
+- `functions/` — Firebase Cloud Functions for incident coordination & notifications.
+- `tracking-web/` — Web portal for live location tracking & caregiver dashboard.
+- `firebase/` — Firebase security rules, cloud architecture, & emulator config.
+- `docs/` — [Approved Product & Engineering Documentation](docs/README.md).
+
+---
+
+## 🚀 Project Status
+Currently building **Phase 1 MVP (Android Application Foundation, Voice/Haptic engine, SOS State Machine, Contacts & Live Tracking)**.
+
