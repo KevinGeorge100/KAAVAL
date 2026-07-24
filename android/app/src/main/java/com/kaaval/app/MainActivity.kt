@@ -12,14 +12,17 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.kaaval.app.accessibility.HapticFeedbackManager
 import com.kaaval.app.accessibility.VoiceFeedbackManager
+import com.kaaval.app.ai.OpenAiEmergencyAnalyzer
+import com.kaaval.app.data.KaavalDatabase
+import com.kaaval.app.data.KaavalRepository
 import com.kaaval.app.domain.model.EmergencyContact
+import com.kaaval.app.domain.model.EmergencyIncident
 import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
 import com.kaaval.app.domain.model.WearableDevice
@@ -43,40 +46,43 @@ class MainActivity : ComponentActivity() {
     private lateinit var hapticFeedback: HapticFeedbackManager
     private lateinit var locationManager: KaavalLocationManager
     private lateinit var sosDispatcher: SosDispatcher
+    private lateinit var repository: KaavalRepository
+    private lateinit var openAiAnalyzer: OpenAiEmergencyAnalyzer
 
     private var countdownJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate()
 
+        val db = KaavalDatabase.getDatabase(this)
+        repository = KaavalRepository(db)
+
         voiceFeedback = VoiceFeedbackManager(this)
         hapticFeedback = HapticFeedbackManager(this)
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
+        openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
 
         setContent {
             KAAVALTheme {
                 var selectedTab by remember { mutableStateOf(0) }
                 var emergencyState by remember { mutableStateOf<EmergencyState>(EmergencyState.Idle) }
 
-                val sampleContacts = remember {
-                    mutableStateListOf(
-                        EmergencyContact("1", "Primary Caregiver (Mom)", "+919876543210", "Mother", isPrimary = true),
-                        EmergencyContact("2", "Sister", "+919876543211", "Family Member", isPrimary = false)
-                    )
-                }
+                val contacts by repository.allContacts.collectAsState(initial = emptyList())
+                val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
 
-                val sampleProfile = remember {
+                val defaultProfile = remember {
                     MedicalProfile(
                         fullName = "Visually Impaired User",
                         age = 26,
                         bloodGroup = "O+",
                         allergies = "Penicillin, Dust",
-                        medications = "Daily Vitamin D, Eye Drops",
+                        medications = "Daily Eye Drops",
                         emergencyNotes = "Visually impaired. Guided assistance required."
                     )
                 }
 
+                val currentProfile = medicalProfileState ?: defaultProfile
                 val sampleWearable = remember { WearableDevice() }
 
                 fun startCountdown() {
@@ -98,11 +104,21 @@ class MainActivity : ComponentActivity() {
 
                         val loc = locationManager.getCurrentLocation()
                         sosDispatcher.dispatchEmergencyAlert(
-                            contacts = sampleContacts,
+                            contacts = contacts,
                             latitude = loc?.latitude,
                             longitude = loc?.longitude,
                             trackingUrl = trackingUrl
                         )
+
+                        val incident = EmergencyIncident(
+                            incidentId = incidentId,
+                            timestamp = System.currentTimeMillis(),
+                            latitude = loc?.latitude,
+                            longitude = loc?.longitude,
+                            status = "ACTIVE",
+                            trackingUrl = trackingUrl
+                        )
+                        repository.logIncident(incident)
 
                         EmergencyForegroundService.startService(this@MainActivity)
                         hapticFeedback.triggerSosActivePattern()
@@ -189,23 +205,25 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(
-                            contacts = sampleContacts,
+                            contacts = contacts,
                             onAddContact = { name, phone, rel ->
-                                sampleContacts.add(
-                                    EmergencyContact(
-                                        id = System.currentTimeMillis().toString(),
-                                        name = name,
-                                        phoneNumber = phone,
-                                        relationship = rel,
-                                        isPrimary = sampleContacts.isEmpty()
+                                lifecycleScope.launch {
+                                    repository.insertContact(
+                                        EmergencyContact(
+                                            id = System.currentTimeMillis().toString(),
+                                            name = name,
+                                            phoneNumber = phone,
+                                            relationship = rel,
+                                            isPrimary = contacts.isEmpty()
+                                        )
                                     )
-                                )
-                                voiceFeedback.speak("Added contact $name")
+                                    voiceFeedback.speak("Added contact $name")
+                                }
                             },
                             modifier = Modifier.padding(innerPadding)
                         )
                         2 -> MedicalProfileScreen(
-                            profile = sampleProfile,
+                            profile = currentProfile,
                             modifier = Modifier.padding(innerPadding)
                         )
                         3 -> WearableStatusScreen(
