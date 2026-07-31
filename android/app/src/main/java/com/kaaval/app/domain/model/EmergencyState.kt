@@ -9,7 +9,8 @@ sealed class EmergencyState {
         val latitude: Double?,
         val longitude: Double?,
         val trackingUrl: String,
-        val isPrimaryCalled: Boolean = false
+        val isPrimaryCalled: Boolean = false,
+        val respondingCaregiver: String? = null // New: To track who is helping
     ) : EmergencyState()
     object Cancelled : EmergencyState()
     object Resolved : EmergencyState()

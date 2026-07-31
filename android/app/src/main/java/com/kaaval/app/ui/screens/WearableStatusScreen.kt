@@ -29,6 +29,7 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 fun WearableStatusScreen(
     device: WearableDevice,
     onTestTactileVibration: () -> Unit,
+    onRefreshScan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -37,16 +38,38 @@ fun WearableStatusScreen(
             .background(HighContrastBlack)
             .padding(20.dp)
     ) {
-        Text(
-            text = "BLE Wearable Status",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = HighContrastYellow,
-            modifier = Modifier.semantics {
-                contentDescription = "BLE Wearable Status Header"
-                stateDescription = "Bluetooth Low Energy hardware tactile trigger monitor"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "BLE Wearable Status",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = HighContrastYellow,
+                modifier = Modifier.weight(1f).semantics {
+                    contentDescription = "BLE Wearable Status Header"
+                    stateDescription = "Bluetooth Low Energy hardware tactile trigger monitor"
+                }
+            )
+
+            if (!device.isConnected) {
+                Button(
+                    onClick = onRefreshScan,
+                    colors = ButtonDefaults.buttonColors(containerColor = HighContrastYellow),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.semantics {
+                        role = Role.Button
+                        contentDescription = "Scan for Wearable Button"
+                        stateDescription = "Double tap to start searching for your KAAVAL tactile trigger"
+                    }
+                ) {
+                    Text("SCAN", color = HighContrastBlack, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
             }
-        )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -72,14 +95,14 @@ fun WearableStatusScreen(
                         color = Color.White
                     )
                     Badge(
-                        containerColor = if (device.isConnected) ActiveGreen else Color.Red,
+                        containerColor = if (device.isConnected) ActiveGreen else if (device.deviceName == "Searching...") HighContrastYellow else Color.Red,
                         modifier = Modifier.semantics {
                             contentDescription = "BLE Connection Badge"
-                            stateDescription = if (device.isConnected) "Device Connected" else "Device Disconnected"
+                            stateDescription = if (device.isConnected) "Device Connected" else "Searching or Disconnected"
                         }
                     ) {
                         Text(
-                            text = if (device.isConnected) "CONNECTED" else "DISCONNECTED",
+                            text = if (device.isConnected) "CONNECTED" else if (device.deviceName == "Searching...") "SEARCHING" else "DISCONNECTED",
                             color = HighContrastBlack,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

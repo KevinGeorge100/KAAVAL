@@ -35,7 +35,8 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         ERROR_OBTAINING_LOCATION,
         NO_INTERNET,
         GPS_DISABLED,
-        BATTERY_LOW
+        BATTERY_LOW,
+        CAREGIVER_ON_THE_WAY // New
     }
 
     /**
@@ -130,6 +131,7 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
             AnnouncementType.NO_INTERNET -> getMessage("Warning: Network connection unavailable. Using offline emergency alert dispatch.", "മുന്നറിയിപ്പ്: നെറ്റ്‌വർക്ക് കണക്ഷൻ ലഭ്യമല്ല.")
             AnnouncementType.GPS_DISABLED -> getMessage("Warning: GPS location service is disabled. Please enable location services.", "മുന്നറിയിപ്പ്: ജി.പി.എസ് സർവീസ് ഓഫാണ്.")
             AnnouncementType.BATTERY_LOW -> getMessage("Warning: Battery level low. Connect charger to maintain emergency tracking.", "മുന്നറിയിപ്പ്: ബാറ്ററി കുറവാണ്.")
+            AnnouncementType.CAREGIVER_ON_THE_WAY -> getMessage("Help is on the way. A caregiver has acknowledged your alert.", "സഹായം വരുന്നു. ഒരു കെയർഗിവർ നിങ്ങളുടെ സന്ദേശം കണ്ടു.")
         }
 
         if (isPriority) {

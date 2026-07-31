@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,8 +36,12 @@ import com.kaaval.app.domain.model.EmergencyIncident
 import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
 import com.kaaval.app.domain.model.WearableDevice
+import com.kaaval.app.service.AudioWitnessManager
+import com.kaaval.app.service.BatteryGuardianManager
 import com.kaaval.app.service.EmergencyForegroundService
+import com.kaaval.app.service.KaavalBleManager
 import com.kaaval.app.service.KaavalLocationManager
+import com.kaaval.app.service.SmsReplyReceiver
 import com.kaaval.app.sos.SosDispatcher
 import com.kaaval.app.ui.screens.ContactsScreen
 import com.kaaval.app.ui.screens.MainSosScreen
@@ -59,9 +64,17 @@ class MainActivity : ComponentActivity() {
     private lateinit var repository: KaavalRepository
     private lateinit var openAiAnalyzer: OpenAiEmergencyAnalyzer
     private lateinit var voiceCommandManager: VoiceCommandManager
+    private lateinit var bleManager: KaavalBleManager
+    private lateinit var audioWitness: AudioWitnessManager
+    private lateinit var batteryGuardian: BatteryGuardianManager
+    private var smsReceiver: SmsReplyReceiver? = null
 
     private var countdownJob: Job? = null
     private val voiceTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    // Volume Trigger Logic
+    private var volumeUpClickCount = 0
+    private var lastVolumeUpTime = 0L
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -69,6 +82,12 @@ class MainActivity : ComponentActivity() {
         val allGranted = permissions.entries.all { it.value }
         if (!allGranted) {
             voiceFeedback.speakPriority("Warning: Some permissions were denied. Emergency features may not work correctly.")
+        } else {
+            // Restart voice listener if microphone was just granted
+            if (permissions[Manifest.permission.RECORD_AUDIO] == true) {
+                voiceCommandManager.startListening()
+                voiceFeedback.speak("Voice commands active.")
+            }
         }
     }
 
@@ -83,6 +102,21 @@ class MainActivity : ComponentActivity() {
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
+        audioWitness = AudioWitnessManager(this)
+        
+        batteryGuardian = BatteryGuardianManager(this) { level ->
+            // Final SOS call when battery is critical
+            voiceFeedback.speakPriority("Warning: Critical battery level $level percent. Sending final emergency coordinates.")
+            // Trigger emergency dispatch one last time
+        }
+
+        bleManager = KaavalBleManager(this) {
+            // HARDWARE TRIGGER callback from the BLE module
+            lifecycleScope.launch {
+                voiceTriggerFlow.emit(Unit) // Triggers the same SOS flow as Voice/Button
+                voiceFeedback.speakPriority("Hardware SOS Triggered.")
+            }
+        }
 
         voiceCommandManager = VoiceCommandManager(this) {
             lifecycleScope.launch {
@@ -91,23 +125,21 @@ class MainActivity : ComponentActivity() {
         }
 
         requestEmergencyPermissions()
+        
+        // Start scanning for the tactile wearable
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
+            bleManager.startScan()
+        }
 
         setContent {
             KAAVALTheme {
                 var selectedTab by remember { mutableStateOf(0) }
                 var emergencyState by remember { mutableStateOf<EmergencyState>(EmergencyState.Idle) }
+                var isDiscreetMode by remember { mutableStateOf(false) }
 
                 val contacts by repository.allContacts.collectAsState(initial = emptyList())
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
-
-                LaunchedEffect(Unit) {
-                    voiceTriggerFlow.collect {
-                        // Avoid triggering if already in countdown or active
-                        if (emergencyState is EmergencyState.Idle) {
-                            startCountdown()
-                        }
-                    }
-                }
+                val wearableState by bleManager.wearableState.collectAsState()
 
                 val defaultProfile = remember {
                     MedicalProfile(
@@ -121,7 +153,33 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val currentProfile = medicalProfileState ?: defaultProfile
-                val sampleWearable = remember { WearableDevice() }
+                // val sampleWearable = remember { WearableDevice() }
+
+                LaunchedEffect(wearableState.isConnected) {
+                    if (wearableState.isConnected) {
+                        voiceFeedback.speak("KAAVAL wearable connected.")
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
+                    }
+                }
+
+                fun simulateCaregiverResponse(senderName: String = "Anjali (Sister)") {
+                    val currentState = emergencyState
+                    if (currentState is EmergencyState.Active) {
+                        emergencyState = currentState.copy(respondingCaregiver = senderName)
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
+                        voiceFeedback.speakPriority("Caregiver $senderName is responding.")
+                    }
+                }
+
+                LaunchedEffect(contacts) {
+                    if (contacts.isNotEmpty()) {
+                        smsReceiver = SmsReplyReceiver(contacts.map { it.phoneNumber }) { sender ->
+                            // Find the name of the contact who replied
+                            val contactName = contacts.find { it.phoneNumber.contains(sender.takeLast(10)) }?.name ?: sender
+                            simulateCaregiverResponse(contactName)
+                        }
+                    }
+                }
 
                 fun startCountdown() {
                     if (contacts.isEmpty()) {
@@ -131,21 +189,35 @@ class MainActivity : ComponentActivity() {
                     }
 
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_HOLD)
-                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
+                    if (!isDiscreetMode) {
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
+                    }
 
                     countdownJob?.cancel()
                     countdownJob = lifecycleScope.launch {
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COUNTDOWN_STARTED, isPriority = true)
+                        if (!isDiscreetMode) {
+                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COUNTDOWN_STARTED, isPriority = true)
+                            delay(1500) // CRITICAL: Wait for "Activating in" intro to finish
+                        }
+                        
                         for (i in 5 downTo 1) {
                             emergencyState = EmergencyState.Countdown(i)
-                            voiceFeedback.speakPriority("Activating in $i seconds")
-                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
+                            if (isDiscreetMode) {
+                                hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
+                            } else {
+                                voiceFeedback.speakPriority(i.toString()) // Priority for instant sync
+                                hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
+                            }
                             delay(1000)
                         }
 
                         // Activate SOS
                         val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
                         val trackingUrl = "https://kaaval-94c1d.web.app/live/$incidentId"
+
+                        // Start Audio Witness recording (Final Boss Feature #2)
+                        audioWitness.startRecording(incidentId)
+                        batteryGuardian.startMonitoring() // Final Boss Feature #3
 
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ACQUIRING_LOCATION)
                         val loc = locationManager.getCurrentLocation()
@@ -207,6 +279,8 @@ class MainActivity : ComponentActivity() {
                 fun cancelSos() {
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
+                    audioWitness.stopRecording()
+                    batteryGuardian.stopMonitoring()
                     emergencyState = EmergencyState.Idle
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_CANCELLED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
@@ -215,7 +289,10 @@ class MainActivity : ComponentActivity() {
                 fun resolveSos() {
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
+                    audioWitness.stopRecording()
+                    batteryGuardian.stopMonitoring()
                     emergencyState = EmergencyState.Idle
+                    hapticFeedback.cancel() // Stop the heartbeat
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_ENDED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COMPLETED, isPriority = true)
@@ -226,7 +303,10 @@ class MainActivity : ComponentActivity() {
                         NavigationBar(containerColor = HighContrastBlack) {
                             NavigationBarItem(
                                 selected = selectedTab == 0,
-                                onClick = { selectedTab = 0 },
+                                onClick = { 
+                                    selectedTab = 0 
+                                    voiceFeedback.speak("Emergency SOS Screen")
+                                },
                                 icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                 label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
                                 modifier = Modifier.semantics {
@@ -241,7 +321,10 @@ class MainActivity : ComponentActivity() {
                             )
                             NavigationBarItem(
                                 selected = selectedTab == 1,
-                                onClick = { selectedTab = 1 },
+                                onClick = { 
+                                    selectedTab = 1 
+                                    voiceFeedback.speak("Emergency Contacts Screen")
+                                },
                                 icon = { Icon(Icons.Default.People, contentDescription = null) },
                                 label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
                                 modifier = Modifier.semantics {
@@ -256,7 +339,10 @@ class MainActivity : ComponentActivity() {
                             )
                             NavigationBarItem(
                                 selected = selectedTab == 2,
-                                onClick = { selectedTab = 2 },
+                                onClick = { 
+                                    selectedTab = 2 
+                                    voiceFeedback.speak("Medical Profile Screen")
+                                },
                                 icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
                                 label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
                                 modifier = Modifier.semantics {
@@ -271,7 +357,10 @@ class MainActivity : ComponentActivity() {
                             )
                             NavigationBarItem(
                                 selected = selectedTab == 3,
-                                onClick = { selectedTab = 3 },
+                                onClick = { 
+                                    selectedTab = 3 
+                                    voiceFeedback.speak("Wearable Status Screen")
+                                },
                                 icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                                 label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
                                 modifier = Modifier.semantics {
@@ -290,9 +379,15 @@ class MainActivity : ComponentActivity() {
                     when (selectedTab) {
                         0 -> MainSosScreen(
                             emergencyState = emergencyState,
+                            isDiscreetMode = isDiscreetMode,
+                            onDiscreetModeChange = { 
+                                isDiscreetMode = it 
+                                if (it) voiceFeedback.speak("Discreet mode on.") else voiceFeedback.speak("Standard mode on.")
+                            },
                             onTriggerSos = { startCountdown() },
                             onCancelSos = { cancelSos() },
                             onResolveSos = { resolveSos() },
+                            onSimulateCaregiverResponse = { simulateCaregiverResponse() },
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(
@@ -311,17 +406,41 @@ class MainActivity : ComponentActivity() {
                                     voiceFeedback.speak("Added contact $name")
                                 }
                             },
+                            onDeleteContact = { contact ->
+                                lifecycleScope.launch {
+                                    repository.deleteContact(contact)
+                                    voiceFeedback.speak("Removed contact ${contact.name}")
+                                }
+                            },
+                            onSetPrimary = { contact ->
+                                lifecycleScope.launch {
+                                    repository.setPrimaryContact(contact.id)
+                                    voiceFeedback.speak("${contact.name} is now your primary contact.")
+                                }
+                            },
                             modifier = Modifier.padding(innerPadding)
                         )
                         2 -> MedicalProfileScreen(
                             profile = currentProfile,
+                            onReadProfileAloud = {
+                                val text = "Emergency Medical Profile for ${currentProfile.fullName}. " +
+                                        "Blood group ${currentProfile.bloodGroup}. " +
+                                        "Allergies: ${currentProfile.allergies}. " +
+                                        "Medications: ${currentProfile.medications}. " +
+                                        "Instructions: ${currentProfile.emergencyNotes}"
+                                voiceFeedback.speak(text)
+                            },
                             modifier = Modifier.padding(innerPadding)
                         )
                         3 -> WearableStatusScreen(
-                            device = sampleWearable,
+                            device = wearableState,
                             onTestTactileVibration = {
                                 hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_ACTIVATED)
                                 voiceFeedback.speak("Testing tactile wearable vibration feedback.")
+                            },
+                            onRefreshScan = {
+                                bleManager.startScan()
+                                voiceFeedback.speak("Scanning for KAAVAL wearable.")
                             },
                             modifier = Modifier.padding(innerPadding)
                         )
@@ -336,9 +455,22 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.SEND_SMS,
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.READ_SMS,
             Manifest.permission.CALL_PHONE,
             Manifest.permission.RECORD_AUDIO
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            // Deprecated but required for older APIs
+            @Suppress("DEPRECATION")
+            permissions.add(Manifest.permission.BLUETOOTH)
+            @Suppress("DEPRECATION")
+            permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -357,12 +489,36 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             voiceCommandManager.startListening()
+            // Optional: voiceFeedback.speak("Voice commands active.") 
+            // Better to keep it quiet on every start, but good for testing.
         }
     }
 
     override fun onStop() {
         super.onStop()
         voiceCommandManager.stopListening()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastVolumeUpTime < 1500) {
+                volumeUpClickCount++
+            } else {
+                volumeUpClickCount = 1
+            }
+            lastVolumeUpTime = currentTime
+
+            if (volumeUpClickCount >= 3) {
+                volumeUpClickCount = 0
+                lifecycleScope.launch {
+                    voiceTriggerFlow.emit(Unit)
+                    voiceFeedback.speakPriority("Tactile SOS Triggered via buttons.")
+                }
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onDestroy() {

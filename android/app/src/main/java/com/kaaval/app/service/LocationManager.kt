@@ -3,6 +3,7 @@ package com.kaaval.app.service
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -18,12 +19,20 @@ class KaavalLocationManager(context: Context) {
     suspend fun getCurrentLocation(): Location? {
         return try {
             val cancellationTokenSource = CancellationTokenSource()
-            fusedLocationClient.getCurrentLocation(
+            
+            // Try to get fresh location with timeout
+            val freshLocation = fusedLocationClient.getCurrentLocation(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 cancellationTokenSource.token
             ).await()
+            
+            if (freshLocation != null) return freshLocation
+
+            // Fallback to last known location if fresh acquisition fails (Differentiator #1)
+            Log.w("LocationManager", "Fresh GPS lock failed. Falling back to last known location.")
+            fusedLocationClient.lastLocation.await()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("LocationManager", "GPS acquisition error", e)
             null
         }
     }

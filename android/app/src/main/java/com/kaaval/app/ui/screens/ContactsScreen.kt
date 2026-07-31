@@ -35,6 +35,8 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 fun ContactsScreen(
     contacts: List<EmergencyContact>,
     onAddContact: (name: String, phone: String, relationship: String) -> Unit,
+    onDeleteContact: (EmergencyContact) -> Unit,
+    onSetPrimary: (EmergencyContact) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -92,6 +94,7 @@ fun ContactsScreen(
                     text = "No emergency contacts added.\nTap + to add your primary caregivers.",
                     color = Color.LightGray,
                     fontSize = 16.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.semantics {
                         contentDescription = "Empty Emergency Contacts List Notice"
                         stateDescription = "No emergency contacts added yet. Tap plus button at top right to add your primary caregivers."
@@ -106,58 +109,86 @@ fun ContactsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .border(
-                                width = if (contact.isPrimary) 2.dp else 0.dp,
-                                color = if (contact.isPrimary) HighContrastYellow else Color.Transparent,
+                                width = if (contact.isPrimary) 2.dp else 1.dp,
+                                color = if (contact.isPrimary) HighContrastYellow else Color.DarkGray,
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .semantics {
-                                contentDescription = "Emergency Contact Card: ${contact.name}"
-                                stateDescription = "Relationship: ${contact.relationship}. Phone: ${contact.phoneNumber}. ${if (contact.isPrimary) "Primary Emergency Call Contact" else "Secondary Contact"}"
-                            }
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = if (contact.isPrimary) Icons.Default.Star else Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = HighContrastYellow,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text(
-                                        text = contact.name,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = if (contact.isPrimary) Icons.Default.Star else Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = HighContrastYellow,
+                                        modifier = Modifier.size(32.dp)
                                     )
-                                    Text(
-                                        text = "${contact.relationship} • ${contact.phoneNumber}",
-                                        fontSize = 14.sp,
-                                        color = Color.LightGray
-                                    )
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Column {
+                                        Text(
+                                            text = contact.name,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            text = "${contact.relationship} • ${contact.phoneNumber}",
+                                            fontSize = 14.sp,
+                                            color = Color.LightGray
+                                        )
+                                    }
+                                }
+                                if (contact.isPrimary) {
+                                    Badge(
+                                        containerColor = HighContrastYellow,
+                                        modifier = Modifier.semantics {
+                                            contentDescription = "Primary Call Contact Badge"
+                                            stateDescription = "Selected as primary emergency auto-dial contact"
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "PRIMARY",
+                                            color = HighContrastBlack,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
-                            if (contact.isPrimary) {
-                                Badge(
-                                    containerColor = HighContrastYellow,
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                if (!contact.isPrimary) {
+                                    TextButton(
+                                        onClick = { onSetPrimary(contact) },
+                                        modifier = Modifier.semantics {
+                                            role = Role.Button
+                                            contentDescription = "Set ${contact.name} as Primary Contact"
+                                            stateDescription = "Double tap to make this person the first contact called during emergency"
+                                        }
+                                    ) {
+                                        Text("SET AS PRIMARY", color = HighContrastYellow, fontWeight = FontWeight.Bold)
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                
+                                TextButton(
+                                    onClick = { onDeleteContact(contact) },
                                     modifier = Modifier.semantics {
-                                        contentDescription = "Primary Call Contact Badge"
-                                        stateDescription = "Selected as primary emergency auto-dial contact"
+                                        role = Role.Button
+                                        contentDescription = "Delete ${contact.name} from Emergency Contacts"
+                                        stateDescription = "Double tap to remove this person from your emergency network"
                                     }
                                 ) {
-                                    Text(
-                                        text = "PRIMARY",
-                                        color = HighContrastBlack,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
+                                    Text("REMOVE", color = Color(0xFFFF4444), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

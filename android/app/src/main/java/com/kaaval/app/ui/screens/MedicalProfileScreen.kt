@@ -9,7 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +29,7 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 @Composable
 fun MedicalProfileScreen(
     profile: MedicalProfile,
+    onReadProfileAloud: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -35,16 +38,36 @@ fun MedicalProfileScreen(
             .background(HighContrastBlack)
             .padding(20.dp)
     ) {
-        Text(
-            text = "Emergency Medical Profile",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = HighContrastYellow,
-            modifier = Modifier.semantics {
-                contentDescription = "Emergency Medical Profile Header"
-                stateDescription = "Medical details for first responders and caregivers"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Emergency Medical Profile",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = HighContrastYellow,
+                modifier = Modifier.weight(1f).semantics {
+                    contentDescription = "Emergency Medical Profile Header"
+                    stateDescription = "Medical details for first responders and caregivers"
+                }
+            )
+
+            Button(
+                onClick = onReadProfileAloud,
+                colors = ButtonDefaults.buttonColors(containerColor = HighContrastYellow),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                modifier = Modifier.semantics {
+                    role = Role.Button
+                    contentDescription = "Read Profile Aloud Button"
+                    stateDescription = "Double tap to have the phone speak this medical profile for a first responder"
+                },
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("LISTEN", color = HighContrastBlack, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
-        )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

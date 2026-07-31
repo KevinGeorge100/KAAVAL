@@ -24,6 +24,10 @@ class VoiceCommandManager(
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10)
+        // Helps in noisy environments by not waiting for long silence
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000)
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500)
     }
 
     private var isListening = false
@@ -31,6 +35,7 @@ class VoiceCommandManager(
     fun startListening() {
         if (isListening) return
         
+        Log.d("VoiceCommandManager", "Initializing SpeechRecognizer...")
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
                 setRecognitionListener(this@VoiceCommandManager)
@@ -40,9 +45,9 @@ class VoiceCommandManager(
         try {
             speechRecognizer?.startListening(recognizerIntent)
             isListening = true
-            Log.d("VoiceCommandManager", "Started listening for emergency commands...")
+            Log.i("VoiceCommandManager", "VOICE SYSTEM ACTIVE: Listening for 'HELP' or 'SOS'...")
         } catch (e: Exception) {
-            Log.e("VoiceCommandManager", "Error starting speech recognizer", e)
+            Log.e("VoiceCommandManager", "Critical error starting speech recognizer", e)
         }
     }
 
@@ -73,8 +78,14 @@ class VoiceCommandManager(
         val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         matches?.forEach { text ->
             val lowerText = text.lowercase()
-            if (lowerText.contains("help") || lowerText.contains("sos") || lowerText.contains("emergency")) {
-                Log.i("VoiceCommandManager", "Partial Voice Trigger Detected: $text")
+            // Check for English and Malayalam triggers
+            if (lowerText.contains("help") || 
+                lowerText.contains("sos") || 
+                lowerText.contains("emergency") || 
+                lowerText.contains("സഹായം") || 
+                lowerText.contains("sahayam")) {
+                
+                Log.i("VoiceCommandManager", "CRITICAL: Partial Voice Trigger Detected: $text")
                 onTriggerReceived()
                 return
             }
@@ -96,9 +107,13 @@ class VoiceCommandManager(
         }
         Log.e("VoiceCommandManager", "Speech recognition error: $message")
         
-        // Restart on common non-fatal errors
-        if (isListening && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
-            speechRecognizer?.startListening(recognizerIntent)
+        // Restart on common non-fatal errors or if busy
+        if (isListening) {
+            // If busy, wait a moment before retrying
+            val delay = if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) 500L else 100L
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (isListening) speechRecognizer?.startListening(recognizerIntent)
+            }, delay)
         }
     }
 

@@ -32,7 +32,8 @@ object HapticFeedbackManager {
         ERROR,
         LOW_BATTERY,
         NO_INTERNET,
-        GPS_DISABLED
+        GPS_DISABLED,
+        CAREGIVER_RESPONDING // New pattern for response assurance
     }
 
     /**
@@ -190,6 +191,12 @@ object HapticFeedbackManager {
                 val amplitudes = intArrayOf(0, 220, 0, 220)
                 VibrationEffect.createWaveform(timings, amplitudes, -1)
             }
+            HapticPattern.CAREGIVER_RESPONDING -> {
+                // Reassuring "Heartbeat" pulse (Double tap)
+                val timings = longArrayOf(0, 100, 100, 100, 800) // Pulse-pulse-pause
+                val amplitudes = intArrayOf(0, 150, 0, 150, 0)
+                VibrationEffect.createWaveform(timings, amplitudes, 0) // Repeat indefinitely to provide constant assurance
+            }
         }
     }
 
@@ -211,6 +218,7 @@ object HapticFeedbackManager {
             HapticPattern.LOW_BATTERY -> Pair(longArrayOf(0, 200, 250, 200), intArrayOf(0, 120, 0, 120))
             HapticPattern.NO_INTERNET -> Pair(longArrayOf(0, 400, 100, 150), intArrayOf(0, 100, 0, 255))
             HapticPattern.GPS_DISABLED -> Pair(longArrayOf(0, 450, 200, 450), intArrayOf(0, 220, 0, 220))
+            HapticPattern.CAREGIVER_RESPONDING -> Pair(longArrayOf(0, 100, 100, 100, 800), intArrayOf(0, 150, 0, 150, 0))
         }
     }
 }

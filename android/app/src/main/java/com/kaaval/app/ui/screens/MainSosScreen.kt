@@ -40,9 +40,12 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 @Composable
 fun MainSosScreen(
     emergencyState: EmergencyState,
+    isDiscreetMode: Boolean,
+    onDiscreetModeChange: (Boolean) -> Unit,
     onTriggerSos: () -> Unit,
     onCancelSos: () -> Unit,
     onResolveSos: () -> Unit,
+    onSimulateCaregiverResponse: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -54,25 +57,47 @@ fun MainSosScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
-        // Header Title (Voice Accessible & TalkBack Enabled)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.semantics {
-                contentDescription = "KAAVAL Emergency SOS System Header"
-                stateDescription = "Accessibility Emergency Ecosystem Active"
-            }
+        // Header Title
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = "KAAVAL SOS",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                color = HighContrastYellow
-            )
-            Text(
-                text = "Accessibility Emergency Ecosystem",
-                fontSize = 14.sp,
-                color = Color.LightGray
-            )
+            Column(
+                modifier = Modifier.semantics {
+                    contentDescription = "KAAVAL Emergency SOS System Header"
+                    stateDescription = "Accessibility Emergency Ecosystem Active"
+                }
+            ) {
+                Text(
+                    text = "KAAVAL SOS",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    color = HighContrastYellow
+                )
+                Text(
+                    text = "Emergency Response Ecosystem",
+                    fontSize = 12.sp,
+                    color = Color.LightGray
+                )
+            }
+
+            // Discreet Mode Toggle (Student Persona Enhancement)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Switch(
+                    checked = isDiscreetMode,
+                    onCheckedChange = onDiscreetModeChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = HighContrastYellow,
+                        checkedTrackColor = HighContrastYellow.copy(alpha = 0.5f)
+                    ),
+                    modifier = Modifier.semantics {
+                        contentDescription = "Discreet SOS Mode Toggle"
+                        stateDescription = if (isDiscreetMode) "Discreet mode enabled. Countdown will be silent." else "Standard mode enabled. Voice feedback active."
+                    }
+                )
+                Text("DISCREET", fontSize = 10.sp, color = HighContrastYellow, fontWeight = FontWeight.Bold)
+            }
         }
 
         // Center Content depending on Emergency State
@@ -216,12 +241,30 @@ fun MainSosScreen(
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "SMS sent to emergency contacts.\nPrimary Contact Call initiated.",
-                                    fontSize = 14.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center
-                                )
+                                
+                                // Coordination Feedback (Differentiator #2)
+                                if (emergencyState.respondingCaregiver != null) {
+                                    Text(
+                                        text = "${emergencyState.respondingCaregiver} IS RESPONDING",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ActiveGreen,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        text = "Tactile heartbeat assurance active.",
+                                        fontSize = 12.sp,
+                                        color = Color.LightGray
+                                    )
+                                } else {
+                                    Text(
+                                        text = "SMS sent to emergency contacts.\nWaiting for caregiver acknowledgement...",
+                                        fontSize = 14.sp,
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "Live Tracking ID: ${emergencyState.incidentId}",
@@ -229,6 +272,14 @@ fun MainSosScreen(
                                     color = HighContrastYellow,
                                     fontWeight = FontWeight.Bold
                                 )
+
+                                // Mock Button for Vision Demonstration
+                                if (emergencyState.respondingCaregiver == null) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    TextButton(onClick = onSimulateCaregiverResponse) {
+                                        Text("DEBUG: Simulate Caregiver Response", color = Color.Gray, fontSize = 10.sp)
+                                    }
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.height(24.dp))
