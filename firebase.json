@@ -1,12 +1,17 @@
 {
   "hosting": {
     "public": "tracking-web",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/live",
+        "destination": "/live.html"
+      },
       {
         "source": "/live/**",
         "destination": "/live.html"
