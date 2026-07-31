@@ -3,6 +3,7 @@ package com.kaaval.app.sos
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.telephony.SmsManager
 import android.util.Log
 import com.kaaval.app.domain.model.EmergencyContact
@@ -28,7 +29,12 @@ class SosDispatcher(private val context: Context) {
 
         val smsMessage = "🚨 EMERGENCY SOS ALERT from KAAVAL 🚨\nI need immediate assistance!\n$locationText"
 
-        val smsManager: SmsManager = context.getSystemService(SmsManager::class.java)
+        val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
+        }
 
         for (contact in contacts) {
             try {

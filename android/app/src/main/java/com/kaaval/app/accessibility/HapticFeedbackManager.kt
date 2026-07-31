@@ -77,7 +77,6 @@ object HapticFeedbackManager {
                     currentVibrator.vibrate(effect)
                 }
             } else {
-                @Suppress("DEPRECATION")
                 val (timings, _) = getPatternArrays(pattern)
                 if (timings.isNotEmpty()) {
                     @Suppress("DEPRECATION")

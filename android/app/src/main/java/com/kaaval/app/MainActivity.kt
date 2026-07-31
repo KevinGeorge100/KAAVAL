@@ -1,8 +1,13 @@
 package com.kaaval.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -54,6 +59,15 @@ class MainActivity : ComponentActivity() {
 
     private var countdownJob: Job? = null
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (!allGranted) {
+            voiceFeedback.speakPriority("Warning: Some permissions were denied. Emergency features may not work correctly.")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -65,6 +79,8 @@ class MainActivity : ComponentActivity() {
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
+
+        requestEmergencyPermissions()
 
         setContent {
             KAAVALTheme {
@@ -89,6 +105,12 @@ class MainActivity : ComponentActivity() {
                 val sampleWearable = remember { WearableDevice() }
 
                 fun startCountdown() {
+                    if (contacts.isEmpty()) {
+                        voiceFeedback.speakPriority("Error: No emergency contacts found. Please add contacts before triggering SOS.")
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.ERROR)
+                        return
+                    }
+
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_HOLD)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
 
@@ -279,6 +301,27 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun requestEmergencyPermissions() {
+        val permissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.CALL_PHONE
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        val missingPermissions = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            requestPermissionLauncher.launch(missingPermissions.toTypedArray())
         }
     }
 
