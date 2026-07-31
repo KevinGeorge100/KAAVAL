@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private val voiceFeedback = VoiceFeedbackManager
-    private lateinit var hapticFeedback: HapticFeedbackManager
+    private val hapticFeedback = HapticFeedbackManager
     private lateinit var locationManager: KaavalLocationManager
     private lateinit var sosDispatcher: SosDispatcher
     private lateinit var repository: KaavalRepository
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         repository = KaavalRepository(db)
 
         voiceFeedback.initialize(this)
-        hapticFeedback = HapticFeedbackManager(this)
+        hapticFeedback.initialize(this)
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                 val sampleWearable = remember { WearableDevice() }
 
                 fun startCountdown() {
-                    hapticFeedback.triggerCountdownPulse()
+                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_HOLD)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
 
                     countdownJob?.cancel()
@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
                         for (i in 5 downTo 1) {
                             emergencyState = EmergencyState.Countdown(i)
                             voiceFeedback.speakPriority("Activating in $i seconds")
-                            hapticFeedback.triggerCountdownPulse()
+                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
                             delay(1000)
                         }
 
@@ -109,8 +109,10 @@ class MainActivity : ComponentActivity() {
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ACQUIRING_LOCATION)
                         val loc = locationManager.getCurrentLocation()
                         if (loc != null) {
+                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LOCATION_ACQUIRED)
                             voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LOCATION_ACQUIRED)
                         } else {
+                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.ERROR)
                             voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ERROR_OBTAINING_LOCATION)
                         }
 
@@ -121,8 +123,10 @@ class MainActivity : ComponentActivity() {
                             longitude = loc?.longitude,
                             trackingUrl = trackingUrl
                         )
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SMS_SENT)
 
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.CALLING_PRIMARY_CONTACT)
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CALL_STARTED)
 
                         val incident = EmergencyIncident(
                             incidentId = incidentId,
@@ -135,9 +139,10 @@ class MainActivity : ComponentActivity() {
                         repository.logIncident(incident)
 
                         EmergencyForegroundService.startService(this@MainActivity)
-                        hapticFeedback.triggerSosActivePattern()
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_ACTIVATED)
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_ACTIVATED, isPriority = true)
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_STARTED)
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LIVE_TRACKING_STARTED)
 
                         emergencyState = EmergencyState.Active(
                             incidentId = incidentId,
@@ -154,7 +159,7 @@ class MainActivity : ComponentActivity() {
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
                     emergencyState = EmergencyState.Idle
-                    hapticFeedback.triggerCancellationRumble()
+                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_CANCELLED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
                 }
 
@@ -162,6 +167,7 @@ class MainActivity : ComponentActivity() {
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
                     emergencyState = EmergencyState.Idle
+                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_ENDED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COMPLETED, isPriority = true)
                 }
@@ -279,5 +285,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         voiceFeedback.shutdown()
+        hapticFeedback.shutdown()
     }
 }
