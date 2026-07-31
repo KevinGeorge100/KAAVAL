@@ -8,7 +8,8 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 
 ## 🗂️ Documentation Directory Index
 
-### 🎯 1. Product Baseline (`/docs/product`)
+### 🎯 1. Product Baseline & System Status (`/docs`)
+- 📄 **[STATUS.md](STATUS.md)** — Latest release status, complete feature matrix, and student field-testing roadmap.
 - 📄 **[SCOPE.md](product/SCOPE.md)** — Comprehensive product scope baseline, user stories, and acceptance criteria.
 
 ---
