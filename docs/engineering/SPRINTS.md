@@ -57,26 +57,26 @@ flowchart LR
 - Test build/installation, baseline UI semantics, Firebase emulator connection, and on-device SMS/call/location feasibility.
 - Deliverable: working project shell, CI pipeline, environment checklist, ADRs, and device test matrix.
 
-## Sprint 2 — Authentication
+## Sprint 2 — Accessibility Infrastructure & Engines
 
-**Goal:** Give the user an accessible account and persistent profile.
+**Goal:** Provide full non-visual accessibility support via high-contrast theming, TalkBack semantics, voice speech synthesis, and tactile haptics.
 
-**Work**
+### Granular Task Breakdown & Status
 
-- Implement Firebase Phone Authentication and accessible OTP entry/retry feedback.
-- Create authenticated user profile read/write flow.
-- Implement server/data rules so users access only their own profile.
+| Task | Status | Implementation & Deliverables |
+| :--- | :---: | :--- |
+| **Implement High-Contrast Android Theme** | ✅ **Completed** | Material 3 Pure Black (`#000000`) & Yellow (`#FFD600`) design system ([THEME_ACCESSIBILITY.md](../architecture/THEME_ACCESSIBILITY.md)). |
+| **Implement TalkBack Accessibility** | ✅ **Completed** | Jetpack Compose Semantics, `contentDescription`, `Role.Button`/`Role.Tab`, dynamic `stateDescription` ([TALKBACK_ACCESSIBILITY.md](TALKBACK_ACCESSIBILITY.md)). |
+| **Develop Custom Haptic Feedback** | ✅ **Completed** | `HapticFeedbackManager` Singleton engine with 14 `HapticPattern` waveforms on API 26-34+ ([HAPTIC_FEEDBACK.md](HAPTIC_FEEDBACK.md)). |
+| **Implement English TTS** | ✅ **Completed** | `VoiceFeedbackManager` Singleton speech engine with 16 queued & priority announcements ([VOICE_FEEDBACK.md](VOICE_FEEDBACK.md)). |
+| **Implement Malayalam TTS** | 🟡 **Partially Completed** | `ml_IN` locale architecture & bilingual fallback strings ready; awaiting device TTS voice pack installation. |
+| **Accessibility Validation (TalkBack, TTS & Haptics)** | ⏳ **Not Started** | End-to-end on-device validation with visually impaired test users (Scheduled for Sprint 8). |
 
 **Definition of Done**
 
-- A user can sign in, return to an existing account, and recover from a failed OTP attempt.
-- No account or profile data is exposed across users.
-- The flow works with TalkBack and localized English/Malayalam strings.
-
-**Testing and deliverables**
-
-- Unit, Compose UI, and Emulator Suite security-rule tests; physical-device TalkBack/OTP test.
-- Deliverable: tested authentication/profile flow and security-rule report.
+- High-contrast theme meets WCAG AAA standards (~19.5:1 ratio).
+- TalkBack announces explicit component roles and dynamic state descriptions.
+- Voice and Haptic engines run as lifecycle-safe singletons without thread blocking.
 
 ## Sprint 3 — Emergency Contacts
 
