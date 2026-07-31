@@ -53,18 +53,19 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         if (status == TextToSpeech.SUCCESS) {
             val result = tts?.setLanguage(currentLocale)
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e(TAG, "Language $currentLocale not supported on device")
-            } else {
-                isInitialized = true
-                Log.d(TAG, "TextToSpeech engine initialized successfully in $currentLocale")
-                
-                // Flush pending messages queued before TTS completed init
-                synchronized(pendingQueue) {
-                    for ((msg, isPriority) in pendingQueue) {
-                        speakInternal(msg, isPriority)
-                    }
-                    pendingQueue.clear()
+                Log.w(TAG, "Language $currentLocale missing TTS voice pack on device. Falling back to English.")
+                tts?.setLanguage(Locale.ENGLISH)
+                currentLocale = Locale.ENGLISH
+            }
+            isInitialized = true
+            Log.d(TAG, "TextToSpeech engine initialized successfully in $currentLocale")
+            
+            // Flush pending messages queued before TTS completed init
+            synchronized(pendingQueue) {
+                for ((msg, isPriority) in pendingQueue) {
+                    speakInternal(msg, isPriority)
                 }
+                pendingQueue.clear()
             }
         } else {
             Log.e(TAG, "TextToSpeech initialization failed with status $status")
@@ -142,16 +143,22 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
      * Supports switching language locale (e.g. "en" for English, "ml" for Malayalam).
      */
     fun setLanguage(languageCode: String) {
-        currentLocale = if (languageCode.equals("ml", ignoreCase = true)) {
+        val targetLocale = if (languageCode.equals("ml", ignoreCase = true)) {
             Locale("ml", "IN")
         } else {
             Locale.ENGLISH
         }
         if (isInitialized) {
-            val result = tts?.setLanguage(currentLocale)
+            val result = tts?.setLanguage(targetLocale)
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.w(TAG, "Locale $currentLocale missing TTS voice pack on device.")
+                Log.w(TAG, "Locale $targetLocale missing TTS voice pack on device. Falling back to English.")
+                tts?.setLanguage(Locale.ENGLISH)
+                currentLocale = Locale.ENGLISH
+            } else {
+                currentLocale = targetLocale
             }
+        } else {
+            currentLocale = targetLocale
         }
     }
 
