@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var voiceFeedback: VoiceFeedbackManager
+    private val voiceFeedback = VoiceFeedbackManager
     private lateinit var hapticFeedback: HapticFeedbackManager
     private lateinit var locationManager: KaavalLocationManager
     private lateinit var sosDispatcher: SosDispatcher
@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
         val db = KaavalDatabase.getDatabase(this)
         repository = KaavalRepository(db)
 
-        voiceFeedback = VoiceFeedbackManager(this)
+        voiceFeedback.initialize(this)
         hapticFeedback = HapticFeedbackManager(this)
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
@@ -90,13 +90,14 @@ class MainActivity : ComponentActivity() {
 
                 fun startCountdown() {
                     hapticFeedback.triggerCountdownPulse()
-                    voiceFeedback.speak("Emergency SOS initiated. Activating in 5 seconds.")
+                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
 
                     countdownJob?.cancel()
                     countdownJob = lifecycleScope.launch {
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COUNTDOWN_STARTED, isPriority = true)
                         for (i in 5 downTo 1) {
                             emergencyState = EmergencyState.Countdown(i)
-                            voiceFeedback.speakCountdown(i)
+                            voiceFeedback.speakPriority("Activating in $i seconds")
                             hapticFeedback.triggerCountdownPulse()
                             delay(1000)
                         }
@@ -105,13 +106,23 @@ class MainActivity : ComponentActivity() {
                         val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
                         val trackingUrl = "https://kaaval-tracking.web.app/live/$incidentId"
 
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ACQUIRING_LOCATION)
                         val loc = locationManager.getCurrentLocation()
+                        if (loc != null) {
+                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LOCATION_ACQUIRED)
+                        } else {
+                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ERROR_OBTAINING_LOCATION)
+                        }
+
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SENDING_SMS_ALERTS)
                         sosDispatcher.dispatchEmergencyAlert(
                             contacts = contacts,
                             latitude = loc?.latitude,
                             longitude = loc?.longitude,
                             trackingUrl = trackingUrl
                         )
+
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.CALLING_PRIMARY_CONTACT)
 
                         val incident = EmergencyIncident(
                             incidentId = incidentId,
@@ -125,7 +136,8 @@ class MainActivity : ComponentActivity() {
 
                         EmergencyForegroundService.startService(this@MainActivity)
                         hapticFeedback.triggerSosActivePattern()
-                        voiceFeedback.speak("Emergency activated. Live GPS location is being shared with caregivers.")
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_ACTIVATED, isPriority = true)
+                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_STARTED)
 
                         emergencyState = EmergencyState.Active(
                             incidentId = incidentId,
@@ -143,14 +155,15 @@ class MainActivity : ComponentActivity() {
                     EmergencyForegroundService.stopService(this@MainActivity)
                     emergencyState = EmergencyState.Idle
                     hapticFeedback.triggerCancellationRumble()
-                    voiceFeedback.speak("Emergency alert cancelled.")
+                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
                 }
 
                 fun resolveSos() {
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
                     emergencyState = EmergencyState.Idle
-                    voiceFeedback.speak("Emergency closed. You are marked safe.")
+                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_ENDED)
+                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COMPLETED, isPriority = true)
                 }
 
                 Scaffold(
