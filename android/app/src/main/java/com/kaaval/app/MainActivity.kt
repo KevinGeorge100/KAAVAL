@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
                         // Activate SOS
                         val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
-                        val trackingUrl = "https://kaaval-tracking.web.app/live/$incidentId"
+                        val trackingUrl = "https://kaaval-94c1d.web.app/live/$incidentId"
 
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ACQUIRING_LOCATION)
                         val loc = locationManager.getCurrentLocation()
