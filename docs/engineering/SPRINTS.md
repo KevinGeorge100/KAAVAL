@@ -8,16 +8,16 @@
 
 Each sprint produces a working, testable increment on a physical Android device. The sequence is intentionally dependency-driven: no tracking before safe alerting, and no external alerting before the SOS state machine is dependable.
 
-| Sprint | Outcome | Estimate |
-|---:|---|---:|
-| 1 — Project Setup | Project foundations, feasibility decisions, CI, accessible shell | 1 week |
-| 2 — Authentication | Accessible sign-in and user profile | 1 week |
-| 3 — Contacts | Emergency contact management and Primary Contact | 1 week |
-| 4 — SOS | Safe accessible hold/countdown/cancel workflow | 1–1.5 weeks |
-| 5 — SMS & Calling | Alert all contacts and initiate primary-contact calling | 1.5–2 weeks |
-| 6 — Live Tracking | Secure, time-limited tracking link and location updates | 2–3 weeks |
-| 7 — History & Resilience | Mark-safe, expiry, event history, and recovery | 1 week |
-| 8 — Testing & Demo | Hardening, accessibility validation, signed test release, demo | 2 weeks |
+| Sprint | Outcome | Status | Estimate |
+|---:|---|:---:|---:|
+| 1 — Project Setup | Project foundations, feasibility decisions, CI, accessible shell | ✅ **Completed** | 1 week |
+| 2 — Accessibility & Engines | High-contrast theme, TalkBack semantics, Voice & Haptic engines | ✅ **Completed** | 1 week |
+| 3 — Contacts | Emergency contact management and Primary Contact | 🔄 In Progress | 1 week |
+| 4 — SOS | Safe accessible hold/countdown/cancel workflow | ⏳ Pending | 1–1.5 weeks |
+| 5 — SMS & Calling | Alert all contacts and initiate primary-contact calling | ⏳ Pending | 1.5–2 weeks |
+| 6 — Live Tracking | Secure, time-limited tracking link and location updates | ⏳ Pending | 2–3 weeks |
+| 7 — History & Resilience | Mark-safe, expiry, event history, and recovery | ⏳ Pending | 1 week |
+| 8 — Testing & Demo | Hardening, accessibility validation, signed test release, demo | ⏳ Pending | 2 weeks |
 
 **Estimated duration:** 10.5–12.5 weeks for one developer. The sequence matters more than an exact calendar date; Sprint 1 must resolve the SMS/calling and offline-link feasibility gates.
 
