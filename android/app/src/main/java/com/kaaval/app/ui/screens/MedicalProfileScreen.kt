@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,6 +20,10 @@ import com.kaaval.app.ui.theme.EmergencyRed
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 
+/**
+ * Emergency Medical Profile Screen
+ * Hardened with Jetpack Compose Semantics for TalkBack accessibility.
+ */
 @Composable
 fun MedicalProfileScreen(
     profile: MedicalProfile,
@@ -34,7 +39,11 @@ fun MedicalProfileScreen(
             text = "Emergency Medical Profile",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = HighContrastYellow
+            color = HighContrastYellow,
+            modifier = Modifier.semantics {
+                contentDescription = "Emergency Medical Profile Header"
+                stateDescription = "Medical details for first responders and caregivers"
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -45,7 +54,8 @@ fun MedicalProfileScreen(
                 .fillMaxWidth()
                 .border(2.dp, HighContrastYellow, RoundedCornerShape(16.dp))
                 .semantics {
-                    contentDescription = "Medical Card for ${profile.fullName}. Blood Group: ${profile.bloodGroup}. Allergies: ${profile.allergies}. Medications: ${profile.medications}."
+                    contentDescription = "Emergency Medical Profile Card for ${profile.fullName}"
+                    stateDescription = "Blood Group: ${profile.bloodGroup}. Known Allergies: ${profile.allergies}. Current Medications: ${profile.medications}. Emergency Notes: ${profile.emergencyNotes}"
                 }
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
@@ -60,7 +70,13 @@ fun MedicalProfileScreen(
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
-                    Badge(containerColor = EmergencyRed) {
+                    Badge(
+                        containerColor = EmergencyRed,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Blood Group Badge"
+                            stateDescription = "Blood Group ${profile.bloodGroup}"
+                        }
+                    ) {
                         Text(
                             text = profile.bloodGroup,
                             fontSize = 16.sp,
@@ -72,21 +88,54 @@ fun MedicalProfileScreen(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = Color.DarkGray)
+                HorizontalDivider(color = Color.DarkGray)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text("ALLERGIES", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = HighContrastYellow)
-                Text(profile.allergies, fontSize = 16.sp, color = Color.White)
+                Text(
+                    text = "ALLERGIES",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HighContrastYellow,
+                    modifier = Modifier.semantics { contentDescription = "Allergies Section Header" }
+                )
+                Text(
+                    text = profile.allergies,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    modifier = Modifier.semantics { contentDescription = "Known Allergies: ${profile.allergies}" }
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text("CURRENT MEDICATIONS", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = HighContrastYellow)
-                Text(profile.medications, fontSize = 16.sp, color = Color.White)
+                Text(
+                    text = "CURRENT MEDICATIONS",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HighContrastYellow,
+                    modifier = Modifier.semantics { contentDescription = "Current Medications Section Header" }
+                )
+                Text(
+                    text = profile.medications,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    modifier = Modifier.semantics { contentDescription = "Current Medications: ${profile.medications}" }
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text("EMERGENCY INSTRUCTIONS", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = HighContrastYellow)
-                Text(profile.emergencyNotes, fontSize = 16.sp, color = Color.White)
+                Text(
+                    text = "EMERGENCY INSTRUCTIONS",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HighContrastYellow,
+                    modifier = Modifier.semantics { contentDescription = "Emergency Instructions Section Header" }
+                )
+                Text(
+                    text = profile.emergencyNotes,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    modifier = Modifier.semantics { contentDescription = "Emergency Instructions: ${profile.emergencyNotes}" }
+                )
             }
         }
     }

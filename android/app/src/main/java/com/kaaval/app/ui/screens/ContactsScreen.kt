@@ -15,8 +15,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,6 +27,10 @@ import com.kaaval.app.domain.model.EmergencyContact
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 
+/**
+ * Emergency Contacts Screen
+ * Hardened with Jetpack Compose Semantics for TalkBack accessibility.
+ */
 @Composable
 fun ContactsScreen(
     contacts: List<EmergencyContact>,
@@ -50,13 +57,19 @@ fun ContactsScreen(
                 text = "Emergency Contacts",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = HighContrastYellow
+                color = HighContrastYellow,
+                modifier = Modifier.semantics {
+                    contentDescription = "Emergency Contacts Header"
+                    stateDescription = "${contacts.size} contacts configured"
+                }
             )
 
             IconButton(
                 onClick = { showDialog = true },
                 modifier = Modifier.semantics {
-                    contentDescription = "Add new emergency contact"
+                    role = Role.Button
+                    contentDescription = "Add New Emergency Contact Button"
+                    stateDescription = "Double tap to open contact setup dialog"
                 }
             ) {
                 Icon(
@@ -78,7 +91,11 @@ fun ContactsScreen(
                 Text(
                     text = "No emergency contacts added.\nTap + to add your primary caregivers.",
                     color = Color.LightGray,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Empty Emergency Contacts List Notice"
+                        stateDescription = "No emergency contacts added yet. Tap plus button at top right to add your primary caregivers."
+                    }
                 )
             }
         } else {
@@ -94,7 +111,8 @@ fun ContactsScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .semantics {
-                                contentDescription = "${contact.name}, ${contact.relationship}, Phone ${contact.phoneNumber}${if (contact.isPrimary) ", Primary Emergency Call Contact" else ""}"
+                                contentDescription = "Emergency Contact Card: ${contact.name}"
+                                stateDescription = "Relationship: ${contact.relationship}. Phone: ${contact.phoneNumber}. ${if (contact.isPrimary) "Primary Emergency Call Contact" else "Secondary Contact"}"
                             }
                     ) {
                         Row(
@@ -106,12 +124,12 @@ fun ContactsScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.Person,
+                                    imageVector = if (contact.isPrimary) Icons.Default.Star else Icons.Default.Person,
                                     contentDescription = null,
                                     tint = HighContrastYellow,
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(32.dp)
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Column {
                                     Text(
                                         text = contact.name,
@@ -127,63 +145,112 @@ fun ContactsScreen(
                                 }
                             }
                             if (contact.isPrimary) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "Primary Contact",
-                                    tint = HighContrastYellow,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                Badge(
+                                    containerColor = HighContrastYellow,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Primary Call Contact Badge"
+                                        stateDescription = "Selected as primary emergency auto-dial contact"
+                                    }
+                                ) {
+                                    Text(
+                                        text = "PRIMARY",
+                                        color = HighContrastBlack,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Add Emergency Contact", color = HighContrastYellow) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = nameInput,
-                            onValueChange = { nameInput = it },
-                            label = { Text("Full Name") }
-                        )
-                        OutlinedTextField(
-                            value = phoneInput,
-                            onValueChange = { phoneInput = it },
-                            label = { Text("Phone Number") }
-                        )
-                        OutlinedTextField(
-                            value = relationInput,
-                            onValueChange = { relationInput = it },
-                            label = { Text("Relationship (e.g. Mother, Sister, Caregiver)") }
-                        )
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = {
+                Text(
+                    text = "Add Emergency Contact",
+                    color = HighContrastYellow,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Add Emergency Contact Dialog Title"
                     }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            if (nameInput.isNotBlank() && phoneInput.isNotBlank()) {
-                                onAddContact(nameInput, phoneInput, relationInput.ifBlank { "Caregiver" })
-                                nameInput = ""
-                                phoneInput = ""
-                                relationInput = ""
-                                showDialog = false
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = nameInput,
+                        onValueChange = { nameInput = it },
+                        label = { Text("Contact Name") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Contact Name Text Field"
+                                stateDescription = if (nameInput.isEmpty()) "Empty text field" else "Value: $nameInput"
                             }
-                        }
-                    ) {
-                        Text("SAVE CONTACT")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("CANCEL")
-                    }
+                    )
+                    OutlinedTextField(
+                        value = phoneInput,
+                        onValueChange = { phoneInput = it },
+                        label = { Text("Phone Number") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Phone Number Text Field"
+                                stateDescription = if (phoneInput.isEmpty()) "Empty text field" else "Value: $phoneInput"
+                            }
+                    )
+                    OutlinedTextField(
+                        value = relationInput,
+                        onValueChange = { relationInput = it },
+                        label = { Text("Relationship (e.g. Mother, Spouse)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Relationship Description Text Field"
+                                stateDescription = if (relationInput.isEmpty()) "Empty text field" else "Value: $relationInput"
+                            }
+                    )
                 }
-            )
-        }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (nameInput.isNotBlank() && phoneInput.isNotBlank()) {
+                            onAddContact(nameInput, phoneInput, relationInput.ifBlank { "Caregiver" })
+                            nameInput = ""
+                            phoneInput = ""
+                            relationInput = ""
+                            showDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = HighContrastYellow),
+                    modifier = Modifier.semantics {
+                        role = Role.Button
+                        contentDescription = "Save Emergency Contact Button"
+                        stateDescription = "Double tap to save contact and close dialog"
+                    }
+                ) {
+                    Text("SAVE CONTACT", color = HighContrastBlack, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDialog = false },
+                    modifier = Modifier.semantics {
+                        role = Role.Button
+                        contentDescription = "Cancel Dialog Button"
+                        stateDescription = "Double tap to dismiss dialog without saving"
+                    }
+                ) {
+                    Text("CANCEL", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF1E2433)
+        )
     }
 }

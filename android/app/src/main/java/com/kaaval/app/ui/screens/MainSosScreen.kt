@@ -18,8 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +33,10 @@ import com.kaaval.app.ui.theme.EmergencyRed
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 
+/**
+ * Main SOS Emergency Screen
+ * Fully accessibility-hardened with Jetpack Compose Semantics for Android TalkBack.
+ */
 @Composable
 fun MainSosScreen(
     emergencyState: EmergencyState,
@@ -52,6 +59,7 @@ fun MainSosScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.semantics {
                 contentDescription = "KAAVAL Emergency SOS System Header"
+                stateDescription = "Accessibility Emergency Ecosystem Active"
             }
         ) {
             Text(
@@ -85,7 +93,9 @@ fun MainSosScreen(
                             .background(EmergencyRed)
                             .border(6.dp, HighContrastYellow, CircleShape)
                             .semantics {
-                                contentDescription = "Emergency SOS Button. Double tap or press and hold to trigger emergency alert."
+                                role = Role.Button
+                                contentDescription = "Emergency SOS Button"
+                                stateDescription = "Ready. Double tap or press and hold to trigger emergency alert."
                             }
                             .pointerInput(Unit) {
                                 detectTapGestures(
@@ -123,7 +133,8 @@ fun MainSosScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.semantics {
-                            contentDescription = "Emergency activating in ${emergencyState.secondsRemaining} seconds. Tap cancel to stop."
+                            contentDescription = "Emergency Activation Countdown Timer"
+                            stateDescription = "Activating emergency alert in ${emergencyState.secondsRemaining} seconds. Double tap cancel emergency button below to stop."
                         }
                     ) {
                         Text(
@@ -153,7 +164,12 @@ fun MainSosScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = EmergencyRed),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp),
+                                .height(64.dp)
+                                .semantics {
+                                    role = Role.Button
+                                    contentDescription = "Cancel Emergency Alert Button"
+                                    stateDescription = "Double tap to stop countdown and cancel alert"
+                                },
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
@@ -171,7 +187,8 @@ fun MainSosScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.semantics {
-                            contentDescription = "Emergency Active. Live GPS Location is being shared with caregivers."
+                            contentDescription = "Live Caregiver Tracking Emergency Incident Status Card"
+                            stateDescription = "Emergency Active. Incident ID: ${emergencyState.incidentId}. SMS sent to emergency contacts and primary contact call initiated. Live GPS location is actively being shared with caregivers."
                         }
                     ) {
                         Card(
@@ -220,7 +237,12 @@ fun MainSosScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = ActiveGreen),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp),
+                                .height(64.dp)
+                                .semantics {
+                                    role = Role.Button
+                                    contentDescription = "Mark Self Safe and Resolve Emergency Button"
+                                    stateDescription = "Double tap to mark yourself safe and stop live location tracking"
+                                },
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
@@ -238,7 +260,11 @@ fun MainSosScreen(
                         text = "System Ready",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.semantics {
+                            contentDescription = "System Ready"
+                            stateDescription = "No active emergency. System monitoring."
+                        }
                     )
                 }
             }
@@ -248,7 +274,11 @@ fun MainSosScreen(
         Text(
             text = "Voice Commands & TalkBack Enabled",
             fontSize = 12.sp,
-            color = Color.Gray
+            color = Color.Gray,
+            modifier = Modifier.semantics {
+                contentDescription = "Accessibility Guidance Footer"
+                stateDescription = "Voice commands and TalkBack screen reader support active"
+            }
         )
     }
 }

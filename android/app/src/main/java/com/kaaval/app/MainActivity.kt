@@ -12,8 +12,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.kaaval.app.accessibility.HapticFeedbackManager
@@ -156,8 +159,13 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = selectedTab == 0,
                                 onClick = { selectedTab = 0 },
-                                icon = { Icon(Icons.Default.Home, contentDescription = "SOS") },
+                                icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                 label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
+                                modifier = Modifier.semantics {
+                                    role = Role.Tab
+                                    contentDescription = "Emergency SOS Screen Tab"
+                                    stateDescription = if (selectedTab == 0) "Selected. Tab 1 of 4" else "Not selected. Tab 1 of 4"
+                                },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = HighContrastBlack,
                                     indicatorColor = HighContrastYellow
@@ -166,8 +174,13 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = selectedTab == 1,
                                 onClick = { selectedTab = 1 },
-                                icon = { Icon(Icons.Default.People, contentDescription = "Contacts") },
+                                icon = { Icon(Icons.Default.People, contentDescription = null) },
                                 label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
+                                modifier = Modifier.semantics {
+                                    role = Role.Tab
+                                    contentDescription = "Emergency Contacts Screen Tab"
+                                    stateDescription = if (selectedTab == 1) "Selected. Tab 2 of 4" else "Not selected. Tab 2 of 4"
+                                },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = HighContrastBlack,
                                     indicatorColor = HighContrastYellow
@@ -176,8 +189,13 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = selectedTab == 2,
                                 onClick = { selectedTab = 2 },
-                                icon = { Icon(Icons.Default.AccountBox, contentDescription = "Medical Profile") },
+                                icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
                                 label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
+                                modifier = Modifier.semantics {
+                                    role = Role.Tab
+                                    contentDescription = "Medical Profile Screen Tab"
+                                    stateDescription = if (selectedTab == 2) "Selected. Tab 3 of 4" else "Not selected. Tab 3 of 4"
+                                },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = HighContrastBlack,
                                     indicatorColor = HighContrastYellow
@@ -186,8 +204,13 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = selectedTab == 3,
                                 onClick = { selectedTab = 3 },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = "Wearable") },
+                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                                 label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
+                                modifier = Modifier.semantics {
+                                    role = Role.Tab
+                                    contentDescription = "BLE Wearable Status Tab"
+                                    stateDescription = if (selectedTab == 3) "Selected. Tab 4 of 4" else "Not selected. Tab 4 of 4"
+                                },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = HighContrastBlack,
                                     indicatorColor = HighContrastYellow
