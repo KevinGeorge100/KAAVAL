@@ -271,7 +271,7 @@ class MainActivity : ComponentActivity() {
                         3 -> WearableStatusScreen(
                             device = sampleWearable,
                             onTestTactileVibration = {
-                                hapticFeedback.triggerSosActivePattern()
+                                hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_ACTIVATED)
                                 voiceFeedback.speak("Testing tactile wearable vibration feedback.")
                             },
                             modifier = Modifier.padding(innerPadding)
