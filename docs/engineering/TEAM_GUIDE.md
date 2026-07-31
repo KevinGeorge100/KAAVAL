@@ -20,6 +20,7 @@
 ---
 
 ## 2. ClickUp Industry Project Management Setup
+*Note: All task items and milestone tracking for M1 through M8 are managed in ClickUp.*
 
 ### 2.1 ClickUp Hierarchy Structure
 ```text
