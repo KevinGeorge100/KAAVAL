@@ -1,6 +1,8 @@
 # KAAVAL
 **Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals**
 
+Supported by the **IEEE Sensors Council Industry Mentoring Program**.
+
 ---
 
 ## 👁️ Vision
@@ -30,8 +32,36 @@ KAAVAL manages the **complete emergency response workflow** — from emergency a
 ### System Ecosystem:
 - ⌚ **BLE Wearable**: Single tactile trigger button with haptic feedback.
 - 📱 **User Mobile Application**: Voice-first, high-contrast, TalkBack accessible interface.
-- 👨‍👩‍👧 **Caregiver Application**: Emergency acknowledgement, live ETA tracking, & coordination.
-- ☁️ **Cloud Coordination Platform**: Incident state engine, push routing, and escalation logs.
+- 👨‍👩‍👧 **Caregiver Web Portal**: Emergency acknowledgement, live ETA tracking, & map pin coordination.
+- ☁️ **Cloud Coordination Platform**: Incident state engine, tokenized links, and push routing.
+
+---
+
+## 🌐 Live Web Ecosystem Deployment
+- 📱 **Live Interactive Web Simulator**: [https://kaaval-94c1d.web.app](https://kaaval-94c1d.web.app)
+- 📡 **Caregiver Live Location Portal**: [https://kaaval-94c1d.web.app/live](https://kaaval-94c1d.web.app/live)
+
+---
+
+## 📈 Completed Sprint Milestones
+
+### ✅ Sprint 1 — Project Foundation (`M1`)
+- Repository structure, Android Compose shell, Room DB local persistence, Firebase setup, and local web simulator.
+
+### ✅ Sprint 2 — Accessibility Infrastructure & Engines (`M2`)
+- ✅ **Task 2.1 — High-Contrast Accessibility Theme**: Material 3 Pure Black (`#000000`) & KAAVAL Yellow (`#FFD600`) design system, typography, and shapes ([THEME_ACCESSIBILITY.md](docs/architecture/THEME_ACCESSIBILITY.md)).
+- ✅ **Task 2.2 — TalkBack Accessibility**: Full Jetpack Compose Semantics, explicit `contentDescription`, `Role.Button`/`Role.Tab`, and dynamic `stateDescription` announcements ([TALKBACK_ACCESSIBILITY.md](docs/engineering/TALKBACK_ACCESSIBILITY.md)).
+- ✅ **Task 2.3 — Voice Feedback Engine**: `VoiceFeedbackManager` Singleton engine, TextToSpeech integration, queued & priority announcements, English baseline & Malayalam-ready architecture ([VOICE_FEEDBACK.md](docs/engineering/VOICE_FEEDBACK.md)).
+- ✅ **Task 2.4 — Haptic Feedback Engine**: `HapticFeedbackManager` Singleton engine, `VibratorManager` (API 31+) & `Vibrator` fallback (API 26+), 14 `HapticPattern` waveforms ([HAPTIC_FEEDBACK.md](docs/engineering/HAPTIC_FEEDBACK.md)).
+
+---
+
+## 📁 Repository Structure & Documentation
+- `android/` — Kotlin / Jetpack Compose Android Application (MVVM, Clean Architecture, Hilt, Room, Fused Location).
+- `functions/` — Firebase Cloud Functions for incident coordination & notifications.
+- `tracking-web/` — Web portal for live location tracking & caregiver dashboard.
+- `firebase/` — Firebase security rules, cloud architecture, & emulator config.
+- `docs/` — [Official Project & Engineering Documentation Hub](docs/README.md).
 
 ---
 
@@ -39,19 +69,3 @@ KAAVAL manages the **complete emergency response workflow** — from emergency a
 * **Software Lead & Builder**: Kevin George
 * **Hardware & Electrical Engineering Team**: Navami, Adwaid, Jewel *(Electrical & Electronics Engineering)*
 * **Program Mentorship**: Supported by the **IEEE Sensors Council Industry Mentoring Program** with OpenAI API & Codex support.
-
----
-
-## 📁 Repository Structure
-- `android/` — Kotlin / Jetpack Compose Android Application (MVVM, Clean Architecture, Hilt, Room, Fused Location).
-- `functions/` — Firebase Cloud Functions for incident coordination & notifications.
-- `tracking-web/` — Web portal for live location tracking & caregiver dashboard.
-- `firebase/` — Firebase security rules, cloud architecture, & emulator config.
-- `docs/` — [Approved Product & Engineering Documentation](docs/README.md).
-
----
-
-## 🚀 Project Status
-Currently building **Phase 1 MVP (Android Application Foundation, Voice/Haptic engine, SOS State Machine, Contacts & Live Tracking)**.
-
-
