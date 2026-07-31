@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
     private var countdownJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate()
+        super.onCreate(savedInstanceState)
 
         val db = KaavalDatabase.getDatabase(this)
         repository = KaavalRepository(db)
