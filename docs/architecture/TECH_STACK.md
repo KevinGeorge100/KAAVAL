@@ -1,8 +1,12 @@
-# KAAVAL MVP Technology Stack Recommendation v1.0
+# 🛠️ KAAVAL Technology Stack Specification
 
-**Status:** Proposed — requires approval before implementation  
-**Inputs:** KAAVAL MVP Scope v1.0 and KAAVAL MVP Architecture v1.0  
-**Target:** Android-only MVP, India, solo developer, accessibility-first emergency workflow
+---
+**Document Version:** 1.0  
+**Status:** Approved Technology Stack Baseline  
+**Target Platform:** Native Android (Kotlin & Jetpack Compose)  
+**Cloud Infrastructure:** Firebase (Firestore, Auth, Hosting, Functions, Cloud Messaging)  
+**AI Engine:** OpenAI API (Emergency Incident Summarization)  
+---
 
 ## Executive Recommendation
 

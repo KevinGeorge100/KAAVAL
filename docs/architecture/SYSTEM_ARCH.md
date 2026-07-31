@@ -1,9 +1,11 @@
-# KAAVAL MVP Architecture v1.0
+# 🏛️ KAAVAL System Architecture Specification
 
-**Status:** Proposed high-level architecture — pending approval  
-**Scope source:** KAAVAL MVP Scope v1.0  
-**Architecture style:** Android mobile client with a small, security-focused backend and public, time-limited tracking pages  
-**Technology status:** Technology-neutral. No framework, cloud vendor, database, map provider, SMS provider, or authentication provider is selected by this document.
+---
+**Document Version:** 1.0  
+**Status:** Approved System Architecture Baseline  
+**Scope Source:** [docs/product/SCOPE.md](../product/SCOPE.md)  
+**Architecture Style:** Clean Architecture (Android Mobile Client + Firebase Backend + Web Tracking Portal)  
+---
 
 ## 1. Architecture Goal
 

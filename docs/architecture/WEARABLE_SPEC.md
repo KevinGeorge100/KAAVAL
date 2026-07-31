@@ -1,10 +1,11 @@
-# KAAVAL BLE Wearable Hardware Specification v1.0
+# ⌚ KAAVAL BLE Wearable Hardware Specification
 
+---
+**Document Version:** 1.0  
 **Target Device:** KAAVAL Tactile Wearable Wristband / Pendant  
 **Primary User:** Visually Impaired Individuals  
-**Team Responsibility:** Navami, Adwaid, Jewel *(Electrical & Electronics Engineering Team)*  
-**Software Integration:** Kevin George *(Android BLE Manager & State Engine)*  
-
+**EEE Hardware Leads:** Navami, Adwaid, Jewel *(Electrical & Electronics Engineering)*  
+**Software Lead:** Kevin George *(Android BLE Manager & State Engine)*  
 ---
 
 ## 1. Overview & Objectives

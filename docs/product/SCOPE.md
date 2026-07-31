@@ -1,10 +1,12 @@
-# KAAVAL MVP Scope v1.0
+# 🎯 KAAVAL MVP Scope Baseline Specification
 
-**Status:** Scope baseline  
-**Product:** KAAVAL — Accessibility-First Emergency Response Platform  
-**Target release:** Android MVP  
-**Target market:** India  
-**Primary languages:** English and Malayalam
+---
+**Document Version:** 1.0  
+**Status:** Approved MVP Scope Baseline  
+**Target Release:** Android MVP  
+**Target Region:** India  
+**Primary Languages:** English (`en_US`), Malayalam (`ml_IN`)  
+---
 
 ## 1. Project Goal
 

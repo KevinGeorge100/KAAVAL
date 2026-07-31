@@ -1,9 +1,11 @@
-# KAAVAL Weekly Progress Plan v1.0
+# 🗺️ KAAVAL Engineering & Mentoring Progress Roadmap
 
-**Purpose:** A shareable weekly execution plan for project-guide reviews  
+---
+**Document Version:** 1.0  
+**Purpose:** Shareable weekly execution plan for IEEE Mentoring & Project Guide reviews  
 **Project:** KAAVAL — Accessibility-First Emergency Response Platform  
-**MVP target:** Android, India, English and Malayalam  
-**Estimated duration:** 12 weeks
+**Target Platform:** Android MVP (English & Malayalam)  
+---
 
 ## MVP Outcome
 
