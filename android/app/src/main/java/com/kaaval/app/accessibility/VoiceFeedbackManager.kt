@@ -116,8 +116,8 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         val text = when (announcement) {
             AnnouncementType.EMERGENCY_READY -> getMessage("KAAVAL Emergency System is ready.", "കാവൽ എമർജൻസി സിസ്റ്റം തയ്യാറാണ്.")
             AnnouncementType.SOS_BUTTON_HELD -> getMessage("SOS button held. Starting emergency countdown.", "എസ്.ഒ.എസ് ബട്ടൺ അമർത്തിപിടിച്ചിരിക്കുന്നു. എമർജൻസി കൗണ്ട്ഡൗൺ ആരംഭിക്കുന്നു.")
-            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Emergency countdown started. Activating in 5 seconds. Tap cancel to stop.", "എമർജൻസി കൗണ്ട്ഡൗൺ ആരംഭിച്ചു. 5 സെക്കൻഡിനുള്ളിൽ ആക്റ്റിവേറ്റാകും. റദ്ദാക്കാൻ കാൻസൽ ടാപ്പ് ചെയ്യുക.")
-            AnnouncementType.COUNTDOWN_CANCELLED -> getMessage("Emergency countdown cancelled.", "എമർജൻസി കൗണ്ട്ഡൗൺ റദ്ദാക്കി.")
+            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Activating in", "ആക്റ്റിവേറ്റ് ചെയ്യുന്നു")
+            AnnouncementType.COUNTDOWN_CANCELLED -> getMessage("SOS Cancelled.", "എസ്.ഒ.എസ് റദ്ദാക്കി.")
             AnnouncementType.EMERGENCY_ACTIVATED -> getMessage("Emergency activated. Sending emergency alerts and sharing live GPS location.", "എമർജൻസി ആക്റ്റിവേറ്റായി. സന്ദേശങ്ങളും തത്സമയ ജി.പി.എസ് ലൊക്കേഷനും അയക്കുന്നു.")
             AnnouncementType.ACQUIRING_LOCATION -> getMessage("Acquiring GPS location.", "ജി.പി.എസ് ലൊക്കേഷൻ കണ്ടെത്തുന്നു.")
             AnnouncementType.LOCATION_ACQUIRED -> getMessage("GPS location acquired.", "ജി.പി.എസ് ലൊക്കേഷൻ കണ്ടെത്തി.")

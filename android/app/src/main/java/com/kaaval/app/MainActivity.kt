@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.kaaval.app.accessibility.HapticFeedbackManager
+import com.kaaval.app.accessibility.VoiceCommandManager
 import com.kaaval.app.accessibility.VoiceFeedbackManager
 import com.kaaval.app.ai.OpenAiEmergencyAnalyzer
 import com.kaaval.app.data.KaavalDatabase
@@ -46,6 +47,7 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 import com.kaaval.app.ui.theme.KAAVALTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -56,8 +58,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var sosDispatcher: SosDispatcher
     private lateinit var repository: KaavalRepository
     private lateinit var openAiAnalyzer: OpenAiEmergencyAnalyzer
+    private lateinit var voiceCommandManager: VoiceCommandManager
 
     private var countdownJob: Job? = null
+    private val voiceTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -80,6 +84,12 @@ class MainActivity : ComponentActivity() {
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
 
+        voiceCommandManager = VoiceCommandManager(this) {
+            lifecycleScope.launch {
+                voiceTriggerFlow.emit(Unit)
+            }
+        }
+
         requestEmergencyPermissions()
 
         setContent {
@@ -89,6 +99,15 @@ class MainActivity : ComponentActivity() {
 
                 val contacts by repository.allContacts.collectAsState(initial = emptyList())
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
+
+                LaunchedEffect(Unit) {
+                    voiceTriggerFlow.collect {
+                        // Avoid triggering if already in countdown or active
+                        if (emergencyState is EmergencyState.Idle) {
+                            startCountdown()
+                        }
+                    }
+                }
 
                 val defaultProfile = remember {
                     MedicalProfile(
@@ -174,6 +193,14 @@ class MainActivity : ComponentActivity() {
                             trackingUrl = trackingUrl,
                             isPrimaryCalled = true
                         )
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    voiceTriggerFlow.collect {
+                        if (emergencyState is EmergencyState.Idle) {
+                            startCountdown()
+                        }
                     }
                 }
 
@@ -309,7 +336,8 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.SEND_SMS,
-            Manifest.permission.CALL_PHONE
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.RECORD_AUDIO
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -323,6 +351,18 @@ class MainActivity : ComponentActivity() {
         if (missingPermissions.isNotEmpty()) {
             requestPermissionLauncher.launch(missingPermissions.toTypedArray())
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            voiceCommandManager.startListening()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        voiceCommandManager.stopListening()
     }
 
     override fun onDestroy() {
