@@ -60,7 +60,7 @@ fun MainSosScreen(
         modifier = modifier
             .fillMaxSize()
             .background(HighContrastBlack)
-            .pointerInput(Unit) {
+            .pointerInput(emergencyState) {
                 val path = mutableListOf<Offset>()
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -72,7 +72,7 @@ fun MainSosScreen(
                         change.consume()
                     }
                     
-                    if (isStrictPShape(path)) {
+                    if (emergencyState is EmergencyState.Idle && isStrictPShape(path)) {
                         onTriggerSos()
                     }
                 }
