@@ -136,6 +136,7 @@ class MainActivity : ComponentActivity() {
                 var selectedTab by remember { mutableStateOf(0) }
                 var emergencyState by remember { mutableStateOf<EmergencyState>(EmergencyState.Idle) }
                 var isDiscreetMode by remember { mutableStateOf(false) }
+                var recoveryChecked by remember { mutableStateOf(false) }
 
                 val contacts by repository.allContacts.collectAsState(initial = emptyList())
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
@@ -165,7 +166,9 @@ class MainActivity : ComponentActivity() {
                 fun simulateCaregiverResponse(senderName: String = "Anjali (Sister)") {
                     val currentState = emergencyState
                     if (currentState is EmergencyState.Active) {
-                        emergencyState = currentState.copy(respondingCaregiver = senderName)
+                        val updatedState = currentState.copy(respondingCaregiver = senderName)
+                        emergencyState = updatedState
+                        lifecycleScope.launch { repository.saveEmergencyState(updatedState) }
                         hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
                         voiceFeedback.speakPriority("Caregiver $senderName is responding.")
                     }
@@ -257,7 +260,7 @@ class MainActivity : ComponentActivity() {
                         voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_STARTED)
                         hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LIVE_TRACKING_STARTED)
 
-                        emergencyState = EmergencyState.Active(
+                        val activeState = EmergencyState.Active(
                             incidentId = incidentId,
                             timestamp = System.currentTimeMillis(),
                             latitude = loc?.latitude,
@@ -265,7 +268,21 @@ class MainActivity : ComponentActivity() {
                             trackingUrl = trackingUrl,
                             isPrimaryCalled = true
                         )
+                        repository.saveEmergencyState(activeState)
+                        emergencyState = activeState
                     }
+                }
+
+                LaunchedEffect(recoveryChecked) {
+                    if (recoveryChecked) return@LaunchedEffect
+                    val persistedState = repository.getEmergencyState()
+                    if (persistedState != null && emergencyState is EmergencyState.Idle) {
+                        emergencyState = persistedState
+                        EmergencyForegroundService.startService(this@MainActivity)
+                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LIVE_TRACKING_STARTED)
+                        voiceFeedback.speakPriority("Recovered active emergency session after restart.")
+                    }
+                    recoveryChecked = true
                 }
 
                 LaunchedEffect(Unit) {
@@ -281,6 +298,7 @@ class MainActivity : ComponentActivity() {
                     EmergencyForegroundService.stopService(this@MainActivity)
                     audioWitness.stopRecording()
                     batteryGuardian.stopMonitoring()
+                    lifecycleScope.launch { repository.clearEmergencyState() }
                     emergencyState = EmergencyState.Idle
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_CANCELLED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
@@ -291,6 +309,7 @@ class MainActivity : ComponentActivity() {
                     EmergencyForegroundService.stopService(this@MainActivity)
                     audioWitness.stopRecording()
                     batteryGuardian.stopMonitoring()
+                    lifecycleScope.launch { repository.clearEmergencyState() }
                     emergencyState = EmergencyState.Idle
                     hapticFeedback.cancel() // Stop the heartbeat
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
@@ -388,6 +407,7 @@ class MainActivity : ComponentActivity() {
                             onCancelSos = { cancelSos() },
                             onResolveSos = { resolveSos() },
                             onSimulateCaregiverResponse = { simulateCaregiverResponse() },
+                            onSimulateCrash = { throw RuntimeException("Simulated crash for emergency recovery testing") },
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(

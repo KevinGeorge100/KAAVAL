@@ -46,6 +46,7 @@ fun MainSosScreen(
     onCancelSos: () -> Unit,
     onResolveSos: () -> Unit,
     onSimulateCaregiverResponse: () -> Unit = {},
+    onSimulateCrash: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -279,6 +280,9 @@ fun MainSosScreen(
                                     TextButton(onClick = onSimulateCaregiverResponse) {
                                         Text("DEBUG: Simulate Caregiver Response", color = Color.Gray, fontSize = 10.sp)
                                     }
+                                }
+                                TextButton(onClick = onSimulateCrash) {
+                                    Text("DEBUG: Simulate Crash", color = Color.Gray, fontSize = 10.sp)
                                 }
                             }
                         }
