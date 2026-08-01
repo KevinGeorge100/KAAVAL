@@ -17,8 +17,8 @@ import java.net.URLEncoder
 class SosDispatcher(private val context: Context) {
 
     // KAAVAL Telegram Bot Configuration (Free & Unlimited)
-    private val BOT_TOKEN = "8934083898:AAG3N_90NM0okF8oieVf5cKLTPGJR9YVRf4"
-    private val CHAT_ID = "-5337579781"
+    private val BOT_TOKEN = "PASTE_TELEGRAM_BOT_TOKEN"
+    private val CHAT_ID = "PASTE_TELEGRAM_CHAT_ID"
 
     suspend fun dispatchEmergencyAlert(
         contacts: List<EmergencyContact>,
