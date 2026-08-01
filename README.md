@@ -1,4 +1,6 @@
 # KAAVAL
+![KAAVAL Emergency Response Ecosystem](banner.png)
+
 **Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals**
 
 Supported by the **IEEE Sensors Council Industry Mentoring Program**.
