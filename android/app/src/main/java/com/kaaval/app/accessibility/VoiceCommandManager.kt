@@ -95,8 +95,7 @@ class VoiceCommandManager(
             "help", "sos", "emergency", "police", "ambulance",
             "sahayam", "സഹായം", // Malayalam
             "bachao", "save me", // Indian Common
-            "amma", "appa", // Phonetic cries for help in Indian context
-            "sir", "madam" // Often used when addressing bystanders for help
+            "amma", "appa" // Phonetic cries for help in Indian context
         )
         
         return triggers.any { lowerText.contains(it) }
