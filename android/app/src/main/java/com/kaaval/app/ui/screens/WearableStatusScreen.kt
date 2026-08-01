@@ -111,25 +111,37 @@ fun WearableStatusScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                LinearProgressIndicator(
-                    progress = { device.batteryPercentage / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(12.dp)
-                        .semantics {
-                            contentDescription = "Wearable Battery Level Indicator Bar"
-                            stateDescription = "${device.batteryPercentage} percent remaining"
-                        },
-                    color = HighContrastYellow,
-                    trackColor = Color.DarkGray,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Battery Level: ${device.batteryPercentage}%",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                if (device.isConnected) {
+                    LinearProgressIndicator(
+                        progress = { device.batteryPercentage / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(12.dp)
+                            .semantics {
+                                contentDescription = "Wearable Battery Level Indicator Bar"
+                                stateDescription = "${device.batteryPercentage} percent remaining"
+                            },
+                        color = HighContrastYellow,
+                        trackColor = Color.DarkGray,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Battery Level: ${device.batteryPercentage}%",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Text(
+                        text = "Battery Level: --",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { 
+                            stateDescription = "Battery level unavailable. Device is disconnected." 
+                        }
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

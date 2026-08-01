@@ -8,7 +8,6 @@ import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -24,6 +23,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.kaaval.app.accessibility.HapticFeedbackManager
 import com.kaaval.app.accessibility.VoiceCommandManager
@@ -35,12 +35,12 @@ import com.kaaval.app.domain.model.EmergencyContact
 import com.kaaval.app.domain.model.EmergencyIncident
 import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
-import com.kaaval.app.domain.model.WearableDevice
 import com.kaaval.app.service.AudioWitnessManager
 import com.kaaval.app.service.BatteryGuardianManager
 import com.kaaval.app.service.EmergencyForegroundService
 import com.kaaval.app.service.KaavalBleManager
 import com.kaaval.app.service.KaavalLocationManager
+import com.kaaval.app.service.ShakeDetector
 import com.kaaval.app.service.SmsReplyReceiver
 import com.kaaval.app.sos.SosDispatcher
 import com.kaaval.app.ui.screens.ContactsScreen
@@ -50,6 +50,8 @@ import com.kaaval.app.ui.screens.WearableStatusScreen
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 import com.kaaval.app.ui.theme.KAAVALTheme
+import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -67,6 +69,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var bleManager: KaavalBleManager
     private lateinit var audioWitness: AudioWitnessManager
     private lateinit var batteryGuardian: BatteryGuardianManager
+    private lateinit var shakeDetector: ShakeDetector
     private var smsReceiver: SmsReplyReceiver? = null
 
     private var countdownJob: Job? = null
@@ -86,7 +89,8 @@ class MainActivity : ComponentActivity() {
             // Restart voice listener if microphone was just granted
             if (permissions[Manifest.permission.RECORD_AUDIO] == true) {
                 voiceCommandManager.startListening()
-                voiceFeedback.speak("Voice commands active.")
+                val activeMsg = if (Locale.getDefault().language == "ml") "വോയ്‌സ് കമാൻഡുകൾ സജീവമാണ്." else "Voice commands active."
+                voiceFeedback.speak(activeMsg)
             }
         }
     }
@@ -104,6 +108,13 @@ class MainActivity : ComponentActivity() {
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
         audioWitness = AudioWitnessManager(this)
         
+        shakeDetector = ShakeDetector(this) {
+            lifecycleScope.launch {
+                voiceTriggerFlow.emit(Unit)
+                voiceFeedback.speakPriority("Shake trigger detected.")
+            }
+        }
+
         batteryGuardian = BatteryGuardianManager(this) { level ->
             // Final SOS call when battery is critical
             voiceFeedback.speakPriority("Warning: Critical battery level $level percent. Sending final emergency coordinates.")
@@ -141,6 +152,18 @@ class MainActivity : ComponentActivity() {
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
                 val wearableState by bleManager.wearableState.collectAsState()
 
+                // SPRINT 3: State Recovery Logic
+                LaunchedEffect(Unit) {
+                    repository.currentEmergencyState.collect { recoveredState ->
+                        if (recoveredState != null && emergencyState is EmergencyState.Idle) {
+                            emergencyState = recoveredState
+                            voiceFeedback.speakPriority("Emergency state recovered. Resuming coordination.")
+                            // Ensure service is running
+                            EmergencyForegroundService.startService(this@MainActivity)
+                        }
+                    }
+                }
+
                 val defaultProfile = remember {
                     MedicalProfile(
                         fullName = "Visually Impaired User",
@@ -155,6 +178,11 @@ class MainActivity : ComponentActivity() {
                 val currentProfile = medicalProfileState ?: defaultProfile
                 // val sampleWearable = remember { WearableDevice() }
 
+                // Sync TTS Language with User Preference
+                LaunchedEffect(currentProfile.preferredLanguage) {
+                    voiceFeedback.setLanguage(currentProfile.preferredLanguage)
+                }
+
                 LaunchedEffect(wearableState.isConnected) {
                     if (wearableState.isConnected) {
                         voiceFeedback.speak("KAAVAL wearable connected.")
@@ -165,7 +193,12 @@ class MainActivity : ComponentActivity() {
                 fun simulateCaregiverResponse(senderName: String = "Anjali (Sister)") {
                     val currentState = emergencyState
                     if (currentState is EmergencyState.Active) {
-                        emergencyState = currentState.copy(respondingCaregiver = senderName)
+                        val updatedState = currentState.copy(respondingCaregiver = senderName)
+                        emergencyState = updatedState
+                        
+                        // SPRINT 3: Persist updated caregiver state
+                        lifecycleScope.launch { repository.saveEmergencyState(updatedState) }
+
                         hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
                         voiceFeedback.speakPriority("Caregiver $senderName is responding.")
                     }
@@ -188,16 +221,18 @@ class MainActivity : ComponentActivity() {
                         return
                     }
 
+                    // CRITICAL FIX #6: Immediate feedback on tap
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_HOLD)
-                    if (!isDiscreetMode) {
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SOS_BUTTON_HELD, isPriority = true)
-                    }
+                    voiceFeedback.speak("Initiating.")
+
+                    // CRITICAL FIX #1: Stop Voice Listener to release Microphone for recording
+                    voiceCommandManager.stopListening()
 
                     countdownJob?.cancel()
                     countdownJob = lifecycleScope.launch {
                         if (!isDiscreetMode) {
                             voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COUNTDOWN_STARTED, isPriority = true)
-                            delay(1500) // CRITICAL: Wait for "Activating in" intro to finish
+                            delay(1500.milliseconds) // Fixed: Using Duration
                         }
                         
                         for (i in 5 downTo 1) {
@@ -208,7 +243,7 @@ class MainActivity : ComponentActivity() {
                                 voiceFeedback.speakPriority(i.toString()) // Priority for instant sync
                                 hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
                             }
-                            delay(1000)
+                            delay(1000.milliseconds) // Fixed: Using Duration
                         }
 
                         // Activate SOS
@@ -234,7 +269,8 @@ class MainActivity : ComponentActivity() {
                             contacts = contacts,
                             latitude = loc?.latitude,
                             longitude = loc?.longitude,
-                            trackingUrl = trackingUrl
+                            trackingUrl = trackingUrl,
+                            medicalNotes = currentProfile.emergencyNotes
                         )
                         hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SMS_SENT)
 
@@ -265,6 +301,11 @@ class MainActivity : ComponentActivity() {
                             trackingUrl = trackingUrl,
                             isPrimaryCalled = true
                         )
+
+                        // SPRINT 3: Persist active state
+                        (emergencyState as? EmergencyState.Active)?.let { activeState ->
+                            repository.saveEmergencyState(activeState)
+                        }
                     }
                 }
 
@@ -282,20 +323,37 @@ class MainActivity : ComponentActivity() {
                     audioWitness.stopRecording()
                     batteryGuardian.stopMonitoring()
                     emergencyState = EmergencyState.Idle
+                    
+                    // SPRINT 3: Clear persisted state
+                    lifecycleScope.launch { repository.clearEmergencyState() }
+
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_CANCELLED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
                 }
 
                 fun resolveSos() {
+                    // CRITICAL FIX #4: Send "Safe" SMS to caregivers
+                    val safeMessage = "🚨 KAAVAL UPDATE: I am safe now. The emergency has been resolved."
+                    sosDispatcher.dispatchSafeStatus(contacts, safeMessage)
+
                     countdownJob?.cancel()
                     EmergencyForegroundService.stopService(this@MainActivity)
                     audioWitness.stopRecording()
                     batteryGuardian.stopMonitoring()
                     emergencyState = EmergencyState.Idle
+
+                    // SPRINT 3: Clear persisted state
+                    lifecycleScope.launch { repository.clearEmergencyState() }
+
                     hapticFeedback.cancel() // Stop the heartbeat
                     hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_ENDED)
                     voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COMPLETED, isPriority = true)
+                    
+                    // Restart voice listener for future use
+                    if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        voiceCommandManager.startListening()
+                    }
                 }
 
                 Scaffold(
@@ -305,7 +363,7 @@ class MainActivity : ComponentActivity() {
                                 selected = selectedTab == 0,
                                 onClick = { 
                                     selectedTab = 0 
-                                    voiceFeedback.speak("Emergency SOS Screen")
+                                    voiceFeedback.speakPriority("Emergency SOS Screen. The giant activation button is in the center. Hold it to start an alert.")
                                 },
                                 icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                 label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
@@ -323,7 +381,9 @@ class MainActivity : ComponentActivity() {
                                 selected = selectedTab == 1,
                                 onClick = { 
                                     selectedTab = 1 
-                                    voiceFeedback.speak("Emergency Contacts Screen")
+                                    val count = contacts.size
+                                    val summary = if (count == 0) "No contacts added yet." else "You have $count emergency contacts. Swipe to hear their names."
+                                    voiceFeedback.speakPriority("Emergency Contacts Screen. $summary")
                                 },
                                 icon = { Icon(Icons.Default.People, contentDescription = null) },
                                 label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
@@ -341,7 +401,7 @@ class MainActivity : ComponentActivity() {
                                 selected = selectedTab == 2,
                                 onClick = { 
                                     selectedTab = 2 
-                                    voiceFeedback.speak("Medical Profile Screen")
+                                    voiceFeedback.speakPriority("Medical Profile Screen. Your clinical details are here. Use the button at the top right to read them aloud for a first responder.")
                                 },
                                 icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
                                 label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
@@ -359,7 +419,8 @@ class MainActivity : ComponentActivity() {
                                 selected = selectedTab == 3,
                                 onClick = { 
                                     selectedTab = 3 
-                                    voiceFeedback.speak("Wearable Status Screen")
+                                    val status = if (wearableState.isConnected) "Your wearable is connected and ready." else "Your wearable is not connected."
+                                    voiceFeedback.speakPriority("Wearable Status Screen. $status")
                                 },
                                 icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                                 label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
@@ -387,7 +448,6 @@ class MainActivity : ComponentActivity() {
                             onTriggerSos = { startCountdown() },
                             onCancelSos = { cancelSos() },
                             onResolveSos = { resolveSos() },
-                            onSimulateCaregiverResponse = { simulateCaregiverResponse() },
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(
@@ -429,6 +489,15 @@ class MainActivity : ComponentActivity() {
                                         "Medications: ${currentProfile.medications}. " +
                                         "Instructions: ${currentProfile.emergencyNotes}"
                                 voiceFeedback.speak(text)
+                            },
+                            onLanguageChange = { lang ->
+                                lifecycleScope.launch {
+                                    val updatedProfile = currentProfile.copy(preferredLanguage = lang)
+                                    repository.saveMedicalProfile(updatedProfile)
+                                    // Immediate voice feedback in the new language
+                                    val msg = if (lang == "ml") "മലയാളം സജ്ജമാക്കി." else "English language selected."
+                                    voiceFeedback.speakPriority(msg)
+                                }
                             },
                             modifier = Modifier.padding(innerPadding)
                         )
@@ -487,15 +556,17 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        shakeDetector.start()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             voiceCommandManager.startListening()
-            // Optional: voiceFeedback.speak("Voice commands active.") 
-            // Better to keep it quiet on every start, but good for testing.
+            // val activeMsg = if (Locale.getDefault().language == "ml") "വോയ്‌സ് കമാൻഡുകൾ സജീവമാണ്." else "Voice commands active."
+            // voiceFeedback.speak(activeMsg) 
         }
     }
 
     override fun onStop() {
         super.onStop()
+        shakeDetector.stop()
         voiceCommandManager.stopListening()
     }
 
