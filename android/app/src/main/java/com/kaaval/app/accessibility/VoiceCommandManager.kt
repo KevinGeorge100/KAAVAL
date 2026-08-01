@@ -7,7 +7,6 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import java.util.Locale
 
 /**
  * KAAVAL Voice Command Manager
@@ -22,15 +21,17 @@ class VoiceCommandManager(
     private var speechRecognizer: SpeechRecognizer? = null
     private val recognizerIntent: Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN") // Biased for Indian English
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10)
+        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 20) // More results for phonetic variation
         // Helps in noisy environments by not waiting for long silence
-        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000)
-        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500)
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 800)
+        putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 400)
     }
 
     private var isListening = false
+    private var lastShoutTime = 0L
+    private val SHOUT_THRESHOLD = 8.0f // Sensitivity: 1.0 (very sensitive) to 15.0 (loud scream)
 
     fun startListening() {
         if (isListening) return
@@ -61,8 +62,7 @@ class VoiceCommandManager(
     override fun onResults(results: Bundle?) {
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         matches?.forEach { text ->
-            val lowerText = text.lowercase()
-            if (lowerText.contains("help") || lowerText.contains("sos") || lowerText.contains("emergency")) {
+            if (isEmergencyTrigger(text)) {
                 Log.i("VoiceCommandManager", "Voice Trigger Detected: $text")
                 onTriggerReceived()
                 return
@@ -77,19 +77,28 @@ class VoiceCommandManager(
     override fun onPartialResults(partialResults: Bundle?) {
         val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         matches?.forEach { text ->
-            val lowerText = text.lowercase()
-            // Check for English and Malayalam triggers
-            if (lowerText.contains("help") || 
-                lowerText.contains("sos") || 
-                lowerText.contains("emergency") || 
-                lowerText.contains("സഹായം") || 
-                lowerText.contains("sahayam")) {
-                
+            if (isEmergencyTrigger(text)) {
                 Log.i("VoiceCommandManager", "CRITICAL: Partial Voice Trigger Detected: $text")
                 onTriggerReceived()
                 return
             }
         }
+    }
+
+    /**
+     * Comprehensive Emergency Trigger Logic
+     * Matches Indian English slang, phonetic variations, and Malayalam keywords.
+     */
+    private fun isEmergencyTrigger(text: String): Boolean {
+        val lowerText = text.lowercase()
+        val triggers = listOf(
+            "help", "sos", "emergency", "police", "ambulance",
+            "sahayam", "സഹായം", // Malayalam
+            "bachao", "save me", // Indian Common
+            "amma", "appa" // Phonetic cries for help in Indian context
+        )
+        
+        return triggers.any { lowerText.contains(it) }
     }
 
     override fun onError(error: Int) {
@@ -120,7 +129,19 @@ class VoiceCommandManager(
     // Unused listener methods
     override fun onReadyForSpeech(params: Bundle?) {}
     override fun onBeginningOfSpeech() {}
-    override fun onRmsChanged(rmsdB: Float) {}
+    override fun onRmsChanged(rmsdB: Float) {
+        // Real-time loudness monitoring (The "Acoustic Foundation")
+        // This detects shouting even if Google doesn't "understand" the word
+        if (rmsdB > SHOUT_THRESHOLD) {
+            val currentTime = System.currentTimeMillis()
+            // Require sustained loudness or repeated shouts to avoid false triggers
+            if (currentTime - lastShoutTime < 2000) {
+                Log.w("VoiceCommandManager", "Acoustic Panic Detected (Loudness: $rmsdB)")
+                onTriggerReceived()
+            }
+            lastShoutTime = currentTime
+        }
+    }
     override fun onBufferReceived(buffer: ByteArray?) {}
     override fun onEndOfSpeech() {}
     override fun onEvent(eventType: Int, params: Bundle?) {}

@@ -30,6 +30,7 @@ import com.kaaval.app.ui.theme.HighContrastYellow
 fun MedicalProfileScreen(
     profile: MedicalProfile,
     onReadProfileAloud: () -> Unit,
+    onLanguageChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -159,6 +160,46 @@ fun MedicalProfileScreen(
                     color = Color.White,
                     modifier = Modifier.semantics { contentDescription = "Emergency Instructions: ${profile.emergencyNotes}" }
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(color = Color.DarkGray)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Language Preference Section
+                Text(
+                    text = "LANGUAGE PREFERENCE",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HighContrastYellow
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    FilterChip(
+                        selected = profile.preferredLanguage == "en",
+                        onClick = { onLanguageChange("en") },
+                        label = { Text("English (India)") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = HighContrastYellow,
+                            selectedLabelColor = HighContrastBlack,
+                            containerColor = Color.DarkGray,
+                            labelColor = Color.White
+                        )
+                    )
+                    FilterChip(
+                        selected = profile.preferredLanguage == "ml",
+                        onClick = { onLanguageChange("ml") },
+                        label = { Text("Malayalam (മലയാളം)") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = HighContrastYellow,
+                            selectedLabelColor = HighContrastBlack,
+                            containerColor = Color.DarkGray,
+                            labelColor = Color.White
+                        )
+                    )
+                }
             }
         }
     }

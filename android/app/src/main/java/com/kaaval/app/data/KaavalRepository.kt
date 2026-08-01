@@ -1,10 +1,12 @@
 package com.kaaval.app.data
 
 import com.kaaval.app.data.entity.ContactEntity
+import com.kaaval.app.data.entity.EmergencyStateEntity
 import com.kaaval.app.data.entity.IncidentEntity
 import com.kaaval.app.data.entity.MedicalProfileEntity
 import com.kaaval.app.domain.model.EmergencyContact
 import com.kaaval.app.domain.model.EmergencyIncident
+import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -15,12 +17,20 @@ class KaavalRepository(private val db: KaavalDatabase) {
         list.map { it.toDomainModel() }
     }
 
-    val allIncidents: Flow<List<EmergencyIncident>> = db.incidentDao().getAllIncidents().map { list ->
-        list.map { it.toDomainModel() }
-    }
-
     val medicalProfile: Flow<MedicalProfile?> = db.medicalProfileDao().getMedicalProfile().map {
         it?.toDomainModel()
+    }
+
+    val currentEmergencyState: Flow<EmergencyState.Active?> = db.emergencyStateDao().getCurrentState().map {
+        it?.toDomainModel()
+    }
+
+    suspend fun saveEmergencyState(state: EmergencyState.Active) {
+        db.emergencyStateDao().saveState(EmergencyStateEntity.fromDomainModel(state))
+    }
+
+    suspend fun clearEmergencyState() {
+        db.emergencyStateDao().clearState()
     }
 
     suspend fun insertContact(contact: EmergencyContact) {

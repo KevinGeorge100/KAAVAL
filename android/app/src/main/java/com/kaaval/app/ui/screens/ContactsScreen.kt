@@ -40,6 +40,7 @@ fun ContactsScreen(
     modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    var contactToDelete by remember { mutableStateOf<EmergencyContact?>(null) }
     var nameInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
     var relationInput by remember { mutableStateOf("") }
@@ -181,11 +182,11 @@ fun ContactsScreen(
                                 }
                                 
                                 TextButton(
-                                    onClick = { onDeleteContact(contact) },
+                                    onClick = { contactToDelete = contact },
                                     modifier = Modifier.semantics {
                                         role = Role.Button
                                         contentDescription = "Delete ${contact.name} from Emergency Contacts"
-                                        stateDescription = "Double tap to remove this person from your emergency network"
+                                        stateDescription = "Double tap to open deletion confirmation"
                                     }
                                 ) {
                                     Text("REMOVE", color = Color(0xFFFF4444), fontWeight = FontWeight.Bold)
@@ -196,6 +197,32 @@ fun ContactsScreen(
                 }
             }
         }
+    }
+
+    // CRITICAL FIX #7: Confirmation for deleting contacts
+    if (contactToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { contactToDelete = null },
+            title = { Text("Remove Contact?", fontWeight = FontWeight.Bold, color = HighContrastYellow) },
+            text = { Text("Are you sure you want to remove ${contactToDelete?.name} from your emergency network?", color = Color.White) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        contactToDelete?.let { onDeleteContact(it) }
+                        contactToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4444))
+                ) {
+                    Text("YES, REMOVE", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { contactToDelete = null }) {
+                    Text("CANCEL", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF1E2433)
+        )
     }
 
     if (showDialog) {
