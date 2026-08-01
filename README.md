@@ -10,32 +10,41 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 ## 👁️ Vision
 > **Our goal is not to build another emergency app.**
 > 
-> Our goal is to build an **accessibility-first emergency response ecosystem** that enables visually impaired individuals to request help instantly and ensures that caregivers coordinate an effective response until the user is safe.
+> We are building an **accessibility-first emergency response ecosystem** that enables visually impaired individuals to request help instantly and ensures that caregivers coordinate an effective response until the user is safe.
 
 ---
 
 ## 🚨 Problem Statement
-Visually impaired individuals face three critical challenges during emergencies because traditional apps assume users can quickly locate, unlock, and navigate a smartphone screen:
+Visually impaired individuals face three critical challenges during emergencies because existing systems assume users can quickly locate, unlock, and operate a smartphone:
 
-1. **Emergency Activation**: A visually impaired person may not be able to locate or operate a smartphone during high-stress situations.
-2. **Response Assurance**: After triggering an SOS, the user has no feedback or confidence that someone has seen the alert and is responding.
-3. **Caregiver Coordination**: Multiple family members receive the alert, but nobody knows who is actively responding, causing confusion and delayed assistance.
+1.  **Emergency Activation**: Locating or operating a digital screen during a high-stress crisis is nearly impossible without sight.
+2.  **Response Assurance**: After triggering an SOS, users often have zero feedback on whether help is actually coming, leading to extreme anxiety.
+3.  **Caregiver Coordination**: Multiple family members may receive alerts simultaneously, but without coordination, response is often delayed or redundant.
 
 ---
 
-## 🛡️ Our Solution & Differentiator
-KAAVAL manages the **complete emergency response workflow** — from emergency activation to caregiver acknowledgement, live tracking, and incident closure.
+## 🛡️ Our Solution: The SAHAAYA Ecosystem
+KAAVAL (Sahaaya) manages the **complete emergency response workflow** — from instant activation to caregiver acknowledgement and incident closure.
 
-* *Android Emergency SOS sends an emergency alert.*
-* **KAAVAL coordinates the entire emergency response.**
+> **The Differentiator**: While standard systems send a message, **KAAVAL coordinates the response.**
 
-***This is our biggest differentiator.***
+### Ecosystem Components:
+- ⌚ **Tactile Wearable**: A Bluetooth-enabled locket with a dedicated SOS button and haptic feedback.
+- 📱 **User Application**: A voice-first, high-contrast Android app optimized for TalkBack and gesture control.
+- 👨‍👩‍👧 **Caregiver Network**: A coordination platform for family, NGOs, and mentors to acknowledge alerts and track live ETA.
+- ☁️ **Cloud Coordination**: A real-time engine managing incident state and caregiver routing.
 
-### System Ecosystem:
-- ⌚ **BLE Wearable**: Single tactile trigger button with haptic feedback.
-- 📱 **User Mobile Application**: Voice-first, high-contrast, TalkBack accessible interface.
-- 👨‍👩‍👧 **Caregiver Web Portal**: Emergency acknowledgement, live ETA tracking, & map pin coordination.
-- ☁️ **Cloud Coordination Platform**: Incident state engine, tokenized links, and push routing.
+---
+
+## 👥 Target Users
+
+### Primary Users
+*   **Visually Impaired Individuals**: Students and adults who require a reliable, non-visual way to call for help.
+
+### Secondary Users (Responders)
+*   **Family & Caregivers**: Immediate emergency contacts.
+*   **Educational Institutions**: Schools and NGOs for the visually impaired.
+*   **Security Teams**: Campus security or local first responders.
 
 ---
 
