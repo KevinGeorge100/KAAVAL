@@ -11,16 +11,21 @@ import java.io.File
  * Automatically records a short audio snippet during an emergency.
  * Provides "ears on the ground" for caregivers.
  */
-class AudioWitnessManager(private val context: Context) {
+class AudioWitnessManager(
+    private val context: Context,
+    private val onRecordingFinished: (File) -> Unit = {}
+) {
 
     private var mediaRecorder: MediaRecorder? = null
     private var isRecording = false
+    private var currentFile: File? = null
 
     fun startRecording(incidentId: String) {
         if (isRecording) return
 
         try {
             val file = File(context.cacheDir, "witness_$incidentId.m4a")
+            currentFile = file
             
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MediaRecorder(context)
@@ -60,6 +65,12 @@ class AudioWitnessManager(private val context: Context) {
             mediaRecorder = null
             isRecording = false
             Log.i("AudioWitness", "Emergency audio recording stopped and saved.")
+            
+            currentFile?.let { 
+                if (it.exists()) {
+                    onRecordingFinished(it) 
+                }
+            }
         } catch (e: Exception) {
             Log.e("AudioWitness", "Error stopping recorder", e)
         }

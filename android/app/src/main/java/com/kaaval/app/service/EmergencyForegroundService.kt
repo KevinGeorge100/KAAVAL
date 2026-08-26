@@ -13,15 +13,36 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.kaaval.app.MainActivity
 import com.kaaval.app.R
+import com.kaaval.app.data.KaavalDatabase
+import com.kaaval.app.data.KaavalRepository
+import com.kaaval.app.data.repository.FirebaseTrackingRepository
+import com.kaaval.app.domain.repository.LocationTrackingRepository
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 
+/**
+ * KAAVAL Emergency Foreground Service
+ * The active orchestrator for continuous tracking and session life-support.
+ * Owns the Android runtime location loop.
+ */
 class EmergencyForegroundService : Service() {
+
+    private var currentIncidentId: String? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    private lateinit var locationManager: KaavalLocationManager
+    private lateinit var repository: KaavalRepository
+    private lateinit var trackingRepository: LocationTrackingRepository
 
     companion object {
         const val CHANNEL_ID = "KAAVAL_EMERGENCY_CHANNEL"
         const val NOTIFICATION_ID = 9999
+        const val EXTRA_INCIDENT_ID = "EXTRA_INCIDENT_ID"
 
-        fun startService(context: Context) {
-            val intent = Intent(context, EmergencyForegroundService::class.java)
+        fun startService(context: Context, incidentId: String) {
+            val intent = Intent(context, EmergencyForegroundService::class.java).apply {
+                putExtra(EXTRA_INCIDENT_ID, incidentId)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
@@ -37,10 +58,28 @@ class EmergencyForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        locationManager = KaavalLocationManager(this)
+        repository = KaavalRepository(KaavalDatabase.getDatabase(this))
+        trackingRepository = FirebaseTrackingRepository()
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val incidentId = intent?.getStringExtra(EXTRA_INCIDENT_ID)
+        
+        if (incidentId != null) {
+            if (incidentId != currentIncidentId) {
+                currentIncidentId = incidentId
+                android.util.Log.i("EmergencyService", "SERVICE_STARTED incidentId=$incidentId")
+                serviceScope.launch {
+                    trackingRepository.createTrackingSession(incidentId)
+                }
+                startContinuousTracking(incidentId)
+            } else {
+                android.util.Log.w("EmergencyService", "Duplicate service start for same session ignored.")
+            }
+        }
+
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
@@ -48,6 +87,36 @@ class EmergencyForegroundService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
         return START_STICKY
+    }
+
+    private fun startContinuousTracking(incidentId: String) {
+        // Start the Fused Location update loop
+        locationManager.startLocationUpdates { locationData ->
+            serviceScope.launch {
+                val session = repository.getActiveSession().first()
+                if (session != null && session.incidentId == incidentId) {
+                    val updatedSession = session.copy(lastKnownLocation = locationData)
+                    repository.updateSession(updatedSession)
+                    trackingRepository.publishLocation(incidentId, locationData)
+                    android.util.Log.d("EmergencyService", "LOCATION_UPDATE_PERSISTED accuracy=${locationData.accuracy}")
+                } else {
+                    android.util.Log.e("EmergencyService", "Update failed: No matching active session found.")
+                    stopSelf()
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        locationManager.stopLocationUpdates()
+        currentIncidentId?.let {
+            serviceScope.launch {
+                trackingRepository.completeTrackingSession(it)
+            }
+        }
+        serviceScope.cancel()
+        android.util.Log.i("EmergencyService", "SERVICE_STOPPED incidentId=$currentIncidentId")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -60,7 +129,7 @@ class EmergencyForegroundService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("KAAVAL EMERGENCY ACTIVE")
-            .setContentText("Sharing live GPS location with emergency contacts...")
+            .setContentText("Continuous tracking and caregiver alerting active.")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)

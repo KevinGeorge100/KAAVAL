@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /incidents/{incidentId} {
+      // Secure tracking session:
+      // 1. Allow read if the session hasn't expired.
+      // 2. Allow write (create) if the user is authenticated (later).
+      // 3. Allow update (location) from the device.
+
+      allow read: if request.time < resource.data.expiresAt;
+
+      // Temporary open write for development - MUST be secured with Auth in Sprint 4
+      allow write: if true;
+
+      match /responses/{responseId} {
+        allow create: if true;
+      }
+    }
+  }
+}

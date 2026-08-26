@@ -1,13 +1,17 @@
 package com.kaaval.app
 
 import android.Manifest
+import android.content.ComponentName
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.Settings
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -31,8 +35,9 @@ import com.kaaval.app.accessibility.VoiceFeedbackManager
 import com.kaaval.app.ai.OpenAiEmergencyAnalyzer
 import com.kaaval.app.data.KaavalDatabase
 import com.kaaval.app.data.KaavalRepository
+import com.kaaval.app.domain.action.EmergencyActionDispatcher
 import com.kaaval.app.domain.model.EmergencyContact
-import com.kaaval.app.domain.model.EmergencyIncident
+import com.kaaval.app.domain.model.EmergencyEvent
 import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
 import com.kaaval.app.service.AudioWitnessManager
@@ -40,7 +45,6 @@ import com.kaaval.app.service.BatteryGuardianManager
 import com.kaaval.app.service.EmergencyForegroundService
 import com.kaaval.app.service.KaavalBleManager
 import com.kaaval.app.service.KaavalLocationManager
-import com.kaaval.app.service.ShakeDetector
 import com.kaaval.app.service.SmsReplyReceiver
 import com.kaaval.app.sos.SosDispatcher
 import com.kaaval.app.ui.screens.ContactsScreen
@@ -50,6 +54,7 @@ import com.kaaval.app.ui.screens.WearableStatusScreen
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 import com.kaaval.app.ui.theme.KAAVALTheme
+import com.kaaval.app.ui.viewmodel.EmergencyViewModel
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
@@ -69,11 +74,25 @@ class MainActivity : ComponentActivity() {
     private lateinit var bleManager: KaavalBleManager
     private lateinit var audioWitness: AudioWitnessManager
     private lateinit var batteryGuardian: BatteryGuardianManager
-    private lateinit var shakeDetector: ShakeDetector
     private var smsReceiver: SmsReplyReceiver? = null
+    
+    private val actionDispatcher by lazy {
+        EmergencyActionDispatcher(
+            context = this,
+            locationManager = locationManager,
+            sosDispatcher = sosDispatcher,
+            bleManager = bleManager,
+            audioWitness = audioWitness,
+            batteryGuardian = batteryGuardian,
+            repository = repository
+        )
+    }
 
-    private var countdownJob: Job? = null
-    private val voiceTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val viewModel: EmergencyViewModel by viewModels {
+        EmergencyViewModel.provideFactory(actionDispatcher, repository)
+    }
+
+    private var lastAnnouncementTime = 0L
 
     // Volume Trigger Logic
     private var volumeUpClickCount = 0
@@ -98,6 +117,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // SPRINT 4: Enable Lock-Screen Activation
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
+
         val db = KaavalDatabase.getDatabase(this)
         repository = KaavalRepository(db)
 
@@ -106,33 +137,20 @@ class MainActivity : ComponentActivity() {
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
-        audioWitness = AudioWitnessManager(this)
-        
-        shakeDetector = ShakeDetector(this) {
-            lifecycleScope.launch {
-                voiceTriggerFlow.emit(Unit)
-                voiceFeedback.speakPriority("Shake trigger detected.")
-            }
+        audioWitness = AudioWitnessManager(this) { audioFile ->
+            // AI Analysis disabled for stability sprint.
         }
-
-        batteryGuardian = BatteryGuardianManager(this) { level ->
-            // Final SOS call when battery is critical
-            voiceFeedback.speakPriority("Warning: Critical battery level $level percent. Sending final emergency coordinates.")
-            // Trigger emergency dispatch one last time
-        }
+        batteryGuardian = BatteryGuardianManager(this) { level -> 
+            viewModel.processEvent(EmergencyEvent.CriticalBatteryDetected(level))
+        } 
 
         bleManager = KaavalBleManager(this) {
-            // HARDWARE TRIGGER callback from the BLE module
-            lifecycleScope.launch {
-                voiceTriggerFlow.emit(Unit) // Triggers the same SOS flow as Voice/Button
-                voiceFeedback.speakPriority("Hardware SOS Triggered.")
-            }
+            viewModel.processEvent(EmergencyEvent.ButtonPressed)
+            voiceFeedback.speakPriority("Hardware SOS Triggered.")
         }
 
         voiceCommandManager = VoiceCommandManager(this) {
-            lifecycleScope.launch {
-                voiceTriggerFlow.emit(Unit)
-            }
+            viewModel.processEvent(EmergencyEvent.ButtonPressed)
         }
 
         requestEmergencyPermissions()
@@ -142,24 +160,31 @@ class MainActivity : ComponentActivity() {
             bleManager.startScan()
         }
 
+        // GPS Check on startup
+        if (!locationManager.isLocationEnabled()) {
+            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.GPS_DISABLED)
+        }
+
+        checkAccessibilityService()
+
+        // SPRINT 4: Process Global Trigger after all infra is ready
+        handleIntent(intent)
+
         setContent {
             KAAVALTheme {
                 var selectedTab by remember { mutableStateOf(0) }
-                var emergencyState by remember { mutableStateOf<EmergencyState>(EmergencyState.Idle) }
+                val emergencyState by viewModel.emergencyState.collectAsState()
                 var isDiscreetMode by remember { mutableStateOf(false) }
 
                 val contacts by repository.allContacts.collectAsState(initial = emptyList())
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
                 val wearableState by bleManager.wearableState.collectAsState()
 
-                // SPRINT 3: State Recovery Logic
+                // SPRINT 3: State Recovery Logic (Bridge to VM if needed)
                 LaunchedEffect(Unit) {
                     repository.currentEmergencyState.collect { recoveredState ->
                         if (recoveredState != null && emergencyState is EmergencyState.Idle) {
-                            emergencyState = recoveredState
-                            voiceFeedback.speakPriority("Emergency state recovered. Resuming coordination.")
-                            // Ensure service is running
-                            EmergencyForegroundService.startService(this@MainActivity)
+                            // Recovery logic to be unified in VM
                         }
                     }
                 }
@@ -176,7 +201,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val currentProfile = medicalProfileState ?: defaultProfile
-                // val sampleWearable = remember { WearableDevice() }
 
                 // Sync TTS Language with User Preference
                 LaunchedEffect(currentProfile.preferredLanguage) {
@@ -191,249 +215,107 @@ class MainActivity : ComponentActivity() {
                 }
 
                 fun simulateCaregiverResponse(senderName: String = "Anjali (Sister)") {
-                    val currentState = emergencyState
-                    if (currentState is EmergencyState.Active) {
-                        val updatedState = currentState.copy(respondingCaregiver = senderName)
-                        emergencyState = updatedState
-                        
-                        // SPRINT 3: Persist updated caregiver state
-                        lifecycleScope.launch { repository.saveEmergencyState(updatedState) }
-
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
-                        voiceFeedback.speakPriority("Caregiver $senderName is responding.")
-                    }
+                    voiceFeedback.speakPriority("Caregiver $senderName is responding.")
                 }
 
                 LaunchedEffect(contacts) {
                     if (contacts.isNotEmpty()) {
                         smsReceiver = SmsReplyReceiver(contacts.map { it.phoneNumber }) { sender ->
-                            // Find the name of the contact who replied
                             val contactName = contacts.find { it.phoneNumber.contains(sender.takeLast(10)) }?.name ?: sender
                             simulateCaregiverResponse(contactName)
                         }
                     }
                 }
 
-                fun startCountdown() {
-                    if (contacts.isEmpty()) {
-                        voiceFeedback.speakPriority("Error: No emergency contacts found. Please add contacts before triggering SOS.")
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.ERROR)
-                        return
-                    }
-
-                    // CRITICAL FIX #6: Immediate feedback on tap
-                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_HOLD)
-                    voiceFeedback.speak("Initiating.")
-
-                    // CRITICAL FIX #1: Stop Voice Listener to release Microphone for recording
-                    voiceCommandManager.stopListening()
-
-                    countdownJob?.cancel()
-                    countdownJob = lifecycleScope.launch {
-                        if (!isDiscreetMode) {
-                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COUNTDOWN_STARTED, isPriority = true)
-                            delay(1500.milliseconds) // Fixed: Using Duration
-                        }
-                        
-                        for (i in 5 downTo 1) {
-                            emergencyState = EmergencyState.Countdown(i)
-                            if (isDiscreetMode) {
-                                hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
-                            } else {
-                                voiceFeedback.speakPriority(i.toString()) // Priority for instant sync
-                                hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_TICK)
-                            }
-                            delay(1000.milliseconds) // Fixed: Using Duration
-                        }
-
-                        // Activate SOS
-                        val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
-                        val trackingUrl = "https://kaaval-94c1d.web.app/live/$incidentId"
-
-                        // Start Audio Witness recording (Final Boss Feature #2)
-                        audioWitness.startRecording(incidentId)
-                        batteryGuardian.startMonitoring() // Final Boss Feature #3
-
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ACQUIRING_LOCATION)
-                        val loc = locationManager.getCurrentLocation()
-                        if (loc != null) {
-                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LOCATION_ACQUIRED)
-                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LOCATION_ACQUIRED)
-                        } else {
-                            hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.ERROR)
-                            voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.ERROR_OBTAINING_LOCATION)
-                        }
-
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.SENDING_SMS_ALERTS)
-                        sosDispatcher.dispatchEmergencyAlert(
-                            contacts = contacts,
-                            latitude = loc?.latitude,
-                            longitude = loc?.longitude,
-                            trackingUrl = trackingUrl,
-                            medicalNotes = currentProfile.emergencyNotes
-                        )
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SMS_SENT)
-
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.CALLING_PRIMARY_CONTACT)
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.CALL_STARTED)
-
-                        val incident = EmergencyIncident(
-                            incidentId = incidentId,
-                            timestamp = System.currentTimeMillis(),
-                            latitude = loc?.latitude,
-                            longitude = loc?.longitude,
-                            status = "ACTIVE",
-                            trackingUrl = trackingUrl
-                        )
-                        repository.logIncident(incident)
-
-                        EmergencyForegroundService.startService(this@MainActivity)
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SOS_ACTIVATED)
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_ACTIVATED, isPriority = true)
-                        voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_STARTED)
-                        hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.LIVE_TRACKING_STARTED)
-
-                        emergencyState = EmergencyState.Active(
-                            incidentId = incidentId,
-                            timestamp = System.currentTimeMillis(),
-                            latitude = loc?.latitude,
-                            longitude = loc?.longitude,
-                            trackingUrl = trackingUrl,
-                            isPrimaryCalled = true
-                        )
-
-                        // SPRINT 3: Persist active state
-                        (emergencyState as? EmergencyState.Active)?.let { activeState ->
-                            repository.saveEmergencyState(activeState)
-                        }
-                    }
-                }
-
                 LaunchedEffect(Unit) {
-                    voiceTriggerFlow.collect {
-                        if (emergencyState is EmergencyState.Idle) {
-                            startCountdown()
-                        }
-                    }
-                }
-
-                fun cancelSos() {
-                    countdownJob?.cancel()
-                    EmergencyForegroundService.stopService(this@MainActivity)
-                    audioWitness.stopRecording()
-                    batteryGuardian.stopMonitoring()
-                    emergencyState = EmergencyState.Idle
-                    
-                    // SPRINT 3: Clear persisted state
-                    lifecycleScope.launch { repository.clearEmergencyState() }
-
-                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.COUNTDOWN_CANCELLED)
-                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.COUNTDOWN_CANCELLED, isPriority = true)
-                }
-
-                fun resolveSos() {
-                    // CRITICAL FIX #4: Send "Safe" SMS to caregivers
-                    val safeMessage = "🚨 KAAVAL UPDATE: I am safe now. The emergency has been resolved."
-                    sosDispatcher.dispatchSafeStatus(contacts, safeMessage)
-
-                    countdownJob?.cancel()
-                    EmergencyForegroundService.stopService(this@MainActivity)
-                    audioWitness.stopRecording()
-                    batteryGuardian.stopMonitoring()
-                    emergencyState = EmergencyState.Idle
-
-                    // SPRINT 3: Clear persisted state
-                    lifecycleScope.launch { repository.clearEmergencyState() }
-
-                    hapticFeedback.cancel() // Stop the heartbeat
-                    hapticFeedback.vibrate(HapticFeedbackManager.HapticPattern.SUCCESS)
-                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.LIVE_TRACKING_ENDED)
-                    voiceFeedback.announce(VoiceFeedbackManager.AnnouncementType.EMERGENCY_COMPLETED, isPriority = true)
-                    
-                    // Restart voice listener for future use
-                    if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                        voiceCommandManager.startListening()
-                    }
+                    // Handled in VM
                 }
 
                 Scaffold(
                     bottomBar = {
-                        NavigationBar(containerColor = HighContrastBlack) {
-                            NavigationBarItem(
-                                selected = selectedTab == 0,
-                                onClick = { 
-                                    selectedTab = 0 
-                                    voiceFeedback.speakPriority("Emergency SOS Screen. The giant activation button is in the center. Hold it to start an alert.")
-                                },
-                                icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                                label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
-                                modifier = Modifier.semantics {
-                                    role = Role.Tab
-                                    contentDescription = "Emergency SOS Screen Tab"
-                                    stateDescription = if (selectedTab == 0) "Selected. Tab 1 of 4" else "Not selected. Tab 1 of 4"
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = HighContrastBlack,
-                                    indicatorColor = HighContrastYellow
+                        val isStealth = isDiscreetMode && emergencyState is EmergencyState.LiveTracking
+                        if (!isStealth) {
+                            NavigationBar(containerColor = HighContrastBlack) {
+                                NavigationBarItem(
+                                    selected = selectedTab == 0,
+                                    onClick = { 
+                                        selectedTab = 0 
+                                        lastAnnouncementTime = System.currentTimeMillis()
+                                        voiceFeedback.speakPriority("Emergency SOS Screen. The giant activation button is in the center. Hold it to start an alert.")
+                                    },
+                                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                    label = { Text("SOS", fontSize = 12.sp, color = HighContrastYellow) },
+                                    modifier = Modifier.semantics {
+                                        role = Role.Tab
+                                        contentDescription = "Emergency SOS Screen Tab"
+                                        stateDescription = if (selectedTab == 0) "Selected. Tab 1 of 4" else "Not selected. Tab 1 of 4"
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = HighContrastBlack,
+                                        indicatorColor = HighContrastYellow
+                                    )
                                 )
-                            )
-                            NavigationBarItem(
-                                selected = selectedTab == 1,
-                                onClick = { 
-                                    selectedTab = 1 
-                                    val count = contacts.size
-                                    val summary = if (count == 0) "No contacts added yet." else "You have $count emergency contacts. Swipe to hear their names."
-                                    voiceFeedback.speakPriority("Emergency Contacts Screen. $summary")
-                                },
-                                icon = { Icon(Icons.Default.People, contentDescription = null) },
-                                label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
-                                modifier = Modifier.semantics {
-                                    role = Role.Tab
-                                    contentDescription = "Emergency Contacts Screen Tab"
-                                    stateDescription = if (selectedTab == 1) "Selected. Tab 2 of 4" else "Not selected. Tab 2 of 4"
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = HighContrastBlack,
-                                    indicatorColor = HighContrastYellow
+                                NavigationBarItem(
+                                    selected = selectedTab == 1,
+                                    onClick = { 
+                                        selectedTab = 1 
+                                        lastAnnouncementTime = System.currentTimeMillis()
+                                        val count = contacts.size
+                                        val summary = if (count == 0) "No contacts added yet." else "You have $count emergency contacts. Swipe to hear their names."
+                                        voiceFeedback.speakPriority("Emergency Contacts Screen. $summary")
+                                    },
+                                    icon = { Icon(Icons.Default.People, contentDescription = null) },
+                                    label = { Text("Contacts", fontSize = 12.sp, color = HighContrastYellow) },
+                                    modifier = Modifier.semantics {
+                                        role = Role.Tab
+                                        contentDescription = "Emergency Contacts Screen Tab"
+                                        stateDescription = if (selectedTab == 1) "Selected. Tab 2 of 4" else "Not selected. Tab 2 of 4"
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = HighContrastBlack,
+                                        indicatorColor = HighContrastYellow
+                                    )
                                 )
-                            )
-                            NavigationBarItem(
-                                selected = selectedTab == 2,
-                                onClick = { 
-                                    selectedTab = 2 
-                                    voiceFeedback.speakPriority("Medical Profile Screen. Your clinical details are here. Use the button at the top right to read them aloud for a first responder.")
-                                },
-                                icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
-                                label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
-                                modifier = Modifier.semantics {
-                                    role = Role.Tab
-                                    contentDescription = "Medical Profile Screen Tab"
-                                    stateDescription = if (selectedTab == 2) "Selected. Tab 3 of 4" else "Not selected. Tab 3 of 4"
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = HighContrastBlack,
-                                    indicatorColor = HighContrastYellow
+                                NavigationBarItem(
+                                    selected = selectedTab == 2,
+                                    onClick = { 
+                                        selectedTab = 2 
+                                        lastAnnouncementTime = System.currentTimeMillis()
+                                        voiceFeedback.speakPriority("Medical Profile Screen. Your clinical details are here. Use the button at the top right to read them aloud for a first responder.")
+                                    },
+                                    icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
+                                    label = { Text("Medical", fontSize = 12.sp, color = HighContrastYellow) },
+                                    modifier = Modifier.semantics {
+                                        role = Role.Tab
+                                        contentDescription = "Medical Profile Screen Tab"
+                                        stateDescription = if (selectedTab == 2) "Selected. Tab 3 of 4" else "Not selected. Tab 3 of 4"
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = HighContrastBlack,
+                                        indicatorColor = HighContrastYellow
+                                    )
                                 )
-                            )
-                            NavigationBarItem(
-                                selected = selectedTab == 3,
-                                onClick = { 
-                                    selectedTab = 3 
-                                    val status = if (wearableState.isConnected) "Your wearable is connected and ready." else "Your wearable is not connected."
-                                    voiceFeedback.speakPriority("Wearable Status Screen. $status")
-                                },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                                label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
-                                modifier = Modifier.semantics {
-                                    role = Role.Tab
-                                    contentDescription = "BLE Wearable Status Tab"
-                                    stateDescription = if (selectedTab == 3) "Selected. Tab 4 of 4" else "Not selected. Tab 4 of 4"
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = HighContrastBlack,
-                                    indicatorColor = HighContrastYellow
+                                NavigationBarItem(
+                                    selected = selectedTab == 3,
+                                    onClick = { 
+                                        selectedTab = 3 
+                                        lastAnnouncementTime = System.currentTimeMillis()
+                                        val status = if (wearableState.isConnected) "Your wearable is connected and ready." else "Your wearable is not connected."
+                                        voiceFeedback.speakPriority("Wearable Status Screen. $status")
+                                    },
+                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                    label = { Text("Wearable", fontSize = 12.sp, color = HighContrastYellow) },
+                                    modifier = Modifier.semantics {
+                                        role = Role.Tab
+                                        contentDescription = "BLE Wearable Status Tab"
+                                        stateDescription = if (selectedTab == 3) "Selected. Tab 4 of 4" else "Not selected. Tab 4 of 4"
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = HighContrastBlack,
+                                        indicatorColor = HighContrastYellow
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 ) { innerPadding ->
@@ -441,13 +323,19 @@ class MainActivity : ComponentActivity() {
                         0 -> MainSosScreen(
                             emergencyState = emergencyState,
                             isDiscreetMode = isDiscreetMode,
+                            isConfirmingSafe = viewModel.isConfirmingSafe,
+                            onStartSafeConfirmation = { viewModel.startSafeConfirmation() },
+                            onConfirmSafe = { viewModel.resolveSos() },
+                            onCancelSafeConfirmation = { viewModel.cancelSafeConfirmation() },
                             onDiscreetModeChange = { 
                                 isDiscreetMode = it 
+                                viewModel.isDiscreetMode = it
                                 if (it) voiceFeedback.speak("Discreet mode on.") else voiceFeedback.speak("Standard mode on.")
                             },
-                            onTriggerSos = { startCountdown() },
-                            onCancelSos = { cancelSos() },
-                            onResolveSos = { resolveSos() },
+                            onTriggerSos = { viewModel.onSosButtonPressed() },
+                            onTriggerInstantSos = { viewModel.triggerInstantSos() },
+                            onCancelSos = { viewModel.cancelSos() },
+                            onResolveSos = { viewModel.resolveSos() },
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(
@@ -519,6 +407,37 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra("EXTRA_TRIGGER_SOS", false) == true) {
+            android.util.Log.i("MainActivity", "SOS Triggered via Global Intent")
+            viewModel.triggerInstantSos()
+            // Clear the flag to prevent re-triggering on config changes
+            intent.putExtra("EXTRA_TRIGGER_SOS", false)
+        }
+    }
+
+    private fun checkAccessibilityService() {
+        if (!isAccessibilityServiceEnabled()) {
+            android.util.Log.w("MainActivity", "Accessibility Service is NOT enabled. Global trigger unavailable.")
+            // No intrusive dialog for now, as per standard clean-arch/UX rules for this sprint
+        }
+    }
+
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val expectedService = ComponentName(this, com.kaaval.app.service.KaavalAccessibilityService::class.java).flattenToString()
+        val enabledServices = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
+        
+        android.util.Log.d("MainActivity", "Checking for Service: $expectedService")
+        android.util.Log.d("MainActivity", "Enabled Services: $enabledServices")
+        
+        return enabledServices.contains(expectedService) || enabledServices.contains(packageName)
+    }
+
     private fun requestEmergencyPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -534,7 +453,6 @@ class MainActivity : ComponentActivity() {
             permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
-            // Deprecated but required for older APIs
             @Suppress("DEPRECATION")
             permissions.add(Manifest.permission.BLUETOOTH)
             @Suppress("DEPRECATION")
@@ -556,22 +474,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        shakeDetector.start()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             voiceCommandManager.startListening()
-            // val activeMsg = if (Locale.getDefault().language == "ml") "വോയ്‌സ് കമാൻഡുകൾ സജീവമാണ്." else "Voice commands active."
-            // voiceFeedback.speak(activeMsg) 
         }
     }
 
     override fun onStop() {
         super.onStop()
-        shakeDetector.stop()
         voiceCommandManager.stopListening()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP && event?.repeatCount == 0) {
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastVolumeUpTime < 1500) {
                 volumeUpClickCount++
@@ -583,10 +497,9 @@ class MainActivity : ComponentActivity() {
             if (volumeUpClickCount >= 3) {
                 volumeUpClickCount = 0
                 lifecycleScope.launch {
-                    voiceTriggerFlow.emit(Unit)
-                    voiceFeedback.speakPriority("Tactile SOS Triggered via buttons.")
+                    viewModel.triggerInstantSos()
                 }
-                return true
+                return true // Intercept the 3rd click to trigger SOS
             }
         }
         return super.onKeyDown(keyCode, event)

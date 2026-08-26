@@ -48,6 +48,8 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         if (tts == null) {
             Log.d(TAG, "Initializing TextToSpeech Singleton engine...")
             tts = TextToSpeech(context.applicationContext, this)
+        } else {
+            Log.d(TAG, "TTS already initialized or in progress.")
         }
     }
 
@@ -86,11 +88,42 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         speakInternal(message, isPriority = false)
     }
 
+    private var lastUtteranceTime = 0L
+    private const val MIN_STUTTER_THRESHOLD = 150L // ms
+
     /**
      * Priority speech interruption (TextToSpeech.QUEUE_FLUSH) for critical emergency alerts.
      */
     fun speakPriority(message: String) {
+        // Prevent accidental rapid-fire double triggers from stuttering
+        val now = System.currentTimeMillis()
+        if (now - lastUtteranceTime < MIN_STUTTER_THRESHOLD) {
+            Log.d(TAG, "Speech stutter prevented for: $message")
+            return
+        }
+        lastUtteranceTime = now
         speakInternal(message, isPriority = true)
+    }
+
+    /**
+     * Specialized announcement for countdown ticks to ensure smoothness.
+     */
+    fun speakCountdown(seconds: Int) {
+        val now = System.currentTimeMillis()
+        // Stronger guard for countdown to prevent "activates in" + "5" overlap
+        if (seconds == 5 && now - lastUtteranceTime < 400) {
+             Log.d(TAG, "Skipping duplicate countdown start voice")
+             return
+        }
+
+        val msg = if (seconds == 5) {
+            getMessage("Emergency activates in 5", "സന്ദേശം അയക്കാൻ 5")
+        } else {
+            seconds.toString()
+        }
+        
+        lastUtteranceTime = now
+        speakInternal(msg, isPriority = true)
     }
 
     /**
@@ -123,7 +156,7 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         val text = when (announcement) {
             AnnouncementType.EMERGENCY_READY -> getMessage("KAAVAL system is active. Your family is protected.", "കാവൽ സിസ്റ്റം സജ്ജമാണ്. നിങ്ങൾ സുരക്ഷിതനാണ്.")
             AnnouncementType.SOS_BUTTON_HELD -> getMessage("SOS alert initiated. Alerting family now.", "അപകട സന്ദേശം അയക്കുന്നു. വീട്ടുകാരെ വിവരമറിയിക്കുന്നു.")
-            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Alerting in", "സന്ദേശം അയക്കാൻ")
+            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Emergency activates in", "സന്ദേശം അയക്കാൻ")
             AnnouncementType.COUNTDOWN_CANCELLED -> getMessage("Alert cancelled.", "സന്ദേശം റദ്ദാക്കി.")
             AnnouncementType.EMERGENCY_ACTIVATED -> getMessage("Emergency alert sent. Location shared with caregivers.", "അപകട സന്ദേശം അയച്ചു. ലൊക്കേഷൻ വീട്ടുകാർക്ക് കൈമാറി.")
             AnnouncementType.ACQUIRING_LOCATION -> getMessage("Finding your location.", "നിങ്ങളുടെ സ്ഥലം കണ്ടെത്തുന്നു.")
@@ -172,8 +205,17 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         }
     }
 
+    /**
+     * Specialized announcement for calling a specific caregiver by name.
+     */
+    fun speakCaregiverCall(name: String) {
+        val msg = getMessage("Calling $name.", "$name-നെ വിളിക്കുന്നു.")
+        speakPriority(msg)
+    }
+
     private fun speakInternal(text: String, isPriority: Boolean) {
         if (!isInitialized) {
+            Log.d(TAG, "TTS not ready yet. Queuing: $text")
             synchronized(pendingQueue) {
                 pendingQueue.add(Pair(text, isPriority))
             }
@@ -181,7 +223,7 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         }
 
         val queueMode = if (isPriority) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-        val utteranceId = "KAAVAL_VOICE_${System.currentTimeMillis()}"
+        val utteranceId = "KAAVAL_VOICE_${System.currentTimeMillis()}_${(0..999).random()}"
         tts?.speak(text, queueMode, null, utteranceId)
     }
 

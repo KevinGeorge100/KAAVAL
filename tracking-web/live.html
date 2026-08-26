@@ -7,6 +7,11 @@
     <!-- Leaflet.js OpenStreetMap for Live GPS Map Pin -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --bg-color: #0B101D;
@@ -201,6 +206,19 @@
     </div>
 
     <script>
+        // Firebase Configuration (Dummy - to be replaced with real config)
+        const firebaseConfig = {
+            projectId: "kaaval-94c1d",
+            appId: "1:123456789:web:123456789"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Extract Incident ID from URL
+        const urlPath = window.location.pathname;
+        const incidentId = urlPath.split('/').pop() || "KVL-984321";
+        document.getElementById('incident-id').innerText = incidentId;
+
         let currentLat = 9.9312;
         let currentLng = 76.2673;
         let map, marker;
@@ -215,18 +233,42 @@
             marker = L.marker([currentLat, currentLng]).addTo(map)
                 .bindPopup('<b>Visually Impaired User</b><br>Live Emergency SOS Location').openPopup();
 
-            // Try Geolocation API for real live coordinates
-            if ('geolocation' in navigator) {
-                navigator.geolocation.watchPosition((pos) => {
-                    currentLat = pos.coords.latitude;
-                    currentLng = pos.coords.longitude;
-                    map.setView([currentLat, currentLng], 16);
-                    marker.setLatLng([currentLat, currentLng]);
-                    document.getElementById('gps-time').innerText = new Date().toLocaleTimeString();
-                }, (err) => {
-                    console.log('Using default location coordinates');
-                }, { enableHighAccuracy: true });
-            }
+            // Subscribe to Live Updates from Firestore
+            subscribeToLiveTracking();
+        }
+
+        function subscribeToLiveTracking() {
+            db.collection("incidents").doc(incidentId)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        console.log("Live update received:", data);
+
+                        if (data.latitude && data.longitude) {
+                            currentLat = data.latitude;
+                            currentLng = data.longitude;
+
+                            const pos = [currentLat, currentLng];
+                            marker.setLatLng(pos);
+                            map.panTo(pos);
+
+                            if (data.lastUpdate) {
+                                const time = data.lastUpdate.toDate();
+                                document.getElementById('gps-time').innerText = time.toLocaleTimeString();
+                            }
+                        }
+
+                        if (data.status === "COMPLETED") {
+                            document.querySelector('.badge-active').innerText = "🏁 EMERGENCY RESOLVED";
+                            document.querySelector('.badge-active').style.backgroundColor = "var(--green)";
+                            document.querySelector('.badge-active').style.animation = "none";
+                        }
+                    } else {
+                        console.warn("Incident session not found or expired.");
+                    }
+                }, (error) => {
+                    console.error("Firestore subscription error:", error);
+                });
         }
 
         function acknowledgeEmergency() {

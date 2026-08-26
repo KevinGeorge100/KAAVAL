@@ -31,7 +31,7 @@ class VoiceCommandManager(
 
     private var isListening = false
     private var lastShoutTime = 0L
-    private val SHOUT_THRESHOLD = 8.0f // Sensitivity: 1.0 (very sensitive) to 15.0 (loud scream)
+    private val SHOUT_THRESHOLD = 13.5f // Increased threshold to avoid triggering on phone's own speaker volume
 
     fun startListening() {
         if (isListening) return
@@ -92,7 +92,7 @@ class VoiceCommandManager(
     private fun isEmergencyTrigger(text: String): Boolean {
         val lowerText = text.lowercase()
         val triggers = listOf(
-            "help", "sos", "emergency", "police", "ambulance",
+            "help", "sos", "police", "ambulance",
             "sahayam", "സഹായം", // Malayalam
             "bachao", "save me", // Indian Common
             "amma", "appa" // Phonetic cries for help in Indian context
@@ -114,7 +114,12 @@ class VoiceCommandManager(
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
             else -> "Unknown error"
         }
-        Log.e("VoiceCommandManager", "Speech recognition error: $message")
+        
+        if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+            Log.d("VoiceCommandManager", "Speech recognition status: $message")
+        } else {
+            Log.e("VoiceCommandManager", "Speech recognition error: $message")
+        }
         
         // Restart on common non-fatal errors or if busy
         if (isListening) {

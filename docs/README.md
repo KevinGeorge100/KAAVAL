@@ -23,13 +23,23 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 ---
 
 ### 🛠️ 3. Engineering & Accessibility Specifications (`/docs/engineering`)
-- 📄 **[TALKBACK_ACCESSIBILITY.md](engineering/TALKBACK_ACCESSIBILITY.md)** — Jetpack Compose Semantics, content descriptions, roles, and state descriptions.
-- 📄 **[VOICE_FEEDBACK.md](engineering/VOICE_FEEDBACK.md)** — `VoiceFeedbackManager` Singleton engine, 16 speech announcement types, and Malayalam (`ml_IN`) localization setup.
-- 📄 **[HAPTIC_FEEDBACK.md](engineering/HAPTIC_FEEDBACK.md)** — `HapticFeedbackManager` Singleton engine, 14 tactile `HapticPattern` waveforms, and Android API 26-34+ compatibility.
+- 📄 **[VOICE_FEEDBACK.md](engineering/VOICE_FEEDBACK.md)** — `VoiceFeedbackManager` Singleton engine.
+- 📄 **[HAPTIC_FEEDBACK.md](engineering/HAPTIC_FEEDBACK.md)** — `HapticFeedbackManager` Singleton engine.
 - 📄 **[IMPLEMENTATION.md](engineering/IMPLEMENTATION.md)** — Software architecture design & Clean Architecture module breakdown.
-- 📄 **[SPRINTS.md](engineering/SPRINTS.md)** — Detailed sprint backlog & technical task breakdowns.
-- 📄 **[ROADMAP.md](engineering/ROADMAP.md)** — Progressable project roadmap for Project Guide review.
-- 📄 **[TEAM_GUIDE.md](engineering/TEAM_GUIDE.md)** — Industry team standards for ClickUp, Slack channels, and GitHub workflows.
+
+---
+
+### 🛡️ 4. Mission-Critical Reliability & QA (`/docs/QA`)
+- 📄 **[KAAVAL_ADVERSARIAL_TEST_MATRIX.md](QA/KAAVAL_ADVERSARIAL_TEST_MATRIX.md)** — 30-Scenario Stress Test (Kidnapping, Snatched Phone, Unconscious User).
+- 📄 **[POST_AUDIT_ARCHITECTURE.md](QA/POST_AUDIT_ARCHITECTURE.md)** — Transition from Event-Driven SOS to Persistent Emergency Sessions.
+- 📄 **[SPRINT3B_VALIDATION_REPORT.md](QA/SPRINT3B_VALIDATION_REPORT.md)** — Physical device testing for background GPS and activity destruction.
+
+---
+
+### 📈 5. Development Milestones (Sprint Docs)
+- 📄 **[SPRINT3_EMERGENCY_SESSION.md](SPRINT3_EMERGENCY_SESSION.md)** — Persistent session logic & Room storage.
+- 📄 **[SPRINT3_LOCATION_ENGINE.md](SPRINT3_LOCATION_ENGINE.md)** — 3-Layer GPS fallback & Fused Location.
+- 📄 **[SPRINT3_LIVE_TRACKING.md](SPRINT3_LIVE_TRACKING.md)** — Secure Firestore sync & Caregiver Web Portal.
 
 ---
 

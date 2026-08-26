@@ -5,10 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.kaaval.app.data.dao.ContactDao
+import com.kaaval.app.data.dao.EmergencySessionDao
 import com.kaaval.app.data.dao.EmergencyStateDao
 import com.kaaval.app.data.dao.IncidentDao
 import com.kaaval.app.data.dao.MedicalProfileDao
 import com.kaaval.app.data.entity.ContactEntity
+import com.kaaval.app.data.entity.EmergencySessionEntity
 import com.kaaval.app.data.entity.EmergencyStateEntity
 import com.kaaval.app.data.entity.IncidentEntity
 import com.kaaval.app.data.entity.MedicalProfileEntity
@@ -18,9 +20,10 @@ import com.kaaval.app.data.entity.MedicalProfileEntity
         ContactEntity::class, 
         IncidentEntity::class, 
         MedicalProfileEntity::class,
-        EmergencyStateEntity::class
+        EmergencyStateEntity::class,
+        EmergencySessionEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class KaavalDatabase : RoomDatabase() {
@@ -28,6 +31,7 @@ abstract class KaavalDatabase : RoomDatabase() {
     abstract fun incidentDao(): IncidentDao
     abstract fun medicalProfileDao(): MedicalProfileDao
     abstract fun emergencyStateDao(): EmergencyStateDao
+    abstract fun emergencySessionDao(): EmergencySessionDao
 
     companion object {
         @Volatile

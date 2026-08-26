@@ -59,11 +59,17 @@ KAAVAL (Sahaaya) manages the **complete emergency response workflow** — from i
 ### ✅ Sprint 1 — Project Foundation (`M1`)
 - Repository structure, Android Compose shell, Room DB local persistence, Firebase setup, and local web simulator.
 
-### ✅ Sprint 2 — Accessibility Infrastructure & Engines (`M2`)
-- ✅ **Task 2.1 — High-Contrast Accessibility Theme**: Material 3 Pure Black (`#000000`) & KAAVAL Yellow (`#FFD600`) design system, typography, and shapes ([THEME_ACCESSIBILITY.md](docs/architecture/THEME_ACCESSIBILITY.md)).
-- ✅ **Task 2.2 — TalkBack Accessibility**: Full Jetpack Compose Semantics, explicit `contentDescription`, `Role.Button`/`Role.Tab`, and dynamic `stateDescription` announcements ([TALKBACK_ACCESSIBILITY.md](docs/engineering/TALKBACK_ACCESSIBILITY.md)).
-- ✅ **Task 2.3 — Voice Feedback Engine**: `VoiceFeedbackManager` Singleton engine, TextToSpeech integration, queued & priority announcements, English baseline & Malayalam-ready architecture ([VOICE_FEEDBACK.md](docs/engineering/VOICE_FEEDBACK.md)).
-- ✅ **Task 2.4 — Haptic Feedback Engine**: `HapticFeedbackManager` Singleton engine, `VibratorManager` (API 31+) & `Vibrator` fallback (API 26+), 14 `HapticPattern` waveforms ([HAPTIC_FEEDBACK.md](docs/engineering/HAPTIC_FEEDBACK.md)).
+### ✅ Sprint 2 — Accessibility Infrastructure & Engines
+- ✅ **Task 2.1 — High-Contrast Accessibility Theme**: Material 3 Pure Black (`#000000`) & KAAVAL Yellow (`#FFD600`) design system.
+- ✅ **Task 2.2 — TalkBack Accessibility**: Full Jetpack Compose Semantics and explicit descriptions.
+- ✅ **Task 2.3 — Voice Feedback Engine**: `VoiceFeedbackManager` Singleton engine, TextToSpeech integration.
+- ✅ **Task 2.4 — Haptic Feedback Engine**: `HapticFeedbackManager` with 14 `HapticPattern` waveforms.
+
+### ✅ Sprint 3 — Resilience & Live Tracking
+- ✅ **Task 3.1 — Persistent Emergency Sessions**: SOS state is now stored in Room DB, ensuring recovery after app crashes or phone restarts.
+- ✅ **Task 3.2 — Real-Time Location Engine**: 3-layer GPS fallback (Fresh lock -> Last known -> Direct hardware) with continuous 30s background updates.
+- ✅ **Task 3.3 — Secure Live Tracking**: Integrated Firebase Firestore to push real-time coordinates to a secure caregiver map.
+- ✅ **Task 3.4 — Mission-Critical Hardening**: Move SOS orchestration into a `START_STICKY` Foreground Service.
 
 ---
 
@@ -73,22 +79,20 @@ The KAAVAL standalone Android application is fully functional and active for **s
 ### Component Status Matrix
 | Component | Status | Description |
 | :--- | :---: | :--- |
-| **SOS Engine** | ✅ **COMPLETE** | Unified trigger logic (Volume Up x3, English/Malayalam Voice, On-screen hold/cancel). |
-| **User Feedback** | ✅ **COMPLETE** | Synchronized multi-language TTS, custom haptics, and classroom Discreet Mode. |
-| **Coordination** | ✅ **COMPLETE** | Closed-loop SMS reply detection ("OK"/"Coming") & continuous Tactile Heartbeat. |
-| **Emergency Intelligence**| ✅ **COMPLETE** | 15s Audio Witness, 5% Battery Guardian alert, and Instant GPS Fallback. |
-| **Hardware Bridge** | 🟡 **PENDING** | `KaavalBleManager` GATT client built; awaiting physical wearable module for UUID pairing. |
-| **AI Integration** | 🟡 **BACKLOG** | `Analyzer` class ready; API key integration saved for subsequent phase. |
-| **Testing Ready** | 🚀 **ACTIVE** | Standalone software is operational and ready for student user testing. |
+| **SOS Engine** | ✅ **COMPLETE** | Persistent session-based logic with background recovery and single-active incident protection. |
+| **Location Engine**| ✅ **COMPLETE** | Continuous multi-stage GPS tracking (30s interval) owned by Foreground Service. |
+| **User Feedback** | ✅ **COMPLETE** | Synchronized multi-language TTS, "Happy Haptics", and Stealth mode with gesture confirmation. |
+| **Tracking Cloud** | ✅ **COMPLETE** | Real-time Firestore sync with Leaflet.js Caregiver Portal and 4-hour auto-expiration. |
+| **Hardware Bridge** | 🟡 **PENDING** | `KaavalBleManager` GATT client built; awaiting physical wearable module for pairing. |
+| **Response Loop**  | 🟡 **IN PROGRESS**| Implementing Caregiver Escalation and loops-closure (Sprint 4). |
 
 ### Key Features
-- 🔊 **Synchronized Audio/Haptics:** Audio countdown synced with vibration pulses.
-- 🔕 **Discreet Mode:** Classroom mode switching voice alerts to private tactile ticks.
-- 🗣️ **"Listen" Mode:** Audio reader for Medical Profile clinical data.
-- 🎙️ **Multi-Trigger Redundancy:** English ("HELP", "SOS") & Malayalam ("Sahayam") voice + Volume Up x3 key.
-- 💓 **Tactile Heartbeat:** Continuous reassurance pulse for active emergency response.
-- 📩 **Offline SMS Reply Detection:** Closed-loop automatic reply detection for "OK"/"Coming".
-- 🎙️ **Audio Witness & Battery Guardian:** 15s automatic audio recording + 5% low battery emergency alert.
+- 📍 **Continuous Live Tracking:** Background GPS updates pushed to cloud every 30s.
+- 🛡️ **Stealth Mode & Blackout UI:** Hidden SOS activity with "Secret Handshake" (Gesture) safety confirmation.
+- 🔄 **Crash-Resilient SOS:** Persistent Room-backed sessions that survive process death and activity recreation.
+- 🔊 **Synchronized Audio/Haptics:** Audio countdown synced with tactile pulses.
+- 🎙️ **Multi-Trigger Redundancy:** English/Malayalam voice + Volume Up x3 hardware key trigger.
+- 📩 **Offline SMS Detection:** Automatic reply detection ("OK"/"Coming") from caregivers.
 
 ---
 

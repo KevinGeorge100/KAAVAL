@@ -13,7 +13,7 @@ class KaavalApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("KaavalApplication", "KAAVAL Accessibility Emergency Ecosystem Application Initializing...")
+        Log.d("KaavalApplication", "KAAVAL: ONE PRESS. INSTANT PROTECTION. [Initializing]")
         
         // Auto-initialize accessibility engines on startup
         VoiceFeedbackManager.initialize(this)

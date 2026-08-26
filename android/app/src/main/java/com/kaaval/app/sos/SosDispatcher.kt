@@ -17,8 +17,8 @@ import java.net.URLEncoder
 class SosDispatcher(private val context: Context) {
 
     // KAAVAL Telegram Bot Configuration (Free & Unlimited)
-    private val BOT_TOKEN = "PASTE_TELEGRAM_BOT_TOKEN"
-    private val CHAT_ID = "PASTE_TELEGRAM_CHAT_ID"
+    private val BOT_TOKEN = "8934083898:AAG3N_90NM0okF8oieVf5cKLTPGJR9YVRf4"
+    private val CHAT_ID = "-5337579781"
 
     suspend fun dispatchEmergencyAlert(
         contacts: List<EmergencyContact>,
@@ -68,15 +68,11 @@ class SosDispatcher(private val context: Context) {
             }
         }
 
-        // 3. Auto-call primary contact
-        val primaryContact = contacts.find { it.isPrimary } ?: contacts.firstOrNull()
-        if (primaryContact != null) {
-            withContext(Dispatchers.Main) {
-                initiateCall(primaryContact.phoneNumber)
-            }
-        }
-
         return@withContext true
+    }
+
+    fun dispatchAiUpdate(message: String) {
+        sendTelegramAlert("🧠 *AI SITUATIONAL ANALYSIS*\n\n$message")
     }
 
     private fun sendTelegramAlert(message: String) {
@@ -117,7 +113,7 @@ class SosDispatcher(private val context: Context) {
         }
     }
 
-    private fun initiateCall(phoneNumber: String) {
+    fun initiateCall(phoneNumber: String) {
         try {
             val intent = Intent(Intent.ACTION_CALL).apply {
                 data = "tel:$phoneNumber".toUri()

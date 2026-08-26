@@ -4,11 +4,32 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- KAAVAL High-Contrast Yellow Emergency Shield Icon -->
+
+    <!-- KAAVAL Mission-Critical Branding: The Pulsing Shield -->
+    <!-- Inspired by "ONE PRESS. INSTANT PROTECTION." -->
+
+    <!-- 1. Inner Core (The SOS / Wearable Dot) -->
     <path
         android:fillColor="#FFD600"
-        android:pathData="M54,18 L90,84 L18,84 Z"/>
+        android:pathData="M54,54m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0"/>
+
+    <!-- 2. Inner Signal Ring -->
     <path
-        android:fillColor="#000000"
-        android:pathData="M51,40 h6 v24 h-6 z M51,68 h6 v6 h-6 z"/>
+        android:strokeColor="#FFD600"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,54m-18,0a18,18 0,1 1,36 0a18,18 0,1 1,-36 0"/>
+
+    <!-- 3. Outer Protection Arcs (Shield Logic) -->
+    <path
+        android:strokeColor="#FFD600"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M35,30 C45,25 63,25 73,30 M28,54 C28,68 38,82 54,88 C70,82 80,68 80,54"/>
+
+    <!-- 4. Top Crown (Authority) -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M48,22 h12 v3 h-12 z"/>
+
 </vector>
