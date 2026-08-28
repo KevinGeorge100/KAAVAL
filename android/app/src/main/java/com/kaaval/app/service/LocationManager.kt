@@ -11,7 +11,16 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.kaaval.app.domain.model.LocationData
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Policy for location updates frequency.
+ */
+data class LocationUpdatePolicy(
+    val interval: Duration = 15.seconds,
+    val fastestInterval: Duration = 5.seconds
+)
 
 /**
  * KAAVAL Location Manager
