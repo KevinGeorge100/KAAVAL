@@ -328,7 +328,7 @@ fun MainSosScreen(
                                             )
                                         } else {
                                             Text(
-                                                text = "SMS sent to emergency contacts.\nWaiting for caregiver acknowledgement...",
+                                                text = "Primary caregiver call initiated.\nWaiting for caregiver acknowledgement...",
                                                 fontSize = 14.sp,
                                                 color = Color.White,
                                                 textAlign = TextAlign.Center
