@@ -102,7 +102,8 @@ class FirebaseTrackingRepository(
         val subscription = incidentsCollection.document(incidentId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.w("FirebaseTracking", "Snapshot error ignored: ${error.message}")
+                    trySend(null)
                     return@addSnapshotListener
                 }
 

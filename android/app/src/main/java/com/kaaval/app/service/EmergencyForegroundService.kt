@@ -13,13 +13,14 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.kaaval.app.MainActivity
 import com.kaaval.app.R
+import com.kaaval.app.accessibility.HapticFeedbackManager
 import com.kaaval.app.accessibility.VoiceFeedbackManager
-import com.kaaval.app.core.accessibility.HapticFeedbackManager
 import com.kaaval.app.data.KaavalDatabase
 import com.kaaval.app.data.KaavalRepository
 import com.kaaval.app.data.repository.FirebaseTrackingRepository
 import com.kaaval.app.domain.repository.LocationTrackingRepository
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 
 /**
@@ -30,12 +31,14 @@ import kotlinx.coroutines.flow.first
 class EmergencyForegroundService : Service() {
 
     private var currentIncidentId: String? = null
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        android.util.Log.e("EmergencyService", "Coroutine error caught safely: ${throwable.message}", throwable)
+    }
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
     
     private lateinit var locationManager: KaavalLocationManager
     private lateinit var repository: KaavalRepository
     private lateinit var trackingRepository: LocationTrackingRepository
-    private lateinit var hapticFeedback: HapticFeedbackManager
     private var lastClaimedBy: String? = null
     private var lastReassuranceTimestamp: Long? = null
 
@@ -45,19 +48,27 @@ class EmergencyForegroundService : Service() {
         const val EXTRA_INCIDENT_ID = "EXTRA_INCIDENT_ID"
 
         fun startService(context: Context, incidentId: String) {
-            val intent = Intent(context, EmergencyForegroundService::class.java).apply {
-                putExtra(EXTRA_INCIDENT_ID, incidentId)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                val intent = Intent(context, EmergencyForegroundService::class.java).apply {
+                    putExtra(EXTRA_INCIDENT_ID, incidentId)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("EmergencyService", "Failed to invoke startService: ${e.message}", e)
             }
         }
 
         fun stopService(context: Context) {
-            val intent = Intent(context, EmergencyForegroundService::class.java)
-            context.stopService(intent)
+            try {
+                val intent = Intent(context, EmergencyForegroundService::class.java)
+                context.stopService(intent)
+            } catch (e: Exception) {
+                android.util.Log.e("EmergencyService", "Failed to invoke stopService: ${e.message}", e)
+            }
         }
     }
 
@@ -66,19 +77,39 @@ class EmergencyForegroundService : Service() {
         locationManager = KaavalLocationManager(this)
         repository = KaavalRepository(KaavalDatabase.getDatabase(this))
         trackingRepository = FirebaseTrackingRepository()
-        hapticFeedback = HapticFeedbackManager(this)
+        HapticFeedbackManager.initialize(this)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Critical: startForeground must execute immediately to satisfy Android 8.0+ / Android 14 requirements
+        try {
+            val notification = buildNotification()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("EmergencyService", "startForeground location fallback: ${e.message}", e)
+            try {
+                startForeground(NOTIFICATION_ID, buildNotification())
+            } catch (inner: Exception) {
+                android.util.Log.e("EmergencyService", "startForeground completely failed: ${inner.message}", inner)
+            }
+        }
+
         val incidentId = intent?.getStringExtra(EXTRA_INCIDENT_ID)
-        
         if (incidentId != null) {
             if (incidentId != currentIncidentId) {
                 currentIncidentId = incidentId
                 android.util.Log.i("EmergencyService", "SERVICE_STARTED incidentId=$incidentId")
                 serviceScope.launch {
-                    trackingRepository.createTrackingSession(incidentId)
+                    try {
+                        trackingRepository.createTrackingSession(incidentId)
+                    } catch (e: Exception) {
+                        android.util.Log.w("EmergencyService", "createTrackingSession error: ${e.message}")
+                    }
                 }
                 startContinuousTracking(incidentId)
                 startCaregiverReassuranceListener(incidentId)
@@ -87,70 +118,82 @@ class EmergencyForegroundService : Service() {
             }
         }
 
-        val notification = buildNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
-        }
         return START_STICKY
     }
 
     private fun startCaregiverReassuranceListener(incidentId: String) {
         serviceScope.launch {
-            trackingRepository.getTrackingSession(incidentId).collect { session ->
-                if (session == null) return@collect
+            try {
+                trackingRepository.getTrackingSession(incidentId)
+                    .catch { e -> android.util.Log.w("EmergencyService", "Reassurance listener error: ${e.message}") }
+                    .collect { session ->
+                        if (session == null) return@collect
 
-                // 1. Detect Caregiver Claim / Acknowledgment
-                if (!session.claimedBy.isNullOrBlank() && session.claimedBy != lastClaimedBy) {
-                    lastClaimedBy = session.claimedBy
-                    android.util.Log.i("EmergencyService", "Caregiver claim received: ${session.claimedBy} (ETA: ${session.claimedEta})")
-                    
-                    withContext(Dispatchers.Main) {
-                        VoiceFeedbackManager.announceCaregiverResponse(session.claimedBy, session.claimedEta)
-                    }
-                    hapticFeedback.triggerReassuranceHeartbeat()
-                }
+                        // 1. Detect Caregiver Claim / Acknowledgment
+                        if (!session.claimedBy.isNullOrBlank() && session.claimedBy != lastClaimedBy) {
+                            lastClaimedBy = session.claimedBy
+                            android.util.Log.i("EmergencyService", "Caregiver claim received: ${session.claimedBy} (ETA: ${session.claimedEta})")
+                            
+                            withContext(Dispatchers.Main) {
+                                VoiceFeedbackManager.announceCaregiverResponse(session.claimedBy, session.claimedEta)
+                            }
+                            HapticFeedbackManager.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
+                        }
 
-                // 2. Detect Manual Reassurance Ping from Caregiver Portal
-                if (session.lastReassurancePing != null && session.lastReassurancePing != lastReassuranceTimestamp) {
-                    lastReassuranceTimestamp = session.lastReassurancePing
-                    android.util.Log.i("EmergencyService", "Reassurance ping received from caregiver portal")
-                    
-                    withContext(Dispatchers.Main) {
-                        VoiceFeedbackManager.announceReassurancePing()
+                        // 2. Detect Manual Reassurance Ping from Caregiver Portal
+                        if (session.lastReassurancePing != null && session.lastReassurancePing != lastReassuranceTimestamp) {
+                            lastReassuranceTimestamp = session.lastReassurancePing
+                            android.util.Log.i("EmergencyService", "Reassurance ping received from caregiver portal")
+                            
+                            withContext(Dispatchers.Main) {
+                                VoiceFeedbackManager.announceReassurancePing()
+                            }
+                            HapticFeedbackManager.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
+                        }
                     }
-                    hapticFeedback.triggerReassuranceHeartbeat()
-                }
+            } catch (e: Exception) {
+                android.util.Log.e("EmergencyService", "startCaregiverReassuranceListener caught: ${e.message}")
             }
         }
     }
 
     private fun startContinuousTracking(incidentId: String) {
-        // Start the Fused Location update loop
-        locationManager.startLocationUpdates { locationData ->
-            serviceScope.launch {
-                val session = repository.getActiveSession().first()
-                if (session != null && session.incidentId == incidentId) {
-                    val updatedSession = session.copy(lastKnownLocation = locationData)
-                    repository.updateSession(updatedSession)
-                    trackingRepository.publishLocation(incidentId, locationData)
-                    android.util.Log.d("EmergencyService", "LOCATION_UPDATE_PERSISTED accuracy=${locationData.accuracy}")
-                } else {
-                    android.util.Log.e("EmergencyService", "Update failed: No matching active session found.")
-                    stopSelf()
+        try {
+            locationManager.startLocationUpdates { locationData ->
+                serviceScope.launch {
+                    try {
+                        val session = repository.getActiveSession().first()
+                        if (session != null && session.incidentId == incidentId) {
+                            val updatedSession = session.copy(lastKnownLocation = locationData)
+                            repository.updateSession(updatedSession)
+                            trackingRepository.publishLocation(incidentId, locationData)
+                            android.util.Log.d("EmergencyService", "LOCATION_UPDATE_PERSISTED accuracy=${locationData.accuracy}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("EmergencyService", "Location persistence warning: ${e.message}")
+                    }
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("EmergencyService", "startLocationUpdates error: ${e.message}", e)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        locationManager.stopLocationUpdates()
-        currentIncidentId?.let {
-            serviceScope.launch {
-                trackingRepository.completeTrackingSession(it)
+        try {
+            locationManager.stopLocationUpdates()
+            currentIncidentId?.let { id ->
+                serviceScope.launch {
+                    try {
+                        trackingRepository.completeTrackingSession(id)
+                    } catch (e: Exception) {
+                        android.util.Log.w("EmergencyService", "completeTrackingSession error: ${e.message}")
+                    }
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("EmergencyService", "onDestroy error: ${e.message}")
         }
         serviceScope.cancel()
         android.util.Log.i("EmergencyService", "SERVICE_STOPPED incidentId=$currentIncidentId")
@@ -185,7 +228,7 @@ class EmergencyForegroundService : Service() {
                 description = "Notifies when KAAVAL emergency live tracking is active"
             }
             val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+            manager?.createNotificationChannel(channel)
         }
     }
 }
