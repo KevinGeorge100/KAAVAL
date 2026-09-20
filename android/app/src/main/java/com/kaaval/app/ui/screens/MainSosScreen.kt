@@ -35,7 +35,6 @@ import com.kaaval.app.ui.theme.ActiveGreen
 import com.kaaval.app.ui.theme.EmergencyRed
 import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
-import kotlinx.coroutines.delay
 
 /**
  * Main SOS Emergency Screen
@@ -53,8 +52,7 @@ fun MainSosScreen(
     onTriggerSos: () -> Unit,
     onTriggerInstantSos: () -> Unit,
     onCancelSos: () -> Unit,
-    onResolveSos: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Outermost container
     Box(modifier = modifier.fillMaxSize()) {
@@ -161,7 +159,7 @@ fun MainSosScreen(
                                 .pointerInput(Unit) {
                                     detectTapGestures(
                                         onLongPress = { onTriggerSos() },
-                                        onTap = { onTriggerSos() }
+                                    onTap = { onTriggerSos() }
                                     )
                                 }
                         ) {
@@ -215,7 +213,7 @@ fun MainSosScreen(
                                     .background(HighContrastYellow)
                             ) {
                                 Text(
-                                    text = "${emergencyState.secondsRemaining}",
+                                    text = emergencyState.secondsRemaining.toString(),
                                     fontSize = 80.sp,
                                     fontWeight = FontWeight.Black,
                                     color = HighContrastBlack
@@ -253,9 +251,7 @@ fun MainSosScreen(
                                     .fillMaxSize()
                                     .background(Color.Black)
                                     .pointerInput(Unit) {
-                                        detectTapGestures(onDoubleTap = { 
-                                            onStartSafeConfirmation()
-                                        })
+                                        detectTapGestures(onDoubleTap = { onStartSafeConfirmation() })
                                     },
                                 contentAlignment = Alignment.Center
                             ) {

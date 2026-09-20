@@ -42,7 +42,6 @@ import com.kaaval.app.domain.model.EmergencyState
 import com.kaaval.app.domain.model.MedicalProfile
 import com.kaaval.app.service.AudioWitnessManager
 import com.kaaval.app.service.BatteryGuardianManager
-import com.kaaval.app.service.EmergencyForegroundService
 import com.kaaval.app.service.KaavalBleManager
 import com.kaaval.app.service.KaavalLocationManager
 import com.kaaval.app.service.SmsReplyReceiver
@@ -55,12 +54,9 @@ import com.kaaval.app.ui.theme.HighContrastBlack
 import com.kaaval.app.ui.theme.HighContrastYellow
 import com.kaaval.app.ui.theme.KAAVALTheme
 import com.kaaval.app.ui.viewmodel.EmergencyViewModel
-import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -81,7 +77,6 @@ class MainActivity : ComponentActivity() {
             context = this,
             locationManager = locationManager,
             sosDispatcher = sosDispatcher,
-            bleManager = bleManager,
             audioWitness = audioWitness,
             batteryGuardian = batteryGuardian,
             repository = repository
@@ -91,8 +86,6 @@ class MainActivity : ComponentActivity() {
     private val viewModel: EmergencyViewModel by viewModels {
         EmergencyViewModel.provideFactory(actionDispatcher, repository)
     }
-
-    private var lastAnnouncementTime = 0L
 
     // Volume Trigger Logic
     private var volumeUpClickCount = 0
@@ -137,7 +130,7 @@ class MainActivity : ComponentActivity() {
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
         openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
-        audioWitness = AudioWitnessManager(this) { audioFile ->
+        audioWitness = AudioWitnessManager(this) { _ ->
             // AI Analysis disabled for stability sprint.
         }
         batteryGuardian = BatteryGuardianManager(this) { level -> 
@@ -172,9 +165,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             KAAVALTheme {
-                var selectedTab by remember { mutableStateOf(0) }
+                var selectedTab by remember { mutableIntStateOf(0) }
                 val emergencyState by viewModel.emergencyState.collectAsState()
-                var isDiscreetMode by remember { mutableStateOf(false) }
+                var isDiscreetMode by remember { mutableStateOf(value = false) }
 
                 val contacts by repository.allContacts.collectAsState(initial = emptyList())
                 val medicalProfileState by repository.medicalProfile.collectAsState(initial = null)
@@ -182,9 +175,15 @@ class MainActivity : ComponentActivity() {
 
                 // SPRINT 3: State Recovery Logic (Bridge to VM if needed)
                 LaunchedEffect(Unit) {
-                    repository.currentEmergencyState.collect { recoveredState ->
-                        if (recoveredState != null && emergencyState is EmergencyState.Idle) {
-                            // Recovery logic to be unified in VM
+                    repository.currentEmergencyState.collectLatest { recoveredState ->
+                        if ((recoveredState != null) && (emergencyState is EmergencyState.Idle)) {
+                            viewModel.processEvent(
+                                EmergencyEvent.SessionRecovered(
+                                    incidentId = recoveredState.incidentId,
+                                    latitude = recoveredState.latitude,
+                                    longitude = recoveredState.longitude
+                                )
+                            )
                         }
                     }
                 }
@@ -218,12 +217,21 @@ class MainActivity : ComponentActivity() {
                     voiceFeedback.speakPriority("Caregiver $senderName is responding.")
                 }
 
-                LaunchedEffect(contacts) {
+                DisposableEffect(contacts) {
                     if (contacts.isNotEmpty()) {
-                        smsReceiver = SmsReplyReceiver(contacts.map { it.phoneNumber }) { sender ->
+                        val receiver = SmsReplyReceiver(contacts.map { it.phoneNumber }) { sender ->
                             val contactName = contacts.find { it.phoneNumber.contains(sender.takeLast(10)) }?.name ?: sender
                             simulateCaregiverResponse(contactName)
                         }
+                        smsReceiver = receiver
+                        registerReceiver(receiver, android.content.IntentFilter(android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION))
+                        
+                        onDispose {
+                            unregisterReceiver(receiver)
+                            smsReceiver = null
+                        }
+                    } else {
+                        onDispose { }
                     }
                 }
 
@@ -240,7 +248,6 @@ class MainActivity : ComponentActivity() {
                                     selected = selectedTab == 0,
                                     onClick = { 
                                         selectedTab = 0 
-                                        lastAnnouncementTime = System.currentTimeMillis()
                                         voiceFeedback.speakPriority("Emergency SOS Screen. The giant activation button is in the center. Hold it to start an alert.")
                                     },
                                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
@@ -259,7 +266,6 @@ class MainActivity : ComponentActivity() {
                                     selected = selectedTab == 1,
                                     onClick = { 
                                         selectedTab = 1 
-                                        lastAnnouncementTime = System.currentTimeMillis()
                                         val count = contacts.size
                                         val summary = if (count == 0) "No contacts added yet." else "You have $count emergency contacts. Swipe to hear their names."
                                         voiceFeedback.speakPriority("Emergency Contacts Screen. $summary")
@@ -280,7 +286,6 @@ class MainActivity : ComponentActivity() {
                                     selected = selectedTab == 2,
                                     onClick = { 
                                         selectedTab = 2 
-                                        lastAnnouncementTime = System.currentTimeMillis()
                                         voiceFeedback.speakPriority("Medical Profile Screen. Your clinical details are here. Use the button at the top right to read them aloud for a first responder.")
                                     },
                                     icon = { Icon(Icons.Default.AccountBox, contentDescription = null) },
@@ -299,7 +304,6 @@ class MainActivity : ComponentActivity() {
                                     selected = selectedTab == 3,
                                     onClick = { 
                                         selectedTab = 3 
-                                        lastAnnouncementTime = System.currentTimeMillis()
                                         val status = if (wearableState.isConnected) "Your wearable is connected and ready." else "Your wearable is not connected."
                                         voiceFeedback.speakPriority("Wearable Status Screen. $status")
                                     },
@@ -335,7 +339,6 @@ class MainActivity : ComponentActivity() {
                             onTriggerSos = { viewModel.onSosButtonPressed() },
                             onTriggerInstantSos = { viewModel.triggerInstantSos() },
                             onCancelSos = { viewModel.cancelSos() },
-                            onResolveSos = { viewModel.resolveSos() },
                             modifier = Modifier.padding(innerPadding)
                         )
                         1 -> ContactsScreen(
