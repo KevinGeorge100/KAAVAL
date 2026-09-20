@@ -1186,6 +1186,235 @@
             height: 16px;
             color: #34D399;
         }
+
+        /* =======================================================
+           RESPONSIVE MOBILE & DESKTOP ADAPTATION
+           ======================================================= */
+        
+        /* Mobile Segmented View Switcher (Hidden on Desktop) */
+        .mobile-view-tabs {
+            display: none;
+        }
+
+        /* Large Tablets & Desktop (993px and up) */
+        @media (min-width: 993px) {
+            main.workspace {
+                flex-direction: row;
+            }
+            #map-container {
+                flex: 1;
+                height: 100%;
+            }
+            aside.incident-sidebar {
+                width: 440px;
+                height: 100%;
+                border-left: 1px solid var(--border-subtle);
+                border-top: none;
+            }
+        }
+
+        /* Tablets & Mobile Screens (992px and down) */
+        @media (max-width: 992px) {
+            header.topbar {
+                height: 54px;
+                padding: 0 12px;
+            }
+
+            .brand-meta span {
+                display: none;
+            }
+
+            .brand-meta h1 {
+                font-size: 0.85rem;
+                gap: 6px;
+            }
+
+            .incident-pill {
+                font-size: 0.65rem;
+                padding: 2px 6px;
+            }
+
+            .status-beacon {
+                padding: 4px 10px;
+                gap: 6px;
+            }
+
+            .status-title {
+                font-size: 0.72rem;
+            }
+
+            .status-timer {
+                font-size: 0.72rem;
+                padding-left: 6px;
+            }
+
+            .action-tray {
+                gap: 6px;
+            }
+
+            .btn-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .btn-resolve {
+                padding: 6px 10px;
+                font-size: 0.72rem;
+            }
+
+            /* Responsive Workspace: Stacked Layout */
+            main.workspace {
+                flex-direction: column;
+                height: calc(100vh - 54px);
+                position: relative;
+            }
+
+            /* Mobile View Mode Switcher Pill */
+            .mobile-view-tabs {
+                display: flex;
+                position: absolute;
+                bottom: 16px;
+                right: 16px;
+                z-index: 550;
+                background: rgba(13, 19, 34, 0.94);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid var(--border-strong);
+                border-radius: 30px;
+                padding: 4px;
+                gap: 4px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            }
+
+            .mobile-tab-btn {
+                background: transparent;
+                border: none;
+                color: var(--text-secondary);
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-family: var(--font-sans);
+                font-size: 0.72rem;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.2s;
+            }
+
+            .mobile-tab-btn.active {
+                background: var(--blue);
+                color: #FFFFFF;
+            }
+
+            /* Default Stacked Split */
+            #map-container {
+                width: 100%;
+                height: 45vh;
+                min-height: 220px;
+                flex: none;
+                transition: height 0.25s ease;
+            }
+
+            aside.incident-sidebar {
+                width: 100%;
+                flex: 1;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid var(--border-subtle);
+                transition: height 0.25s ease;
+            }
+
+            /* View modes toggled via CSS classes */
+            main.workspace.view-map-only #map-container {
+                height: 100%;
+            }
+            main.workspace.view-map-only aside.incident-sidebar {
+                display: none;
+            }
+
+            main.workspace.view-triage-only #map-container {
+                display: none;
+            }
+            main.workspace.view-triage-only aside.incident-sidebar {
+                height: 100%;
+                display: flex;
+            }
+        }
+
+        /* Narrow Phones (640px and down) */
+        @media (max-width: 640px) {
+            .hud-telemetry {
+                top: 8px;
+                left: 8px;
+                padding: 6px 10px;
+                gap: 10px;
+                font-size: 0.68rem;
+                max-width: calc(100% - 130px);
+            }
+
+            .telemetry-item:last-child {
+                display: none;
+            }
+
+            .hud-controls {
+                top: 8px;
+                right: 8px;
+                gap: 4px;
+            }
+
+            .map-ctl-btn {
+                padding: 6px 8px;
+                font-size: 0.68rem;
+            }
+
+            .hud-proximity {
+                bottom: 65px;
+                width: calc(100% - 24px);
+                max-width: 360px;
+                padding: 8px 12px;
+                font-size: 0.72rem;
+            }
+
+            .sidebar-section {
+                padding: 16px;
+            }
+
+            .triage-actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-window {
+                width: 94%;
+                padding: 18px 16px;
+            }
+
+            .eta-chips-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Extra Small Phones (380px and down) */
+        @media (max-width: 380px) {
+            header.topbar {
+                padding: 0 8px;
+            }
+            .brand-logo {
+                width: 30px;
+                height: 30px;
+            }
+            .incident-pill {
+                display: none;
+            }
+            .btn-icon {
+                width: 28px;
+                height: 28px;
+            }
+            .btn-resolve {
+                padding: 5px 8px;
+                font-size: 0.68rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1455,8 +1684,23 @@
                     </div>
                 </div>
             </div>
-
         </aside>
+
+        <!-- MOBILE VIEW MODE SWITCHER (Visible on screens <= 992px) -->
+        <div class="mobile-view-tabs" id="mobile-view-tabs">
+            <button class="mobile-tab-btn active" id="btn-tab-split" onclick="setMobileView('split')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <span>Split</span>
+            </button>
+            <button class="mobile-tab-btn" id="btn-tab-map" onclick="setMobileView('map')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                <span>Map</span>
+            </button>
+            <button class="mobile-tab-btn" id="btn-tab-triage" onclick="setMobileView('triage')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>Triage</span>
+            </button>
+        </div>
 
     </main>
 
@@ -1631,6 +1875,36 @@
 
             // Connect Firestore
             setupFirestoreListener();
+
+            // Responsive map auto-recalibration on window resize & orientation change
+            window.addEventListener('resize', () => {
+                if (map) {
+                    setTimeout(() => map.invalidateSize(), 200);
+                }
+            });
+        }
+
+        // --- MOBILE & RESPONSIVE VIEW CONTROLLER ---
+        function setMobileView(mode) {
+            const workspace = document.querySelector('main.workspace');
+            if (!workspace) return;
+            
+            workspace.classList.remove('view-map-only', 'view-triage-only');
+            document.querySelectorAll('.mobile-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (mode === 'map') {
+                workspace.classList.add('view-map-only');
+                document.getElementById('btn-tab-map')?.classList.add('active');
+            } else if (mode === 'triage') {
+                workspace.classList.add('view-triage-only');
+                document.getElementById('btn-tab-triage')?.classList.add('active');
+            } else {
+                document.getElementById('btn-tab-split')?.classList.add('active');
+            }
+
+            if (map) {
+                setTimeout(() => map.invalidateSize(), 250);
+            }
         }
 
         function setLayerMode(mode) {
