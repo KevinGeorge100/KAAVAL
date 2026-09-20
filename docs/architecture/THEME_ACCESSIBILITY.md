@@ -34,7 +34,7 @@ KAAVAL is an **accessibility-first emergency response application** for visually
 
 ## 🔤 3. Typography & Dynamic Font Scaling
 
-The typography hierarchy ([Typography.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Typography.kt)) uses Jetpack Compose Material 3 `Typography` configured with enlarged font sizes and bold font weights (`FontWeight.Bold` and `FontWeight.SemiBold`).
+The typography hierarchy ([Typography.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Typography.kt)) uses Jetpack Compose Material 3 `Typography` configured with enlarged font sizes and bold font weights (`FontWeight.Bold` and `FontWeight.SemiBold`).
 
 ```kotlin
 displayLarge  -> 40.sp (Line height 48.sp) — Hero emergency timer & state labels
@@ -52,7 +52,7 @@ labelLarge    -> 16.sp (Line height 20.sp) — Button labels (all-caps support)
 
 ## 📐 4. Shape & Touch Target Sizing
 
-- **Minimum Touch Target**: Defined in [Shape.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Shape.kt) as `MinTouchTargetSize = 48.dp`.
+- **Minimum Touch Target**: Defined in [Shape.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Shape.kt) as `MinTouchTargetSize = 48.dp`.
 - **Button Standards**: Primary and emergency buttons enforce `heightIn(min = 48.dp)` or `heightIn(min = 56.dp)`.
 - **Corner Radii**:
   - `small` -> `12.dp`
@@ -63,8 +63,8 @@ labelLarge    -> 16.sp (Line height 20.sp) — Button labels (all-caps support)
 
 ## 🛠️ 5. Implementation Files
 
-1. [Color.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Color.kt) — Color tokens and backward-compatibility aliases.
-2. [Typography.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Typography.kt) — Accessible typography specifications.
-3. [Shape.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Shape.kt) — Material 3 shapes & touch target sizing.
-4. [Theme.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Theme.kt) — Enforced dark theme wrapper & MaterialTheme injection.
-5. [ThemePreviewScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/ThemePreviewScreen.kt) — Live Jetpack Compose preview screen.
+1. [Color.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Color.kt) — Color tokens and backward-compatibility aliases.
+2. [Typography.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Typography.kt) — Accessible typography specifications.
+3. [Shape.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Shape.kt) — Material 3 shapes & touch target sizing.
+4. [Theme.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/theme/Theme.kt) — Enforced dark theme wrapper & MaterialTheme injection.
+5. [ThemePreviewScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/ThemePreviewScreen.kt) — Live Jetpack Compose preview screen.

@@ -19,7 +19,7 @@ KAAVAL is built specifically for **visually impaired users**, which requires tha
 
 ## 📱 2. Semantics Implementation Matrix
 
-### A. Main SOS Screen ([MainSosScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MainSosScreen.kt))
+### A. Main SOS Screen ([MainSosScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MainSosScreen.kt))
 
 | UI Element | Jetpack Compose Semantics | Content Description | State Description (`stateDescription`) |
 | :--- | :--- | :--- | :--- |
@@ -31,7 +31,7 @@ KAAVAL is built specifically for **visually impaired users**, which requires tha
 
 ---
 
-### B. Emergency Contacts Screen ([ContactsScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/ContactsScreen.kt))
+### B. Emergency Contacts Screen ([ContactsScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/ContactsScreen.kt))
 
 | UI Element | Jetpack Compose Semantics | Content Description | State Description (`stateDescription`) |
 | :--- | :--- | :--- | :--- |
@@ -42,7 +42,7 @@ KAAVAL is built specifically for **visually impaired users**, which requires tha
 
 ---
 
-### C. Medical Profile Screen ([MedicalProfileScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MedicalProfileScreen.kt))
+### C. Medical Profile Screen ([MedicalProfileScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MedicalProfileScreen.kt))
 
 | UI Element | Jetpack Compose Semantics | Content Description | State Description (`stateDescription`) |
 | :--- | :--- | :--- | :--- |
@@ -51,7 +51,7 @@ KAAVAL is built specifically for **visually impaired users**, which requires tha
 
 ---
 
-### D. BLE Wearable Status Screen ([WearableStatusScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/WearableStatusScreen.kt))
+### D. BLE Wearable Status Screen ([WearableStatusScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/WearableStatusScreen.kt))
 
 | UI Element | Jetpack Compose Semantics | Content Description | State Description (`stateDescription`) |
 | :--- | :--- | :--- | :--- |
@@ -61,7 +61,7 @@ KAAVAL is built specifically for **visually impaired users**, which requires tha
 
 ---
 
-### E. Bottom Navigation Bar ([MainActivity.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/MainActivity.kt))
+### E. Bottom Navigation Bar ([MainActivity.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/MainActivity.kt))
 
 | Tab Index | Jetpack Compose Semantics | Content Description | State Description (`stateDescription`) |
 | :---: | :--- | :--- | :--- |

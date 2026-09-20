@@ -1,5 +1,7 @@
 # Android / Gradle
 .gradle/
+clean_gradle_home/
+temp_gradle_home/
 **/build/
 local.properties
 *.apk

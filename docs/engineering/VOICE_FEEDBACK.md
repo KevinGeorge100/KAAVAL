@@ -15,7 +15,7 @@ The **VoiceFeedbackManager** is a thread-safe, lifecycle-aware **Singleton Speec
 - **Queued vs Priority Playback**:
   - `speak(message)` uses `TextToSpeech.QUEUE_ADD` to queue informational speech sequentially without overlapping.
   - `speakPriority(message)` uses `TextToSpeech.QUEUE_FLUSH` to immediately interrupt non-critical speech for high-priority emergency alerts.
-- **Auto-Initialization**: Initialized automatically on app startup via [KaavalApplication.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/KaavalApplication.kt).
+- **Auto-Initialization**: Initialized automatically on app startup via [KaavalApplication.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/KaavalApplication.kt).
 - **Multi-Language Architecture**: Built with an abstraction layer (`getMessage(englishText, malayalamText)`) supporting English by default and seamless switching to Malayalam (`ml_IN`) without refactoring.
 
 ---
@@ -59,6 +59,6 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
 
 ## 🔗 3. Application Integration Points
 
-1. **[KaavalApplication.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/KaavalApplication.kt)**: Auto-initializes TTS engine on app process start (`VoiceFeedbackManager.initialize(this)`).
-2. **[MainActivity.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/MainActivity.kt)**: Triggers priority announcements during 3-second SOS hold, countdown timer intervals, location acquisition, and emergency resolution.
-3. **[MainSosScreen.kt](file:///c:/Projects/KAAVAL/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MainSosScreen.kt)**: Pairs non-visual speech output with tactile TalkBack semantics.
+1. **[KaavalApplication.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/KaavalApplication.kt)**: Auto-initializes TTS engine on app process start (`VoiceFeedbackManager.initialize(this)`).
+2. **[MainActivity.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/MainActivity.kt)**: Triggers priority announcements during 3-second SOS hold, countdown timer intervals, location acquisition, and emergency resolution.
+3. **[MainSosScreen.kt](file:///c:/Projects/KAAVAL/android/app/src/main/java/com/kaaval/app/ui/screens/MainSosScreen.kt)**: Pairs non-visual speech output with tactile TalkBack semantics.
