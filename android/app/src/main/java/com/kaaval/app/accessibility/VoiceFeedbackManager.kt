@@ -110,20 +110,29 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
      */
     fun speakCountdown(seconds: Int) {
         val now = System.currentTimeMillis()
-        // Stronger guard for countdown to prevent "activates in" + "5" overlap
+        // Guard for countdown to prevent duplicate start voice
         if (seconds == 5 && now - lastUtteranceTime < 400) {
-             Log.d(TAG, "Skipping duplicate countdown start voice")
-             return
+            Log.d(TAG, "Skipping duplicate countdown start voice")
+            return
         }
 
-        val msg = if (seconds == 5) {
-            getMessage("Emergency activates in 5", "സന്ദേശം അയക്കാൻ 5")
-        } else {
-            seconds.toString()
-        }
-        
         lastUtteranceTime = now
-        speakInternal(msg, isPriority = true)
+
+        if (seconds == 5) {
+            val msg = getMessage("Activating in 5", "കൗണ്ട്ഡൗൺ 5")
+            // Priority flush cancels any trailing hold announcement
+            speakInternal(msg, isPriority = true)
+        } else {
+            val msg = when (seconds) {
+                4 -> getMessage("4", "നാല്")
+                3 -> getMessage("3", "മൂന്ന്")
+                2 -> getMessage("2", "രണ്ട്")
+                1 -> getMessage("1", "ഒന്ന്")
+                else -> seconds.toString()
+            }
+            // Use QUEUE_ADD so this tick seamlessly follows any preceding speech without cutting it off
+            speakInternal(msg, isPriority = false)
+        }
     }
 
     /**
@@ -155,10 +164,10 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
     fun announce(announcement: AnnouncementType, isPriority: Boolean = false) {
         val text = when (announcement) {
             AnnouncementType.EMERGENCY_READY -> getMessage("KAAVAL system is active. Your family is protected.", "കാവൽ സിസ്റ്റം സജ്ജമാണ്. നിങ്ങൾ സുരക്ഷിതനാണ്.")
-            AnnouncementType.SOS_BUTTON_HELD -> getMessage("SOS alert initiated. Alerting family now.", "അപകട സന്ദേശം അയക്കുന്നു. വീട്ടുകാരെ വിവരമറിയിക്കുന്നു.")
-            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Emergency activates in", "സന്ദേശം അയക്കാൻ")
-            AnnouncementType.COUNTDOWN_CANCELLED -> getMessage("Alert cancelled.", "സന്ദേശം റദ്ദാക്കി.")
-            AnnouncementType.EMERGENCY_ACTIVATED -> getMessage("Emergency alert sent. Location shared with caregivers.", "അപകട സന്ദേശം അയച്ചു. ലൊക്കേഷൻ വീട്ടുകാർക്ക് കൈമാറി.")
+            AnnouncementType.SOS_BUTTON_HELD -> getMessage("SOS button held. Starting emergency countdown.", "എസ്.ഒ.എസ് ബട്ടൺ അമർത്തിപിടിച്ചിരിക്കുന്നു. എമർജൻസി കൗണ്ട്ഡൗൺ ആരംഭിക്കുന്നു.")
+            AnnouncementType.EMERGENCY_COUNTDOWN_STARTED -> getMessage("Emergency countdown started. Activating in 5 seconds. Tap cancel to stop.", "എമർജൻസി കൗണ്ട്ഡൗൺ ആരംഭിച്ചു. 5 സെക്കൻഡിൽ ആക്റ്റീവാകും. നിർത്താൻ റദ്ദാക്കുക.")
+            AnnouncementType.COUNTDOWN_CANCELLED -> getMessage("Emergency countdown cancelled.", "എമർജൻസി കൗണ്ട്ഡൗൺ റദ്ദാക്കി.")
+            AnnouncementType.EMERGENCY_ACTIVATED -> getMessage("Emergency activated. Sending emergency alerts and sharing live GPS location.", "എമർജൻസി ആക്റ്റിവേറ്റായി. സന്ദേശങ്ങളും തത്സമയ ലൊക്കേഷനും പങ്കിടുന്നു.")
             AnnouncementType.ACQUIRING_LOCATION -> getMessage("Finding your location.", "നിങ്ങളുടെ സ്ഥലം കണ്ടെത്തുന്നു.")
             AnnouncementType.LOCATION_ACQUIRED -> getMessage("Location fixed.", "സ്ഥലം കണ്ടെത്തി.")
             AnnouncementType.SENDING_SMS_ALERTS -> getMessage("Sending urgent SMS to your contacts.", "വീട്ടുകാർക്ക് അടിയന്തര സന്ദേശങ്ങൾ അയക്കുന്നു.")

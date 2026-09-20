@@ -11,7 +11,7 @@ try {
         
         $localPath = $request.Url.LocalPath
         if ($localPath -eq "/") { $localPath = "/index.html" }
-        $filePath = Join-Path "c:\Projects\KAAVAL\KAAVAL\tracking-web" $localPath.TrimStart('/')
+        $filePath = Join-Path $PSScriptRoot $localPath.TrimStart('/')
         
         if (Test-Path $filePath -PathType Leaf) {
             $bytes = [System.IO.File]::ReadAllBytes($filePath)
