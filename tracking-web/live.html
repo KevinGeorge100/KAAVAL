@@ -14,6 +14,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+    <!-- MapLibre GL Vector Engine & Leaflet Bridge -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.21/leaflet-maplibre-gl.js"></script>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
@@ -303,6 +308,24 @@
         }
         .leaflet-control-attribution a:hover {
             color: var(--primary) !important;
+        }
+
+        /* High-Visibility Animated Tactical Navigation Line */
+        .tactical-route-underglow {
+            stroke: #00E5FF !important;
+            filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.85));
+        }
+
+        .tactical-route-active {
+            stroke: #FFFFFF !important;
+            stroke-dasharray: 10, 10;
+            animation: dashPulse 1.2s linear infinite;
+        }
+
+        @keyframes dashPulse {
+            to {
+                stroke-dashoffset: -20;
+            }
         }
 
         /* FLOATING HUD: TELEMETRY PILL */
@@ -1023,41 +1046,116 @@
             cursor: pointer;
         }
 
-        /* CUSTOM LEAFLET PULSING PIN */
+        /* ULTRA HIGH-VISIBILITY USER EMERGENCY BEACON */
         .user-pulse-marker {
             position: relative;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .user-pulse-marker .core-dot {
-            width: 14px;
-            height: 14px;
-            background-color: #EF4444;
-            border: 2px solid #FFFFFF;
+            width: 18px;
+            height: 18px;
+            background: radial-gradient(circle, #FF2E4D 0%, #DC2626 70%, #991B1B 100%);
+            border: 2.5px solid #FFFFFF;
             border-radius: 50%;
             position: absolute;
-            top: 5px;
-            left: 5px;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-            z-index: 2;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6), 0 2px 6px rgba(0, 0, 0, 0.8);
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-pulse-marker .core-dot::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 4px #FFFFFF;
         }
 
         .user-pulse-marker .halo-ring {
-            width: 32px;
-            height: 32px;
-            border: 2px solid #EF4444;
+            width: 36px;
+            height: 36px;
+            border: 2px solid #FF3B56;
             border-radius: 50%;
             position: absolute;
-            top: -4px;
-            left: -4px;
-            animation: pinPulse 2s ease-out infinite;
+            animation: pinPulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .user-pulse-marker .halo-ring-outer {
+            width: 56px;
+            height: 56px;
+            border: 1.5px solid rgba(255, 59, 86, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            animation: pinPulseOuter 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            animation-delay: 0.5s;
             z-index: 1;
+            pointer-events: none;
         }
 
         @keyframes pinPulse {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(1.8); opacity: 0; }
+            0% { transform: scale(0.3); opacity: 1; box-shadow: 0 0 8px rgba(255, 59, 86, 0.9); }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        @keyframes pinPulseOuter {
+            0% { transform: scale(0.3); opacity: 0.9; }
+            100% { transform: scale(2.8); opacity: 0; }
+        }
+
+        /* TACTICAL CAREGIVER BEACON */
+        .caregiver-pulse-marker {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caregiver-pulse-marker .cg-core {
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #00F59B 0%, #10B981 80%, #047857 100%);
+            border: 2.5px solid #FFFFFF;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 1), 0 0 24px rgba(16, 185, 129, 0.5), 0 2px 6px rgba(0, 0, 0, 0.8);
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caregiver-pulse-marker .cg-core svg {
+            width: 9px;
+            height: 9px;
+            fill: #FFFFFF;
+        }
+
+        .caregiver-pulse-marker .cg-halo {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #10B981;
+            border-radius: 50%;
+            position: absolute;
+            animation: cgPulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        @keyframes cgPulse {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
         }
 
         /* TOAST ALERT */
@@ -1438,6 +1536,7 @@
         let caregiverLng = null;
         let caregiverMarker = null;
         let routePolyline = null;
+        let routeGlowLine = null;
         let watchPositionId = null;
 
         // Map State
@@ -1454,10 +1553,33 @@
         // CARTO Basemaps Dedicated Production API Key (Free up to 5,000,000 requests/month)
         const CARTO_API_KEY = 'cb1_3r6v_1_fbbfcb2f8d717594a6ce5f56';
 
-        // Tile Endpoints (CARTO Watermark-Free Licensed Endpoints + Esri Satellite)
-        const cartoDarkTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
-        const cartoVoyagerTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
+        // High-Visibility Vector Basemap Styles (WebGL 60FPS Hardware Accelerated)
+        const cartoDarkVectorStyle = `https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json?key=${CARTO_API_KEY}`;
+        const cartoVoyagerVectorStyle = `https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json?key=${CARTO_API_KEY}`;
+
+        // High-Resolution Licensed Raster Fallbacks + Esri Satellite
+        const cartoDarkRasterTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
+        const cartoVoyagerRasterTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
         const esriSatelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+        function createVectorOrRasterLayer(styleUrl, rasterUrl, isDark) {
+            if (typeof L.maplibreGL === 'function' && window.WebGLRenderingContext) {
+                try {
+                    return L.maplibreGL({
+                        style: styleUrl,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
+                    });
+                } catch (e) {
+                    console.warn("Vector basemap initialization fell back to raster:", e);
+                }
+            }
+            return L.tileLayer(rasterUrl, {
+                subdomains: 'abcd',
+                maxZoom: 20,
+                className: isDark ? 'tactical-dark-tiles' : '',
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
+            });
+        }
 
         // --- 2. MAP INITIALIZATION ---
         function initMap() {
@@ -1468,16 +1590,17 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Default: Tactical Dark Layer (Carto Dark Matter)
+            // Default: Tactical Dark Vector Layer (CARTO Dark Matter GL)
             setLayerMode('tactical');
 
-            // Custom Pulsing SVG Marker for User
+            // Custom Multi-Stage Pulsing SVG Marker for User
             const pulseIcon = L.divIcon({
                 className: '',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12],
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
                 html: `
                     <div class="user-pulse-marker">
+                        <div class="halo-ring-outer"></div>
                         <div class="halo-ring"></div>
                         <div class="core-dot"></div>
                     </div>
@@ -1489,11 +1612,11 @@
 
             accuracyCircle = L.circle([currentLat, currentLng], {
                 radius: currentAccuracy,
-                color: '#EF4444',
+                color: '#FF3B56',
                 fillColor: '#EF4444',
-                fillOpacity: 0.12,
-                weight: 1.5,
-                dashArray: '4, 4'
+                fillOpacity: 0.16,
+                weight: 1.8,
+                dashArray: '5, 5'
             }).addTo(map);
 
             updateTelemetryUI(currentLat, currentLng, currentAccuracy, new Date());
@@ -1509,28 +1632,19 @@
             const btn = document.getElementById('btn-toggle-layer');
 
             if (mode === 'tactical') {
-                activeTileLayer = L.tileLayer(cartoDarkTiles, {
-                    subdomains: 'abcd',
-                    maxZoom: 20,
-                    className: 'tactical-dark-tiles',
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
-                }).addTo(map);
+                activeTileLayer = createVectorOrRasterLayer(cartoDarkVectorStyle, cartoDarkRasterTiles, true).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg> Tactical Dark
+                    </svg> Tactical Dark (Vector)
                 `;
                 btn.classList.add('active');
             } else if (mode === 'street') {
-                activeTileLayer = L.tileLayer(cartoVoyagerTiles, {
-                    subdomains: 'abcd',
-                    maxZoom: 20,
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
-                }).addTo(map);
+                activeTileLayer = createVectorOrRasterLayer(cartoVoyagerVectorStyle, cartoVoyagerRasterTiles, false).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg> Street View
+                    </svg> High-Vis Street (Vector)
                 `;
                 btn.classList.remove('active');
             } else if (mode === 'satellite') {
@@ -1601,25 +1715,42 @@
         function updateCaregiverMarker(lat, lng) {
             if (caregiverMarker) map.removeLayer(caregiverMarker);
             if (routePolyline) map.removeLayer(routePolyline);
+            if (routeGlowLine) map.removeLayer(routeGlowLine);
 
             const cgIcon = L.divIcon({
                 className: '',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
                 html: `
-                    <div style="width:16px; height:16px; border-radius:50%; background:#3B82F6; border:2px solid #FFFFFF; box-shadow:0 0 10px rgba(59,130,246,0.8);"></div>
+                    <div class="caregiver-pulse-marker">
+                        <div class="cg-halo"></div>
+                        <div class="cg-core">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                            </svg>
+                        </div>
+                    </div>
                 `
             });
 
             caregiverMarker = L.marker([lat, lng], { icon: cgIcon }).addTo(map);
-            caregiverMarker.bindPopup('<b>Caregiver Station</b><br>Your current position');
+            caregiverMarker.bindPopup('<b>Caregiver Response Unit</b><br>Active Live Geolocation');
 
-            // Draw trajectory
+            // High-Visibility Dual Layer Tactical Navigation Route
+            routeGlowLine = L.polyline([[lat, lng], [currentLat, currentLng]], {
+                color: '#00E5FF',
+                weight: 6,
+                opacity: 0.45,
+                lineCap: 'round',
+                className: 'tactical-route-underglow'
+            }).addTo(map);
+
             routePolyline = L.polyline([[lat, lng], [currentLat, currentLng]], {
-                color: '#3B82F6',
-                weight: 3,
-                dashArray: '6, 8',
-                opacity: 0.85
+                color: '#FFFFFF',
+                weight: 3.5,
+                opacity: 0.95,
+                dashArray: '8, 10',
+                className: 'tactical-route-active'
             }).addTo(map);
         }
 
@@ -1705,6 +1836,9 @@
                 const lastUpdate = data.lastUpdate ? (data.lastUpdate.toDate ? data.lastUpdate.toDate() : new Date(data.lastUpdate)) : new Date();
                 updateTelemetryUI(currentLat, currentLng, currentAccuracy, lastUpdate);
                 computeProximity();
+                if (caregiverLat && caregiverLng) {
+                    updateCaregiverMarker(caregiverLat, caregiverLng);
+                }
             }
 
             // 2. Incident Status
