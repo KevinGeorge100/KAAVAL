@@ -17,6 +17,9 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase Reserved Hosting Init & Local Fallback Config -->
+    <script src="/__/firebase/init.js"></script>
+    <script src="firebase-config.js"></script>
 
     <style>
         :root {
@@ -1449,19 +1452,18 @@
 
     <script>
         // --- 1. FIREBASE CONFIGURATION & INITIALIZATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDmhSUCCVHR6ttU-rlmzAr0c5MhxpYxGF0",
-            authDomain: "kaaval-94c1d.firebaseapp.com",
-            projectId: "kaaval-94c1d",
-            storageBucket: "kaaval-94c1d.firebasestorage.app",
-            messagingSenderId: "146099155291",
-            appId: "1:146099155291:web:kaaval-live-portal"
-        };
         let db = null;
         try {
-            if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
+            if (typeof firebase !== 'undefined') {
+                if (firebase.apps.length === 0) {
+                    const localConfig = window.__FIREBASE_CONFIG__;
+                    if (localConfig && localConfig.apiKey && !localConfig.apiKey.startsWith("YOUR_")) {
+                        firebase.initializeApp(localConfig);
+                    }
+                }
+                if (firebase.apps.length > 0) {
+                    db = firebase.firestore();
+                }
             }
         } catch (e) {
             console.warn("Firestore initialization notice (falling back to resilient live simulation):", e);

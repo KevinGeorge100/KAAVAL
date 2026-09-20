@@ -29,6 +29,8 @@ pnpm-debug.log*
 coverage/
 .firebase/
 firebase-debug.log
+tracking-web/firebase-config.js
+tracking-web/config.js
 
 # Environment, secrets, signing, and service credentials
 .env
