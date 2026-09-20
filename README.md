@@ -1,4 +1,7 @@
 # KAAVAL (കാവൽ)
+
+![KAAVAL Emergency Response Ecosystem](banner.png)
+
 ### Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals
 
 [![Android 14 Ready](https://img.shields.io/badge/Android-14%20(API%2029--34)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](android/)
