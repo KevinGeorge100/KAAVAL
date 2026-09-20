@@ -280,9 +280,9 @@
             background: #0B111E;
         }
 
-        /* Clean CSS Tactical Dark Filter on OpenStreetMap */
+        /* Tactical Dark Tiles - native dark styling from Carto CDN */
         .tactical-dark-tiles {
-            filter: invert(100%) hue-rotate(190deg) brightness(85%) contrast(110%);
+            filter: contrast(105%) brightness(95%);
         }
 
         /* FLOATING HUD: TELEMETRY PILL */
@@ -1431,8 +1431,9 @@
         let incidentElapsedSeconds = 0;
         let timerInterval = null;
 
-        // Tile Endpoints (100% Watermark Free)
-        const osmStandardTiles = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        // Tile Endpoints (100% Free, Enterprise-Grade Global CDN, No API Keys Required, No 403 Tile Policy Blocks)
+        const cartoDarkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        const cartoVoyagerTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
         const esriSatelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
         // --- 2. MAP INITIALIZATION ---
@@ -1444,7 +1445,7 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Default: Tactical Dark Layer (OSM with high-end dark filter)
+            // Default: Tactical Dark Layer (Carto Dark Matter)
             setLayerMode('tactical');
 
             // Custom Pulsing SVG Marker for User
@@ -1485,8 +1486,9 @@
             const btn = document.getElementById('btn-toggle-layer');
 
             if (mode === 'tactical') {
-                activeTileLayer = L.tileLayer(osmStandardTiles, {
-                    maxZoom: 19,
+                activeTileLayer = L.tileLayer(cartoDarkTiles, {
+                    subdomains: 'abcd',
+                    maxZoom: 20,
                     className: 'tactical-dark-tiles'
                 }).addTo(map);
                 btn.innerHTML = `
@@ -1496,8 +1498,9 @@
                 `;
                 btn.classList.add('active');
             } else if (mode === 'street') {
-                activeTileLayer = L.tileLayer(osmStandardTiles, {
-                    maxZoom: 19
+                activeTileLayer = L.tileLayer(cartoVoyagerTiles, {
+                    subdomains: 'abcd',
+                    maxZoom: 20
                 }).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
