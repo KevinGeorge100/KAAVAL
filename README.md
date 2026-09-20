@@ -16,238 +16,230 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 
 ---
 
-### 🌐 Quick Access & Public Links
+### Quick Access & Distribution
 
-| Destination | Link | Description |
+| Destination | Endpoint | Scope |
 | :--- | :--- | :--- |
-| 🚀 **Download Android App** | [kaaval-94c1d.web.app/download](https://kaaval-94c1d.web.app/download) | Production Release APK (2.95 MB) + 1-Tap QR Code |
-| 📡 **Caregiver Command Map** | [kaaval-94c1d.web.app/live](https://kaaval-94c1d.web.app/live) | Real-time WebGL Vector Incident Operations Portal |
-| 📦 **GitHub Releases** | [Releases v1.0.0-prod](https://github.com/KevinGeorge100/KAAVAL/releases/tag/v1.0.0-prod) | Signed APK binaries, release checksums, and change log |
-| 📑 **Engineering Docs** | [docs/README.md](docs/README.md) | Technical architecture, hardware schematics, and runbooks |
+| **Android Client (APK)** | [kaaval-94c1d.web.app/download](https://kaaval-94c1d.web.app/download) | Production Release Build (2.95 MB, R8 Optimized) + Quick-Scan QR |
+| **Incident Command Portal** | [kaaval-94c1d.web.app/live](https://kaaval-94c1d.web.app/live) | Real-time WebGL Vector Operations Dashboard |
+| **GitHub Release Registry** | [Releases v1.0.0-prod](https://github.com/KevinGeorge100/KAAVAL/releases/tag/v1.0.0-prod) | Cryptographic binaries, release notes, and SHA-256 artifacts |
+| **Engineering Hub** | [docs/README.md](docs/README.md) | Technical architecture, hardware schematics, and runbooks |
 
 ---
 
-## 👁️ Vision: Closing the Loop on Emergency Care
+## Executive Overview: Closing the Sensory Gap in Emergency Care
 
-> **Our goal is not to build another generic panic button.**  
-> We are building a **closed-loop emergency response ecosystem** tailored specifically for visually impaired individuals — from instantaneous, eyes-free distress activation to real-time caregiver coordination and bidirectional tactile reassurance until the individual is safe.
+> **Traditional emergency panic buttons are broken by design.**  
+> They operate as open-loop, fire-and-forget transmitters: an SMS is dispatched, but the victim stands in total sensory darkness with zero confirmation that anyone heard them or is coming.  
+>
+> **KAAVAL establishes a closed-loop emergency ecosystem** engineered specifically for visually impaired individuals. It bridges instantaneous mechanical activation with real-time situational intelligence and bidirectional tactile reassurance until the individual is safe.
 
 ---
 
-## 🚨 The Problem: The "Blind Panic" Paradox
+## The Sensory Challenge in Crisis Situations
 
-Every existing emergency alert system makes a fatal assumption: **they assume the victim can see.**
+Every standard personal safety system relies on an untenable assumption: **that the victim has visual acuity, situational composure, and digital dexterity during an emergency.**
 
 ```
-   Existing Apps                                         KAAVAL
+   Conventional Systems                                KAAVAL Platform
 ┌──────────────────────────────────────┐     ┌──────────────────────────────────────┐
-│  • Requires unlocking phone screen   │     │  • Instant 1-click wristband trigger │
-│  • Multi-step digital navigation     │     │  • Hardware volume key listener      │
-│  • Fire-and-forget: User left in     │     │  • Bidirectional Haptic Reassurance  │
-│    the dark with zero feedback       │     │    ("Help is coming!")               │
-│  • Uncoordinated spam SMS to all     │     │  • Real-time Incident Command Map    │
-│    contacts causing bystander delay  │     │    with Single-Claim triage protocol │
+│ • Screen unlock & app navigation     │     │ • Sub-120ms mechanical trigger      │
+│ • Unidirectional "fire-and-forget"   │     │ • Hardware volume key interrupts     │
+│ • No feedback; user remains anxious  │     │ • Closed-loop tactile reassurance    │
+│ • Uncoordinated broadcast spam       │     │ • Single-claim incident triage map   │
 └──────────────────────────────────────┘     └──────────────────────────────────────┘
 ```
 
-1. **Activation Failure**: Locating a phone, unlocking it, and tapping an on-screen button during an assault, medical crisis, or disorientation is impossible without sight.
-2. **The Vacuum of Silence**: After pressing a generic SOS button, the victim stands in terrifying silence, having no idea whether their message was delivered, seen, or ignored.
-3. **Caregiver Paralysis**: Family members receive frantic text messages simultaneously without coordination, resulting in duplicated calls, confusion, or assumption that "someone else is handling it."
+1. **Physical Barrier to Activation**: Unlocking a touchscreen, finding an emergency dialer, or navigating multi-tier digital interfaces during physical distress is impossible without sight.
+2. **The Feedback Vacuum**: Once a message is sent, the user receives no non-visual feedback. They cannot know whether their message bounced, was missed, or if responders are en route.
+3. **Bystander Inaction & Triage Delay**: Broadcasting SMS alerts to multiple family members simultaneously without state management leads to redundant calls, conflicting actions, or diffusion of responsibility.
 
 ---
 
-## 🛡️ The KAAVAL Solution: 4 Integrated Pillars
+## Technical Architecture: 4-Pillar Synchronization
 
-KAAVAL transforms emergency response into a synchronized, 4-pillar closed loop:
+KAAVAL operates as an event-driven distributed system divided into four distinct pillars:
 
 ```mermaid
 flowchart TD
-    subgraph P1 ["PILLAR 1: HARDWARE"]
-        A["Wearable Tactile Wristband"] -->|BLE GATT Notification| B["Physical SOS Button"]
-        K["Bidirectional Haptic Motor"] <--|REASSURE Command| B
+    subgraph P1 ["Pillar 1: Embedded Hardware"]
+        A["KAAVAL Wearable Wristband"] -->|BLE 4.2 GATT Notification| B["Mechanical SPST Trigger"]
+        K["LRA/ERM Haptic Driver"] <--|REASSURE State Pulse| B
     end
 
-    subgraph P2 ["PILLAR 2: MOBILE ENGINE"]
-        B -->|Encrypted BLE 4.2| C["Android Core Service"]
-        D["Hardware Volume Keys"] --> C
-        C -->|Foreground Service| E["Fused GPS Tracking"]
-        C -->|Microphone Stream| F["Gemini 1.5 Flash Audio Witness"]
-        C -->|Offline Fallback| G["Cellular SMS Broadcast"]
+    subgraph P2 ["Pillar 2: Mobile Core Engine"]
+        B -->|Encrypted BLE Channel| C["Android Foreground Service"]
+        D["Hardware Key Interrupts"] --> C
+        C -->|Fused Location Provider| E["Deterministic GPS Telemetry"]
+        C -->|Acoustic Ingestion| F["Gemini 1.5 Flash Audio Witness"]
+        C -->|PSTN Fallback| G["Dual-Path SMS Broadcast"]
     end
 
-    subgraph P3 ["PILLAR 3: CLOUD ENGINE"]
-        C -->|Firestore Real-Time Stream| H["Cloud Dispatch Pipeline"]
-        H -->|Auto-Expiring Session| I[("Firestore Incident DB")]
-        H -->|Cloud Functions| J["Caregiver Push & SMS Gateways"]
+    subgraph P3 ["Pillar 3: Cloud Dispatch Pipeline"]
+        C -->|Firestore Real-Time Pipe| H["Cloud Coordination Engine"]
+        H -->|Atomic Concurrency Lock| I[("Firestore Incident Store")]
+        H -->|Push & Webhook Triggers| J["Caregiver Alert Gateways"]
     end
 
-    subgraph P4 ["PILLAR 4: CAREGIVER PORTAL"]
-        I -->|Vector Basemap Sync| L["Caregiver Command Portal"]
-        L -->|1-Click Claim| M["Claim Emergency / Set ETA"]
-        M -->|Send Tactile Pulse| H
-        H -->|Remote Reassurance| C
-        C -->|BLE Write Characteristic| K
+    subgraph P4 ["Pillar 4: Incident Command"]
+        I -->|Vector Basemap Stream| L["Caregiver Operations Console"]
+        L -->|Single-Responder Triage| M["Claim Incident / Route ETA"]
+        M -->|Dispatch Reassurance| H
+        H -->|Downlink Reassurance| C
+        C -->|GATT Write Characteristic| K
     end
 
-    style A fill:#EF4444,stroke:#FFFFFF,color:#FFFFFF
-    style C fill:#1E293B,stroke:#3B82F6,color:#FFFFFF
-    style H fill:#F59E0B,stroke:#FFFFFF,color:#000000
-    style L fill:#10B981,stroke:#FFFFFF,color:#FFFFFF
-    style K fill:#06B6D4,stroke:#FFFFFF,color:#000000
+    style A fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC
+    style C fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC
+    style H fill:#0F172A,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC
+    style L fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC
+    style K fill:#0F172A,stroke:#22D3EE,stroke-width:2px,color:#F8FAFC
 ```
 
-### 1. ⌚ Proprietary Tactile Wearable (Firmware: ESP32 / FreeRTOS)
-- **Zero-Screen Trigger**: A dedicated physical tactile switch delivers instantaneous emergency dispatch without touching a smartphone.
-- **Closed-Loop Tactile Reassurance**: When a caregiver acknowledges the alert on the web dashboard, the wristband vibrates with a rhythmic haptic heartbeat (`"HELP IS COMING"`), dispelling fear through touch.
-- **Non-Blocking State Machine**: Built on FreeRTOS with asynchronous millisecond timers to prevent BLE disconnects during vibration cycles.
+### Pillar 1: Embedded IoT Wearable (ESP32 & FreeRTOS)
+* **Zero-Latency Physical Activation**: Custom mechanical switch wired to a hardware interrupt delivers sub-120ms transmission over Bluetooth Low Energy.
+* **Closed-Loop Tactile Reassurance**: Incorporates an LRA/ERM vibration motor running custom haptic waveforms. When a caregiver claims an incident on the operations console, the wristband executes a rhythmic tactile pulse sequence (`REASSURE`), confirming rescue without audio cues.
+* **Asynchronous State Machine**: Implemented on FreeRTOS with non-blocking timers, ensuring that BLE advertising and connection supervision intervals remain uninterrupted during vibration bursts.
 
-### 2. 📱 Android Core Emergency Client (Kotlin / Jetpack Compose)
-- **Redundant Triggering**: Operates seamlessly standalone even without the wristband via triple-press Volume Key detection or TalkBack-optimized UI.
-- **`START_STICKY` Foreground Service**: Persists through Android 14 aggressive battery killers, phone reboots, and app process kills.
-- **3-Layer Location Fallback**: High-accuracy Fused Location → Cached GPS → Direct Hardware NMEA Provider.
-- **Gemini 1.5 Flash Audio Witness**: Captures a 10-second high-fidelity ambient acoustic stream, classifying situational danger (cries for help, vehicular collision, footsteps, background distress) and transmitting real-time assessment to responders.
-- **Blackout Stealth Mode**: Turns the phone display pitch-black during an active incident. Users verify their safety via a blind-friendly **"V" tactile gesture** to prevent hostile detection.
+### Pillar 2: Android Core Emergency Client (Kotlin & Jetpack Compose)
+* **Independent Operation**: Operates fully autonomously without the wearable via a low-level physical Volume Key listener (triple-press detection) and TalkBack-certified accessibility semantics.
+* **Foreground Lifecycle Resilience**: Bound to a `START_STICKY` Foreground Service with wakelock acquisition, persisting across process termination, deep-sleep battery optimizations, and system reboots.
+* **Multi-Tiered Fused Location Engine**: Prioritizes fresh GPS fixes, falling back deterministically to Google Play Services cached locations and direct hardware NMEA providers.
+* **Gemini 1.5 Flash Audio Witness**: Automatically records a 10-second high-fidelity ambient acoustic window upon activation, classifies environmental threats (impacts, distress calls, vehicular noise, ambient struggle), and presents structured intelligence to caregivers.
+* **Blackout Stealth Mode**: Renders a zero-luminance pitch-black display to prevent hostile detection. De-escalation requires a tactile gesture ("V" shape stroke) verified by an internal geometric engine.
 
-### 3. ☁️ Real-Time Cloud Coordination (Firebase)
-- **Zero Exposure Architecture**: Eliminates hardcoded service keys in client bundles via environment fallbacks and Firebase App Check.
-- **Automatic 4-Hour Session Expiration**: Enforces privacy by terminating tracking sessions after incident resolution.
-- **Single-Caregiver Claim Protocol**: Prevents bystander confusion by allowing one primary caregiver to formally "Take Charge" with a live ETA.
+### Pillar 3: Cloud Coordination & Dispatch Pipeline (Firebase)
+* **Zero-Trust Client Access**: No administrative keys bundled in client code. Uses restricted client tokens and Firebase App Check.
+* **Transient Session Architecture**: Telemetry links automatically expire after 4 hours. All ephemeral coordinate records are scrubbed upon incident closure.
+* **Atomic Concurrency Lock**: Eliminates bystander paralysis by enforcing a single-caregiver claim state machine on the incident document.
 
-### 4. 🛰️ Tactical Incident Operations Command (Web Portal)
-- **Hardware-Accelerated Vector Basemaps**: Powered by MapLibre GL and licensed CARTO Dark Matter vector tiles for continuous 60fps smooth zooming and crisp vector typography.
-- **High-Visibility Radar Beacons**: Multi-stage crimson user emergency beacon (`#EF4444`) with dual expanding radar waves and emerald caregiver navigation tracker (`#10B981`).
-- **Live Proximity & Animated Route**: Dynamic Haversine calculation, estimated drive times, and illuminated neon cyan trajectory path.
-- **Remote Tactile Pulse Transmitter**: Caregivers can click **"Send Tactile Pulse"** to send instant haptic reassurance vibrations straight to the victim's wristband.
-
----
-
-## ⚡ Feature Comparison Matrix
-
-| Capability | Generic SOS Apps | Traditional Medical Pendants | KAAVAL Ecosystem |
-| :--- | :---: | :---: | :---: |
-| **Eyes-Free Activation** | ❌ No (Touchscreen required) | ⚠️ Partial (Home base only) | ✅ **100% Eyes-Free (Wearable + Volume Keys)** |
-| **Bidirectional Reassurance** | ❌ None (Fire-and-forget) | ⚠️ Voice only (Speakerphone) | ✅ **Haptic Pulse ("Help is on the way")** |
-| **AI Situational Intelligence**| ❌ None | ❌ None | ✅ **Gemini 1.5 Flash Acoustic Witness** |
-| **Live Caregiver Dispatch Map**| ⚠️ Static link via SMS | ❌ Proprietary Call Center | ✅ **Hardware-Accelerated Vector Web Portal** |
-| **Offline Resilience** | ❌ Fails without data | ❌ Fails without cellular | ✅ **Dual-Path: Firestore + Offline SMS** |
-| **Stealth & Anti-Coercion** | ❌ Loud screen alarm | ❌ Beeping alarm | ✅ **Blackout Mode + Gesture Confirmation** |
-| **TalkBack / Accessibility** | ⚠️ Partial | ❌ None | ✅ **WCAG AAA Compliance (~19.5:1 Contrast)** |
+### Pillar 4: Incident Operations Command (WebGL Vector Web Portal)
+* **Hardware-Accelerated Vector Basemaps**: Rendered using MapLibre GL with licensed CARTO Dark Matter vector tiles, providing continuous 60fps zooming, zero raster pixelation, and crisp typography.
+* **Tactical Radar Telemetry**: Multi-stage crimson user beacon (`#EF4444`) with dual expanding radar rings, paired with an emerald caregiver navigation beacon (`#10B981`).
+* **Live Proximity & Dynamic Routing**: Haversine distance calculations and moving animated trajectory lines towards the incident coordinate centroid.
+* **Remote Reassurance Transmitter**: Allows caregivers to trigger downstream tactile reassurance pulses to the wristband with a single click.
 
 ---
 
-## 🔬 Hardware Specifications & Wearable BOM
+## Architectural Comparison: Emergency Systems
 
-The physical KAAVAL Wristband is engineered for low power, resilience, and rapid tactile feedback:
+| Architectural Dimension | Consumer Safety Apps | Legacy Telecare Pendants | KAAVAL Distributed Platform |
+| :--- | :--- | :--- | :--- |
+| **Activation Channel** | Touchscreen interaction | Stationary RF base station | **Hardware BLE Wearable + Physical Key Listener** |
+| **Feedback Loop** | Unidirectional broadcast | Analog voice speakerphone | **Closed-Loop Bidirectional Tactile Pulses (`REASSURE`)** |
+| **Situational Intelligence** | Unstructured text | Human operator audio | **Gemini 1.5 Flash Acoustic Scene Classification** |
+| **Incident Coordination** | Generic group SMS | Proprietary call center | **WebGL Vector Command Map with Single-Claim Protocol** |
+| **Network Resilience** | Data connection required | PSTN landline required | **Dual-Path Redundancy: Firestore over IP + GSM SMS** |
+| **Discretion & Anti-Coercion** | Visible, audible alarms | Auditory siren/beeping | **Blackout Stealth Mode with Geometric Gesture Validation** |
+| **Accessibility Standard** | Partial touch compliance | Physical hardware only | **W3C WCAG 2.1 Level AAA (~19.5:1 Contrast Ratio)** |
 
-| Component | Part / Specification | Purpose |
+---
+
+## Hardware Specifications & Wearable BOM
+
+The KAAVAL Wearable prototype is optimized for low power, deterministic latency, and tactile clarity:
+
+| Subsystem | Component Specification | Engineering Role |
 | :--- | :--- | :--- |
-| **Microcontroller** | ESP32-WROOM-32 (Dual-Core 240MHz) | BLE 4.2 GATT Server & Non-blocking Haptics |
-| **Tactile Trigger** | High-tactile SPST momentary switch | Instant mechanical emergency trigger |
-| **Vibration Actuator**| Precision ERM / LRA Coin Motor | Rhythmic haptic reassurance pulses |
-| **Driver Circuit** | NPN 2N2222 with 1N4001 Flyback Diode | Back-EMF suppression & safe GPIO switching |
-| **Wireless Protocol**| BLE 4.2 (GATT Service `4fafc201...`) | Low-latency bi-directional smartphone telemetry |
-| **Battery System** | 3.7V 500mAh LiPo + TP4056 USB-C Charger | All-day battery life with sleep optimization |
+| **Processing Core** | ESP32-WROOM-32 (Dual-Core Xtensa LX6 @ 240MHz) | FreeRTOS Task Scheduling, BLE Stack, Haptic Engine |
+| **Tactile Trigger** | Momentary SPST Sealed Pushbutton | Low-travel, high-tactile mechanical interrupt |
+| **Haptic Actuator** | Precision 1027 Coin ERM / LRA Actuator | Directional tactile confirmation & reassurance pulses |
+| **Driver Circuit** | NPN 2N2222 with 1N4001 Flyback Protection | High-transient current isolation and back-EMF clamping |
+| **Radio Link** | 2.4GHz BLE 4.2 (GATT Service `4fafc201...`) | Low-power telemetry and downstream control channel |
+| **Power Management** | 3.7V 500mAh LiPo with Integrated TP4056 USB-C | Low-dropout regulation with deep-sleep current < 15µA |
 
 ---
 
-## 📁 Repository Directory Structure
+## Repository Layout
 
 ```
 KAAVAL/
-├── android/                   # Android Core Application
-│   ├── app/src/main/java/     # Kotlin Clean Architecture (MVVM + Hilt + Compose)
+├── android/                   # Native Android Core Engine
+│   ├── app/src/main/java/     # Clean Architecture (MVVM, Hilt, Jetpack Compose)
 │   │   ├── accessibility/     # High-contrast M3 theme, TalkBack semantics, Haptic waveforms
-│   │   ├── ble/               # KaavalBleManager (BLE GATT Client & reconnect loop)
-│   │   ├── data/              # Room Local DB, EmergencySession, Firestore Repository
+│   │   ├── ble/               # KaavalBleManager (GATT client, reconnect loop)
+│   │   ├── data/              # Room Database, EmergencySession entity, Firestore repository
 │   │   ├── service/           # EmergencyForegroundService (Sticky background lifecycle)
 │   │   └── ui/                # Blackout Stealth UI, Emergency Countdown, Caregiver Setup
 │   └── build.gradle.kts       # Android Gradle configuration (R8 ProGuard enabled)
 │
 ├── firmware/                  # Embedded IoT Wearable
 │   └── esp32_wristband/       # PlatformIO ESP32 Firmware
-│       ├── src/main.cpp       # Asynchronous FreeRTOS haptic state machine & BLE GATT server
+│       ├── src/main.cpp       # Asynchronous FreeRTOS haptic state machine & BLE server
 │       └── platformio.ini     # Hardware toolchain definition
 │
-├── tracking-web/              # Caregiver Incident Command & Public Portal
+├── tracking-web/              # Caregiver Operations & Public Distribution
 │   ├── live.html              # Tactical WebGL Vector Map (MapLibre + CARTO Dark Matter)
-│   ├── download.html          # Public Android App Download & QR Scan Portal
+│   ├── download.html          # Public Android App Download & Dynamic QR Portal
 │   └── firebase-config.js     # Secure zero-exposure fallback credentials
 │
-├── functions/                 # Firebase Cloud Functions (Node.js)
-│   └── index.js               # SMS gateways, incident auto-expiration, and triage notifications
+├── functions/                 # Cloud Coordination Functions (Node.js)
+│   └── index.js               # SMS gateways, incident auto-expiration, and dispatch webhooks
 │
-├── docs/                      # Comprehensive Documentation Hub
-│   ├── architecture/          # System architecture, BLE specs, and design systems
-│   ├── engineering/           # Sprint logs, testing guides, and voice/haptic engines
-│   └── runbooks/              # Production launch and verification commands
+├── docs/                      # Centralized Engineering Documentation
+│   ├── architecture/          # System architecture, BLE specifications, and design tokens
+│   ├── engineering/           # Sprint logs, adversarial test matrices, and voice/haptic guides
+│   └── runbooks/              # Production launch, flashing, and verification procedures
 │
 └── firebase.json              # Firebase Hosting clean URLs, headers, and security rules
 ```
 
 ---
 
-## 🛠️ Step-by-Step Developer Quickstart
+## Engineering Quickstart
 
-### 1. Prerequisites
-- **Android Studio Jellyfish or newer** (JDK 17)
+### Prerequisites
+- **Android Studio Jellyfish or later** (JDK 17)
 - **Node.js 18+** & `firebase-tools` (`npm install -g firebase-tools`)
-- **PlatformIO** (VS Code extension or CLI `pip install platformio`)
+- **PlatformIO CLI** (`pip install platformio`)
 
-### 2. Clone the Repository
-```bash
-git clone https://github.com/KevinGeorge100/KAAVAL.git
-cd KAAVAL
-```
-
-### 3. Build the Android Application
+### 1. Build Android Production Binary
 ```bash
 cd android
-./gradlew testDebugUnitTest       # Run unit test suite
-./gradlew assembleRelease         # Build production R8-minified APK (output in app/build/outputs/apk/release/)
+./gradlew testDebugUnitTest       # Run test suite
+./gradlew assembleRelease         # Compile R8-minified production APK (2.95 MB)
 ```
 
-### 4. Flash the ESP32 Wearable Firmware
+### 2. Flash Embedded Wearable Firmware
 ```bash
-cd ../firmware/esp32_wristband
-pio run --target upload           # Flash firmware via USB-C
-pio device monitor                # Open serial monitor at 115200 baud
+cd firmware/esp32_wristband
+pio run --target upload           # Upload firmware via serial port
+pio device monitor -b 115200      # Inspect GATT initialization logs
 ```
 
-### 5. Run the Caregiver Portal Locally
+### 3. Local Web Simulation & Testing
 ```bash
-cd ../../tracking-web
+cd tracking-web
 python -m http.server 8080
-# Open http://localhost:8080/live.html?id=KVL-DEMO-TEST
+# Access portal at http://localhost:8080/live.html?id=KVL-DEMO-TEST
 ```
 
-### 6. Deploy to Firebase
+### 4. Production Deployment
 ```bash
-cd ..
 firebase deploy --only hosting,firestore:rules
 ```
 
 ---
 
-## 🔒 Security, Privacy & Ethics
+## Security, Privacy & Ethics
 
-- **Zero Permanent GPS History**: User coordinates are deleted upon incident resolution and auto-expire after 4 hours.
-- **Zero Hardcoded Secrets**: Client repositories do not bundle unrestricted API keys.
-- **Anti-Coercion Protocol**: Stealth Blackout Mode ensures attackers cannot see active emergency transmissions.
-- **Accessible to All**: Full WCAG AAA color compliance (~19.5:1 contrast) and native screen reader compatibility.
+* **Zero Persistent Geolocation History**: Coordinate records are deleted upon incident resolution and auto-expire after 4 hours.
+* **Anti-Coercion Protocol**: Blackout UI prevents hostile actors from verifying active distress calls.
+* **Cryptographic Data Minimization**: Ephemeral tracking sessions contain only precision metadata, battery telemetry, and audio scene classification labels.
 
 ---
 
-## 👥 Team & Acknowledgments
+## Program Credits & Acknowledgments
 
-- **Kevin George** — *Software Architect, Mobile & AI Lead*
-- **Navami, Adwaid, Jewel** — *Hardware & Electrical Engineering Team (EEE)*
-- **Hemang Mohan** — *Industry Project Mentor*
+* **Kevin George** — *System Architecture, Mobile & AI Engineering*
+* **Navami, Adwaid, Jewel** — *Hardware & Electrical Engineering (EEE)*
+* **Hemang Mohan** — *Industry Project Mentor*
 
-Special thanks to the **IEEE Sensors Council Industry Mentoring Program** for supporting the development and mentoring of KAAVAL.
+Developed with support from the **IEEE Sensors Council Industry Mentoring Program**.
 
 ---
 
 <p align="center">
   <b>KAAVAL Ecosystem &copy; 2026</b><br>
-  <i>Built with empathy, precision, and mission-critical engineering.</i>
+  <i>Mission-critical emergency response infrastructure.</i>
 </p>
