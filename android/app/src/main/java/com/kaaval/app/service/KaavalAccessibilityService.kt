@@ -61,11 +61,7 @@ class KaavalAccessibilityService : AccessibilityService() {
             Log.e("KaavalAccessibility", "Failed to launch MainActivity: ${e.message}")
         }
 
-        // 2. Start the Foreground Service immediately as a safety net
-        // This ensures tracking starts even if the Activity launch is delayed by the lock screen
-        val incidentId = "KVL-ACC-${System.currentTimeMillis() / 1000}"
-        EmergencyForegroundService.startService(this, incidentId)
-        Log.d("KaavalAccessibility", "EmergencyForegroundService started directly from Accessibility.")
+        // The Activity persists one incident before starting its foreground service.
     }
 
     override fun onAccessibilityEvent(event: android.view.accessibility.AccessibilityEvent?) {

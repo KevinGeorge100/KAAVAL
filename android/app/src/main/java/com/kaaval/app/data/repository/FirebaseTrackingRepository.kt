@@ -1,6 +1,8 @@
 package com.kaaval.app.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CancellationException
 import com.google.firebase.firestore.SetOptions
 import com.kaaval.app.domain.model.LocationData
 import com.kaaval.app.domain.model.TrackingSession
@@ -22,19 +24,24 @@ class FirebaseTrackingRepository(
     override suspend fun createTrackingSession(incidentId: String): Boolean {
         return try {
             val now = System.currentTimeMillis()
+            val auth = FirebaseAuth.getInstance()
+            val ownerUid = (auth.currentUser ?: auth.signInAnonymously().await().user)?.uid
+                ?: return false
             val expiresAt = now + TimeUnit.HOURS.toMillis(4) // 4-hour expiration
 
             val data = hashMapOf(
                 "incidentId" to incidentId,
+                "ownerUid" to ownerUid,
                 "status" to "ACTIVE",
                 "createdAt" to Date(now),
                 "expiresAt" to Date(expiresAt),
                 "userName" to "Visually Impaired User"
             )
 
-            incidentsCollection.document(incidentId)
-                .set(data, SetOptions.merge())
-                .await()
+            val document = incidentsCollection.document(incidentId)
+            firestore.runTransaction { transaction ->
+                if (!transaction.get(document).exists()) transaction.set(document, data)
+            }.await()
             true
         } catch (e: Exception) {
             android.util.Log.e("FirebaseTracking", "Failed to create session: ${e.message}")
@@ -48,8 +55,7 @@ class FirebaseTrackingRepository(
                 "latitude" to location.latitude,
                 "longitude" to location.longitude,
                 "accuracy" to location.accuracy,
-                "lastUpdate" to Date(location.timestamp),
-                "status" to "ACTIVE"
+                "lastUpdate" to Date(location.timestamp)
             )
 
             incidentsCollection.document(incidentId)
@@ -88,7 +94,7 @@ class FirebaseTrackingRepository(
                 "aiAnalyzedAt" to Date()
             )
             incidentsCollection.document(incidentId)
-                .set(data, SetOptions.merge())
+                .update(data as Map<String, Any>)
                 .await()
             android.util.Log.i("FirebaseTracking", "AI Summary published to Firestore for $incidentId")
             true
@@ -107,6 +113,7 @@ class FirebaseTrackingRepository(
                     return@addSnapshotListener
                 }
 
+                try {
                 if (snapshot != null && snapshot.exists()) {
                     val statusStr = snapshot.getString("status") ?: "ACTIVE"
                     val lat = snapshot.getDouble("latitude")
@@ -147,6 +154,10 @@ class FirebaseTrackingRepository(
                         lastReassurancePing = reassuranceTime
                     ))
                 } else {
+                    trySend(null)
+                }
+                } catch (e: Exception) {
+                    android.util.Log.w("FirebaseTracking", "Invalid incident snapshot", e)
                     trySend(null)
                 }
             }

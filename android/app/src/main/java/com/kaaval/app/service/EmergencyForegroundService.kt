@@ -31,6 +31,9 @@ import kotlinx.coroutines.flow.first
 class EmergencyForegroundService : Service() {
 
     private var currentIncidentId: String? = null
+    private var reassuranceJob: Job? = null
+    private var recoveryJob: Job? = null
+    private var initialized = false
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         android.util.Log.e("EmergencyService", "Coroutine error caught safely: ${throwable.message}", throwable)
     }
@@ -74,14 +77,21 @@ class EmergencyForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        try {
         locationManager = KaavalLocationManager(this)
         repository = KaavalRepository(KaavalDatabase.getDatabase(this))
         trackingRepository = FirebaseTrackingRepository()
         HapticFeedbackManager.initialize(this)
         createNotificationChannel()
+        initialized = true
+        } catch (e: Exception) {
+            android.util.Log.e("EmergencyService", "Initialization failed", e)
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!initialized) { stopSelf(); return START_NOT_STICKY }
         // Critical: startForeground must execute immediately to satisfy Android 8.0+ / Android 14 requirements
         try {
             val notification = buildNotification()
@@ -91,38 +101,36 @@ class EmergencyForegroundService : Service() {
                 startForeground(NOTIFICATION_ID, notification)
             }
         } catch (e: Exception) {
-            android.util.Log.e("EmergencyService", "startForeground location fallback: ${e.message}", e)
-            try {
-                startForeground(NOTIFICATION_ID, buildNotification())
-            } catch (inner: Exception) {
-                android.util.Log.e("EmergencyService", "startForeground completely failed: ${inner.message}", inner)
-            }
+            android.util.Log.e("EmergencyService", "Foreground promotion denied", e)
+            stopSelf()
+            return START_NOT_STICKY
         }
 
-        val incidentId = intent?.getStringExtra(EXTRA_INCIDENT_ID)
-        if (incidentId != null) {
-            if (incidentId != currentIncidentId) {
-                currentIncidentId = incidentId
-                android.util.Log.i("EmergencyService", "SERVICE_STARTED incidentId=$incidentId")
-                serviceScope.launch {
-                    try {
-                        trackingRepository.createTrackingSession(incidentId)
-                    } catch (e: Exception) {
-                        android.util.Log.w("EmergencyService", "createTrackingSession error: ${e.message}")
-                    }
-                }
-                startContinuousTracking(incidentId)
-                startCaregiverReassuranceListener(incidentId)
-            } else {
-                android.util.Log.w("EmergencyService", "Duplicate service start for same session ignored.")
+        recoveryJob?.cancel()
+        recoveryJob = serviceScope.launch {
+            val active = repository.getActiveSession().first()
+            val requestedId = intent?.getStringExtra(EXTRA_INCIDENT_ID)
+            if (active == null || (requestedId != null && requestedId != active.incidentId)) {
+                stopSelf(startId)
+                return@launch
             }
+            val incidentId = active.incidentId
+            if (incidentId == currentIncidentId) return@launch
+            reassuranceJob?.cancel()
+            locationManager.stopLocationUpdates()
+            currentIncidentId = incidentId
+            lastClaimedBy = null
+            lastReassuranceTimestamp = null
+            startContinuousTracking(incidentId)
+            // Retry cloud initialization without delaying local location persistence.
+            while (isActive && !trackingRepository.createTrackingSession(incidentId)) delay(5000)
+            startCaregiverReassuranceListener(incidentId)
         }
-
         return START_STICKY
     }
 
     private fun startCaregiverReassuranceListener(incidentId: String) {
-        serviceScope.launch {
+        reassuranceJob = serviceScope.launch {
             try {
                 trackingRepository.getTrackingSession(incidentId)
                     .catch { e -> android.util.Log.w("EmergencyService", "Reassurance listener error: ${e.message}") }
@@ -182,16 +190,7 @@ class EmergencyForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            locationManager.stopLocationUpdates()
-            currentIncidentId?.let { id ->
-                serviceScope.launch {
-                    try {
-                        trackingRepository.completeTrackingSession(id)
-                    } catch (e: Exception) {
-                        android.util.Log.w("EmergencyService", "completeTrackingSession error: ${e.message}")
-                    }
-                }
-            }
+            if (::locationManager.isInitialized) locationManager.stopLocationUpdates()
         } catch (e: Exception) {
             android.util.Log.e("EmergencyService", "onDestroy error: ${e.message}")
         }

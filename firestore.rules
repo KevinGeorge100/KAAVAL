@@ -1,21 +1,44 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     match /incidents/{incidentId} {
-      // Secure tracking session:
-      // 1. Allow read if the session hasn't expired.
-      // 2. Allow write (create) if the user is authenticated (later).
-      // 3. Allow update (location) from the device.
-
-      allow read: if resource == null || !('expiresAt' in resource.data) || request.time < resource.data.expiresAt;
-
-      // Temporary open write for development - MUST be secured with Auth in Sprint 4
-      allow write: if true;
-
-      match /responses/{responseId} {
-        allow create: if true;
+      function signedIn() { return request.auth != null; }
+      function owner() { return signedIn() && resource.data.ownerUid == request.auth.uid; }
+      function caregiver() {
+        return signedIn() && 'caregiverUids' in resource.data &&
+          request.auth.uid in resource.data.caregiverUids;
       }
+      function active() {
+        return resource.data.expiresAt is timestamp && request.time < resource.data.expiresAt;
+      }
+      // A high-entropy incident link is a time-limited read capability. No enumeration.
+      // Missing documents remain observable while the phone creates the incident.
+      allow get: if resource == null || owner() || caregiver() || active();
+      allow list: if false;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly(['incidentId', 'ownerUid', 'status', 'createdAt', 'expiresAt', 'userName']) &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.incidentId == incidentId &&
+        request.resource.data.status == 'ACTIVE' &&
+        request.resource.data.userName is string &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time &&
+        request.resource.data.expiresAt <= request.time + duration.value(4, 'h');
+      allow update: if active() && (
+        (owner() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'latitude', 'longitude', 'accuracy', 'lastUpdate', 'source', 'status', 'endedAt',
+          'aiSummary', 'audioTranscript', 'threatLevel', 'aiAnalyzedAt'
+        ]) && request.resource.data.status in ['ACTIVE', 'ACKNOWLEDGED', 'COMPLETED'] &&
+          (resource.data.status != 'COMPLETED' || request.resource.data.status == 'COMPLETED')) ||
+        (caregiver() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'claimedBy', 'claimedEta', 'claimedNote', 'claimedAt', 'caregiverStatus',
+          'reassurancePing', 'status', 'resolvedAt', 'resolutionNote'
+        ]) && (request.resource.data.status == resource.data.status || request.resource.data.status == 'COMPLETED'))
+      );
+      allow delete: if false;
+      // Enrollment and legacy response processing are trusted-server operations only.
+      match /responses/{responseId} { allow read, write: if false; }
     }
   }
 }

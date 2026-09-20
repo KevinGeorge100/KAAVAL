@@ -16,6 +16,25 @@
         "source": "/live/**",
         "destination": "/live.html"
       }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          }
+        ]
+      }
     ]
   },
   "firestore": {
@@ -29,7 +48,7 @@
       "port": 5001
     },
     "firestore": {
-      "port": 8080
+      "port": 8081
     },
     "hosting": {
       "port": 5000

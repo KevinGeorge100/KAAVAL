@@ -3,78 +3,86 @@ package com.kaaval.app.service
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import java.io.File
 
-/**
- * KAAVAL Audio Witness Manager
- * Automatically records a short ambient audio snippet during an emergency.
- * Provides "ears on the ground" for caregivers and feeds into OpenAI Whisper/GPT-4o-mini.
- */
+/** Short, best-effort witness capture. Failure must never interrupt SOS. */
 class AudioWitnessManager(
     private val context: Context,
     private val onRecordingFinished: (File, String) -> Unit = { _, _ -> }
 ) {
-
     private var mediaRecorder: MediaRecorder? = null
     private var isRecording = false
     private var currentFile: File? = null
-    private var currentIncidentId: String = ""
+    private var currentIncidentId = ""
+    private val handler = Handler(Looper.getMainLooper())
+    private val stopTask = Runnable { stopRecording() }
 
+    @Synchronized
     fun startRecording(incidentId: String) {
         if (isRecording) return
-
         try {
             currentIncidentId = incidentId
-            val file = File(context.cacheDir, "witness_$incidentId.m4a")
-            currentFile = file
-            
-            mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            currentFile = File.createTempFile("witness_", ".m4a", context.cacheDir)
+            val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MediaRecorder(context)
             } else {
                 @Suppress("DEPRECATION")
                 MediaRecorder()
-            }.apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(file.absolutePath)
-                prepare()
-                start()
             }
-            
+            // Retain before prepare/start so partial initialization can be released.
+            mediaRecorder = recorder
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            recorder.setOutputFile(currentFile!!.absolutePath)
+            recorder.prepare()
+            recorder.start()
             isRecording = true
-            Log.i("AudioWitness", "Emergency audio recording started: ${file.name}")
-            
-            // Auto-stop after 12 seconds to optimize for Whisper transmission & response latency
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                stopRecording()
-            }, 12000)
-
+            handler.postDelayed(stopTask, 12000)
         } catch (e: Exception) {
             Log.e("AudioWitness", "Failed to start recording", e)
+            releaseRecorder()
+            currentFile?.delete()
+            currentFile = null
         }
     }
 
+    @Synchronized
     fun stopRecording() {
+        handler.removeCallbacks(stopTask)
         if (!isRecording) return
-        
+        val file = currentFile
+        var saved = false
         try {
-            mediaRecorder?.apply {
-                stop()
-                release()
-            }
-            mediaRecorder = null
-            isRecording = false
-            Log.i("AudioWitness", "Emergency audio recording stopped and saved.")
-            
-            val fileToProcess = currentFile
-            val incidentId = currentIncidentId
-            if (fileToProcess != null && fileToProcess.exists()) {
-                onRecordingFinished(fileToProcess, incidentId) 
+            mediaRecorder?.stop()
+            saved = true
+        } catch (e: Exception) {
+            Log.w("AudioWitness", "Recording could not be finalized", e)
+        } finally {
+            releaseRecorder()
+            currentFile = null
+        }
+        try {
+            if (saved && file != null && file.exists() && file.length() > 0) {
+                onRecordingFinished(file, currentIncidentId)
+            } else {
+                file?.delete()
             }
         } catch (e: Exception) {
-            Log.e("AudioWitness", "Error stopping recorder", e)
+            Log.e("AudioWitness", "Recording callback failed", e)
+        }
+    }
+
+    private fun releaseRecorder() {
+        handler.removeCallbacks(stopTask)
+        try { mediaRecorder?.release() } catch (e: Exception) {
+            Log.w("AudioWitness", "Recorder release failed", e)
+        } finally {
+            mediaRecorder = null
+            isRecording = false
         }
     }
 }

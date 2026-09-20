@@ -3,7 +3,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include <esp_mac.h>
+#include <atomic>
 
 /**
  * KAAVAL Tactile Wearable Wristband Firmware (ESP32)
@@ -26,22 +26,30 @@ constexpr unsigned long SOS_HOLD_MS = 3000;
 #define SOS_CHARACTERISTIC_UUID "f0e0d0c0-b0a0-4000-8000-000000000002"
 
 BLECharacteristic* sosCharacteristic;
-bool phoneConnected = false;
+std::atomic<bool> phoneConnected{false};
+std::atomic<int> requestedHaptic{0};
+unsigned long hapticStartedAt = 0;
+int activeHaptic = 0;
 bool buttonWasDown = false;
 bool sosAlreadySent = false;
 unsigned long pressStartedAt = 0;
 
-void pulseHaptic(int durationMs) {
-  digitalWrite(VIBRATION_MOTOR_PIN, HIGH);
-  delay(durationMs);
-  digitalWrite(VIBRATION_MOTOR_PIN, LOW);
-}
-
-void pulseReassurance() {
-  // Soothing double-pulse heartbeat pattern
-  pulseHaptic(120);
-  delay(90);
-  pulseHaptic(180);
+// BLE callbacks only queue feedback; GPIO timing belongs to the Arduino loop.
+void pulseHaptic(int durationMs) { requestedHaptic.store(durationMs); }
+void pulseReassurance() { requestedHaptic.store(-1); }
+void updateHaptic() {
+  const int next = requestedHaptic.exchange(0);
+  if (next != 0) { activeHaptic = next; hapticStartedAt = millis(); }
+  const unsigned long elapsed = millis() - hapticStartedAt;
+  bool on = false;
+  if (activeHaptic == -1) {
+    on = elapsed < 120 || (elapsed >= 210 && elapsed < 390);
+    if (elapsed >= 390) activeHaptic = 0;
+  } else if (activeHaptic > 0) {
+    on = elapsed < static_cast<unsigned long>(activeHaptic);
+    if (!on) activeHaptic = 0;
+  }
+  digitalWrite(VIBRATION_MOTOR_PIN, on ? HIGH : LOW);
 }
 
 class ConnectionCallbacks : public BLEServerCallbacks {
@@ -95,9 +103,7 @@ void setup() {
   pinMode(VIBRATION_MOTOR_PIN, OUTPUT);
   digitalWrite(VIBRATION_MOTOR_PIN, LOW);
 
-  // Set distinct MAC address for KAAVAL device identification
-  uint8_t kaavalBleBaseMac[] = { 0x02, 0x4B, 0x41, 0x41, 0x56, 0x01 };
-  esp_base_mac_addr_set(kaavalBleBaseMac);
+  // Preserve the factory unique MAC; a shared fixed MAC breaks multi-device pairing.
 
   BLEDevice::init("KAAVAL");
   BLEServer* server = BLEDevice::createServer();
@@ -129,7 +135,14 @@ void setup() {
 }
 
 void loop() {
-  const bool buttonIsDown = (digitalRead(SOS_BUTTON_PIN) == LOW);
+  updateHaptic();
+  static bool rawWasDown = false;
+  static bool stableDown = false;
+  static unsigned long changedAt = 0;
+  const bool rawDown = digitalRead(SOS_BUTTON_PIN) == LOW;
+  if (rawDown != rawWasDown) { rawWasDown = rawDown; changedAt = millis(); }
+  if (millis() - changedAt >= 30) stableDown = rawDown;
+  const bool buttonIsDown = stableDown;
 
   if (buttonIsDown && !buttonWasDown) {
     pressStartedAt = millis();
@@ -142,5 +155,5 @@ void loop() {
   }
 
   buttonWasDown = buttonIsDown;
-  delay(20);
+  delay(1);
 }

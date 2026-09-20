@@ -123,7 +123,12 @@ class EmergencyActionDispatcher(
             is EmergencyAction.CompleteEmergency -> {
                 scope.launch {
                     val active = repository.getActiveSession().first()
-                    active?.let { repository.completeSession(it.incidentId) }
+                    active?.let {
+                        repository.completeSession(it.incidentId)
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            com.kaaval.app.data.repository.FirebaseTrackingRepository().completeTrackingSession(it.incidentId)
+                        }
+                    }
                     EmergencyForegroundService.stopService(context)
                 }
                 audioWitness.stopRecording()
@@ -133,7 +138,12 @@ class EmergencyActionDispatcher(
             is EmergencyAction.CancelCountdown -> {
                 scope.launch {
                     val active = repository.getActiveSession().first()
-                    active?.let { repository.completeSession(it.incidentId) }
+                    active?.let {
+                        repository.completeSession(it.incidentId)
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            com.kaaval.app.data.repository.FirebaseTrackingRepository().completeTrackingSession(it.incidentId)
+                        }
+                    }
                     EmergencyForegroundService.stopService(context)
                 }
                 audioWitness.stopRecording()

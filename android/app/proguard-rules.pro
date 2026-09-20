@@ -28,7 +28,6 @@
     @com.google.firebase.firestore.PropertyName <methods>;
     @com.google.firebase.firestore.Exclude <fields>;
     @com.google.firebase.firestore.Exclude <methods>;
-    @com.google.firebase.firestore.IgnoreExtraProperties class *;
 }
 
 # --- Domain Models & Data Transfer Objects ---

@@ -34,7 +34,7 @@ class EmergencyStateManager(private val logger: (String, String) -> Unit = { tag
         val transition = when (event) {
             is EmergencyEvent.ButtonPressed -> {
                 if (currentState is EmergencyState.Idle) {
-                    currentIncidentId = "KVL-${System.currentTimeMillis() / 1000}"
+                    currentIncidentId = "KVL-${java.util.UUID.randomUUID()}"
                     Pair(EmergencyState.HoldingButton(0f), EmergencyAction.PlayVoiceAnnouncement("SOS_BUTTON_HELD", isPriority = true))
                 } else null
             }
@@ -66,7 +66,7 @@ class EmergencyStateManager(private val logger: (String, String) -> Unit = { tag
                 if (currentState is EmergencyState.HoldingButton || currentState is EmergencyState.Countdown || currentState is EmergencyState.Idle) {
                     // Ensure incident ID exists for instant triggers
                     if (currentIncidentId == null) {
-                        currentIncidentId = "KVL-${System.currentTimeMillis() / 1000}"
+                        currentIncidentId = "KVL-${java.util.UUID.randomUUID()}"
                     }
 
                     val actions = mutableListOf(
@@ -87,13 +87,13 @@ class EmergencyStateManager(private val logger: (String, String) -> Unit = { tag
             }
             is EmergencyEvent.InstantSosTriggered -> {
                 if (currentState is EmergencyState.Idle) {
-                    currentIncidentId = "KVL-${System.currentTimeMillis() / 1000}"
+                    currentIncidentId = "KVL-${java.util.UUID.randomUUID()}"
                     Pair(EmergencyState.Idle, null) // Just a trigger, first tick will handle voice/state/session
                 } else null
             }
             is EmergencyEvent.CountdownFinished, EmergencyEvent.EmergencyActivated -> {
                 if (currentState is EmergencyState.Countdown || currentState is EmergencyState.HoldingButton) {
-                    val incidentId = currentIncidentId ?: "KVL-${System.currentTimeMillis() / 1000}"
+                    val incidentId = currentIncidentId ?: "KVL-${java.util.UUID.randomUUID()}"
                     Pair(
                         EmergencyState.Activated,
                         EmergencyAction.CompositeAction(
@@ -165,7 +165,7 @@ class EmergencyStateManager(private val logger: (String, String) -> Unit = { tag
             }
             is EmergencyEvent.LiveTrackingStarted -> {
                 if (currentState is EmergencyState.CallingPrimaryContact || currentState is EmergencyState.SendingAlerts || currentState is EmergencyState.LocationReady) {
-                    val incidentId = currentIncidentId ?: "KVL-${System.currentTimeMillis() / 1000}"
+                    val incidentId = currentIncidentId ?: "KVL-${java.util.UUID.randomUUID()}"
                     Pair(
                         EmergencyState.LiveTracking(
                             incidentId = incidentId,

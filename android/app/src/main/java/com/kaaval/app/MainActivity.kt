@@ -505,6 +505,9 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         voiceCommandManager.stopListening()
+        // This recorder is Activity-owned; do not continue a microphone capture
+        // after visibility is lost without a microphone foreground service.
+        audioWitness.stopRecording()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

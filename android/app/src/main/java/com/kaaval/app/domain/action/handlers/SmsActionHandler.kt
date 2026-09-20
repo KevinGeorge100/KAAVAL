@@ -32,15 +32,18 @@ class SmsActionHandler(
             val contacts = repository.allContacts.first()
             val profile = repository.medicalProfile.first() ?: MedicalProfile(
                 fullName = "Visually Impaired User",
-                age = 26,
-                bloodGroup = "O+",
-                allergies = "Penicillin, Dust",
-                medications = "Daily Eye Drops",
+                age = 0,
+                bloodGroup = "Unknown",
+                allergies = "Unknown",
+                medications = "Unknown",
                 emergencyNotes = "Visually impaired. Guided assistance required."
             )
             
-            val incidentId = "KVL-${System.currentTimeMillis() / 1000}"
-            val trackingUrl = "https://kaaval-94c1d.web.app/live/$incidentId"
+            val incidentId = kotlinx.coroutines.withTimeoutOrNull(5000) {
+                repository.getActiveSession().first { it != null }?.incidentId
+            }
+            val trackingUrl = incidentId?.let { "https://kaaval-94c1d.web.app/live/$it" }
+                ?: "Live tracking unavailable"
             
             val isBatteryCritical = action.alertType == EmergencyAction.AlertType.BATTERY_CRITICAL
             val medicalNotes = if (isBatteryCritical) {
