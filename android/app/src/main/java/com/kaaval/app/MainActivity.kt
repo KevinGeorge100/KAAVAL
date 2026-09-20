@@ -105,6 +105,10 @@ class MainActivity : ComponentActivity() {
                 voiceFeedback.speak(activeMsg)
             }
         }
+
+        if (permissions[Manifest.permission.BLUETOOTH_SCAN] == true) {
+            bleManager.startScan()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

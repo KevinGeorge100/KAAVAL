@@ -6,18 +6,20 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.kaaval.app.domain.model.WearableDevice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 /**
  * KAAVAL BLE Wearable Manager
@@ -28,6 +30,15 @@ class KaavalBleManager(
     private val context: Context,
     private val onHardwareTrigger: () -> Unit
 ) {
+    companion object {
+        // These must match the UUIDs used by the ESP32 Arduino sketch.
+        private val KAAVAL_SERVICE_UUID: UUID =
+            UUID.fromString("f0e0d0c0-b0a0-4000-8000-000000000001")
+        private val SOS_CHARACTERISTIC_UUID: UUID =
+            UUID.fromString("f0e0d0c0-b0a0-4000-8000-000000000002")
+        private val CLIENT_CHARACTERISTIC_CONFIG_UUID: UUID =
+            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    }
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -52,17 +63,51 @@ class KaavalBleManager(
 
         @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // Here we would find the specific SOS characteristic and enable notifications
-                Log.d("KaavalBleManager", "Services discovered. Wearable ready for trigger.")
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e("KaavalBleManager", "Service discovery failed with status $status")
+                return
             }
+
+            val sosCharacteristic = gatt
+                .getService(KAAVAL_SERVICE_UUID)
+                ?.getCharacteristic(SOS_CHARACTERISTIC_UUID)
+
+            if (sosCharacteristic == null) {
+                Log.e("KaavalBleManager", "KAAVAL SOS characteristic was not found")
+                return
+            }
+
+            if (!gatt.setCharacteristicNotification(sosCharacteristic, true)) {
+                Log.e("KaavalBleManager", "Could not enable SOS notifications")
+                return
+            }
+
+            val descriptor = sosCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
+            if (descriptor == null) {
+                Log.e("KaavalBleManager", "SOS characteristic has no notification descriptor")
+                return
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+            } else {
+                @Suppress("DEPRECATION")
+                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                @Suppress("DEPRECATION")
+                gatt.writeDescriptor(descriptor)
+            }
+            Log.i("KaavalBleManager", "KAAVAL wearable ready for SOS notifications")
         }
 
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
-            // THIS IS THE TRIGGER: Hardware button pressed!
+            if (characteristic.uuid != SOS_CHARACTERISTIC_UUID ||
+                characteristic.value?.let { String(it, Charsets.UTF_8) } != "SOS") {
+                return
+            }
+
             Log.w("KaavalBleManager", "HARDWARE SOS TRIGGER RECEIVED FROM WEARABLE!")
             onHardwareTrigger()
         }
