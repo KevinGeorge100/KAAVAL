@@ -1,0 +1,9 @@
+If:
+  PathMatch: wearable/.*
+CompileFlags:
+  Add:
+    - "-xc++"
+    - "-std=c++17"
+    - "-w"
+Diagnostics:
+  Suppress: ["*"]
