@@ -3,6 +3,11 @@
     "files.exclude": {
         "**/KAAVAL/**": true
     },
+    "git.repositoryScanMaxDepth": 1,
+    "git.ignoredRepositories": [
+        "c:\\Projects\\KAAVAL\\KAAVAL",
+        "./KAAVAL"
+    ],
     "clangd.fallbackFlags": [
         "-xc++",
         "-std=c++17",

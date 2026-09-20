@@ -19,7 +19,8 @@ import kotlin.time.Duration.Companion.seconds
  */
 data class LocationUpdatePolicy(
     val interval: Duration = 15.seconds,
-    val fastestInterval: Duration = 5.seconds
+    val fastestInterval: Duration = 5.seconds,
+    val priority: Int = Priority.PRIORITY_HIGH_ACCURACY
 )
 
 /**
@@ -101,7 +102,7 @@ class KaavalLocationManager(private val context: Context) {
             return
         }
 
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, policy.interval.inWholeMilliseconds)
+        val request = LocationRequest.Builder(policy.priority, policy.interval.inWholeMilliseconds)
             .setMinUpdateIntervalMillis(policy.fastestInterval.inWholeMilliseconds)
             .build()
 
