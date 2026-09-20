@@ -15,6 +15,14 @@
       {
         "source": "/live/**",
         "destination": "/live.html"
+      },
+      {
+        "source": "/download",
+        "destination": "/download.html"
+      },
+      {
+        "source": "/app",
+        "destination": "/download.html"
       }
     ],
     "headers": [
