@@ -3,6 +3,13 @@
     "files.exclude": {
         "**/KAAVAL/**": true
     },
+    "java.project.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/archetype/**",
+        "**/META-INF/maven/**",
+        "**/KAAVAL/**"
+    ],
     "git.repositoryScanMaxDepth": 1,
     "git.ignoredRepositories": [
         "c:\\Projects\\KAAVAL\\KAAVAL",
