@@ -28,29 +28,29 @@ class SosDispatcher(private val context: Context) {
         medicalNotes: String = ""
     ): Boolean = withContext(Dispatchers.IO) {
         
-        if (contacts.isEmpty()) {
-            Log.w("SosDispatcher", "No emergency contacts configured")
-            return@withContext false
-        }
-
         val googleMapsUrl = if (latitude != null && longitude != null) 
             "https://maps.google.com/?q=$latitude,$longitude" else "Location unavailable"
 
         val alertText = """
             🚨 *KAAVAL EMERGENCY ALERT* 🚨
             
-            *Student Name*: Visually Impaired User
+            *User*: Visually Impaired Individual
             *Location*: $googleMapsUrl
-            *Medical Info*: $medicalNotes
+            *Medical Info*: ${medicalNotes.ifBlank { "None provided" }}
             *Live Tracking*: $trackingUrl
             
-            _Help is needed immediately!_
+            _Immediate assistance required!_
         """.trimIndent()
 
-        // 1. Send FREE Telegram Alert (Primary)
+        // 1. Send FREE Telegram Group Alert (Primary Community Channel)
         sendTelegramAlert(alertText)
 
-        // 2. Send SMS fallback (Secondary/Carrier Charges)
+        // 2. Send SMS fallback (Secondary Carrier Channel)
+        if (contacts.isEmpty()) {
+            Log.w("SosDispatcher", "No SMS emergency contacts configured; Telegram group alert dispatched.")
+            return@withContext true
+        }
+
         val smsMessage = "🚨 EMERGENCY SOS ALERT from KAAVAL 🚨\nLocation: $googleMapsUrl\nTracking: $trackingUrl"
         val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             context.getSystemService(SmsManager::class.java)
@@ -86,6 +86,8 @@ class SosDispatcher(private val context: Context) {
             val url = URL("https://api.telegram.org/bot$BOT_TOKEN/sendMessage?chat_id=$CHAT_ID&text=$encodedMsg&parse_mode=Markdown")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
             if (conn.responseCode == 200) {
                 Log.i("SosDispatcher", "Telegram Alert Sent Successfully (Free)")
             } else {
@@ -97,6 +99,9 @@ class SosDispatcher(private val context: Context) {
     }
 
     fun dispatchSafeStatus(contacts: List<EmergencyContact>, message: String) {
+        // Broadcast safe resolution to Telegram group
+        sendTelegramAlert("✅ *KAAVAL INCIDENT RESOLVED*\n\n$message")
+
         val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             context.getSystemService(SmsManager::class.java)
         } else {
