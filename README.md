@@ -61,29 +61,29 @@ Every existing emergency alert system makes a fatal assumption: **they assume th
 KAAVAL transforms emergency response into a synchronized, 4-pillar closed loop:
 
 ```mermaid
-graph TD
-    subgraph PILLAR 1: HARDWARE
-        A[Wearable Tactile Wristband] -->|BLE GATT Notification| B(Physical SOS Button)
-        K[Bidirectional Haptic Motor] <--|REASSURE Command| B
+flowchart TD
+    subgraph P1 ["PILLAR 1: HARDWARE"]
+        A["Wearable Tactile Wristband"] -->|BLE GATT Notification| B["Physical SOS Button"]
+        K["Bidirectional Haptic Motor"] <--|REASSURE Command| B
     end
 
-    subgraph PILLAR 2: MOBILE ENGINE
-        B -->|Encrypted BLE 4.2| C[Android Core Service]
-        D[Hardware Volume Keys] --> C
-        C -->|Foreground Service| E[Fused GPS Tracking]
-        C -->|Microphone Stream| F[Gemini 1.5 Flash Audio Witness]
-        C -->|Offline Fallback| G[Cellular SMS Broadcast]
+    subgraph P2 ["PILLAR 2: MOBILE ENGINE"]
+        B -->|Encrypted BLE 4.2| C["Android Core Service"]
+        D["Hardware Volume Keys"] --> C
+        C -->|Foreground Service| E["Fused GPS Tracking"]
+        C -->|Microphone Stream| F["Gemini 1.5 Flash Audio Witness"]
+        C -->|Offline Fallback| G["Cellular SMS Broadcast"]
     end
 
-    subgraph PILLAR 3: CLOUD ENGINE
-        C -->|Firestore Real-Time Stream| H[Cloud Dispatch Pipeline]
-        H -->|Auto-Expiring Session| I[(Firestore Incident DB)]
-        H -->|Cloud Functions| J[Caregiver Push & SMS Gateways]
+    subgraph P3 ["PILLAR 3: CLOUD ENGINE"]
+        C -->|Firestore Real-Time Stream| H["Cloud Dispatch Pipeline"]
+        H -->|Auto-Expiring Session| I[("Firestore Incident DB")]
+        H -->|Cloud Functions| J["Caregiver Push & SMS Gateways"]
     end
 
-    subgraph PILLAR 4: CAREGIVER PORTAL
-        I -->|Vector Basemap Sync| L[Caregiver Command Portal]
-        L -->|1-Click Claim| M[Claim Emergency / Set ETA]
+    subgraph P4 ["PILLAR 4: CAREGIVER PORTAL"]
+        I -->|Vector Basemap Sync| L["Caregiver Command Portal"]
+        L -->|1-Click Claim| M["Claim Emergency / Set ETA"]
         M -->|Send Tactile Pulse| H
         H -->|Remote Reassurance| C
         C -->|BLE Write Characteristic| K
