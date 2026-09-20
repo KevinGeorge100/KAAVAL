@@ -142,12 +142,12 @@ class MainActivity : ComponentActivity() {
         } 
 
         bleManager = KaavalBleManager(this) {
-            viewModel.processEvent(EmergencyEvent.ButtonPressed)
             voiceFeedback.speakPriority("Hardware SOS Triggered.")
+            viewModel.triggerInstantSos()
         }
 
         voiceCommandManager = VoiceCommandManager(this) {
-            viewModel.processEvent(EmergencyEvent.ButtonPressed)
+            viewModel.triggerInstantSos()
         }
 
         requestEmergencyPermissions()
