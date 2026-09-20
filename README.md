@@ -1,8 +1,12 @@
-# KAAVAL (കാവൽ)
+<div align="center">
+  <img src="kaaval-logo.png" alt="KAAVAL Official Logo" width="140" />
+  
+  # KAAVAL (കാവൽ)
+  
+  ### Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals
+</div>
 
 ![KAAVAL Emergency Response Ecosystem](banner.png)
-
-### Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals
 
 [![Android 14 Ready](https://img.shields.io/badge/Android-14%20(API%2029--34)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](android/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9.22-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](android/)
@@ -121,6 +125,30 @@ flowchart TD
 | **Network Resilience** | Data connection required | PSTN landline required | **Dual-Path Redundancy: Firestore over IP + GSM SMS** |
 | **Discretion & Anti-Coercion** | Visible, audible alarms | Auditory siren/beeping | **Blackout Stealth Mode with Geometric Gesture Validation** |
 | **Accessibility Standard** | Partial touch compliance | Physical hardware only | **W3C WCAG 2.1 Level AAA (~19.5:1 Contrast Ratio)** |
+
+---
+
+## Brand Identity & Design System
+
+The official KAAVAL brand identity embodies defensive vigilance, rapid tactile response, and uncompromising accessibility. Designed specifically for low-vision individuals and high-stress emergency environments, the visual system adheres to strict high-contrast standards.
+
+<div align="center">
+  <img src="kaaval-logo.png" alt="KAAVAL Official Brandmark" width="160" />
+</div>
+
+### Official Color Palette
+
+| Swatch | Color Name | Hex Code | Role in Ecosystem | Accessibility Standard |
+| :---: | :--- | :--- | :--- | :--- |
+| 🟨 | **Tactical Yellow** | `#FFD600` | Primary brand identity, SOS triggers, tactile focus rings | **~19.5:1** contrast on Pure Black (Exceeds WCAG AAA) |
+| ⬛ | **Pure Canvas Black** | `#000000` | AMOLED backdrop, blackout anti-coercion UI, battery longevity | Baseline canvas (0 cd/m² on OLED panels) |
+| ⬜ | **Signal White** | `#FFFFFF` | Primary typography, critical readability, tactile icons | **21:1** contrast on Pure Black (WCAG AAA maximum) |
+
+### Brandmark Architecture
+1. **Concentric Eye of Awareness**: Omnidirectional situational perception, audio witness classification, and continuous sensor fusion.
+2. **Protective Shield Profile**: Defensive perimeter symbolizing physical and cryptographic safety.
+3. **Wearable Beacon Loop**: Mechanical wristband connection establishing a closed-loop link between victim and caregiver.
+4. **Zero-Glare Silhouette**: High-contrast contour engineered for instantaneous cognitive recognition under severe stress or low visual acuity.
 
 ---
 

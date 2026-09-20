@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KAAVAL Incident Command & Emergency Response Portal</title>
+    <link rel="icon" type="image/png" href="kaaval-logo.png">
     
     <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,20 +93,22 @@
         }
 
         .brand-logo {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+            background: #000000;
+            border: 1.5px solid #FFD600;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 0 12px rgba(255, 214, 0, 0.4);
+            padding: 3px;
         }
 
-        .brand-logo svg {
-            width: 18px;
-            height: 18px;
-            color: #FFFFFF;
+        .brand-logo img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
         }
 
         .brand-meta h1 {
@@ -1191,9 +1194,7 @@
     <header class="topbar">
         <div class="brand-group">
             <div class="brand-logo">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
-                </svg>
+                <img src="kaaval-logo.png" alt="KAAVAL Logo">
             </div>
             <div class="brand-meta">
                 <h1>KAAVAL Dispatch <span id="incident-id-badge" class="incident-pill" onclick="copyIncidentId()">KVL-984321</span></h1>

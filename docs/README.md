@@ -1,6 +1,10 @@
-# 📚 KAAVAL Documentation Hub
-
-Welcome to the official documentation repository for **KAAVAL** — *Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals*.
+<div align="center">
+  <img src="../kaaval-logo.png" alt="KAAVAL Official Logo" width="110" />
+  
+  # KAAVAL Documentation Hub
+  
+  <p><strong>Accessibility-First Emergency Response Ecosystem for Visually Impaired Individuals</strong></p>
+</div>
 
 Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 
