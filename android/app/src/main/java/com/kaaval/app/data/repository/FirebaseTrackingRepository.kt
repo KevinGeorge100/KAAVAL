@@ -29,7 +29,7 @@ class FirebaseTrackingRepository(
                 "status" to "ACTIVE",
                 "createdAt" to Date(now),
                 "expiresAt" to Date(expiresAt),
-                "userName" to "Visually Impaired User" // Placeholder
+                "userName" to "Visually Impaired User"
             )
 
             incidentsCollection.document(incidentId)
@@ -74,6 +74,30 @@ class FirebaseTrackingRepository(
         }
     }
 
+    suspend fun updateAiSummary(
+        incidentId: String,
+        summary: String,
+        transcript: String,
+        threatLevel: String = "HIGH"
+    ): Boolean {
+        return try {
+            val data = hashMapOf(
+                "aiSummary" to summary,
+                "audioTranscript" to transcript,
+                "threatLevel" to threatLevel,
+                "aiAnalyzedAt" to Date()
+            )
+            incidentsCollection.document(incidentId)
+                .set(data, SetOptions.merge())
+                .await()
+            android.util.Log.i("FirebaseTracking", "AI Summary published to Firestore for $incidentId")
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseTracking", "Failed to update AI summary: ${e.message}")
+            false
+        }
+    }
+
     override fun getTrackingSession(incidentId: String): Flow<TrackingSession?> = callbackFlow {
         val subscription = incidentsCollection.document(incidentId)
             .addSnapshotListener { snapshot, error ->
@@ -91,16 +115,35 @@ class FirebaseTrackingRepository(
                     val created = snapshot.getDate("createdAt")?.time ?: 0L
                     val expires = snapshot.getDate("expiresAt")?.time ?: 0L
 
+                    val claimedBy = snapshot.getString("claimedBy")
+                    val claimedEta = snapshot.getString("claimedEta")
+                    val claimedNote = snapshot.getString("claimedNote")
+                    val aiSummary = snapshot.getString("aiSummary")
+                    val audioTranscript = snapshot.getString("audioTranscript")
+                    val reassuranceTime = snapshot.getDate("reassurancePing")?.time
+
                     val location = if (lat != null && lng != null) {
                         LocationData(lat, lng, time ?: 0L, acc ?: 0f, snapshot.getString("source"))
                     } else null
 
+                    val trackingStatus = try {
+                        TrackingStatus.valueOf(statusStr)
+                    } catch (e: Exception) {
+                        TrackingStatus.ACTIVE
+                    }
+
                     trySend(TrackingSession(
                         incidentId = incidentId,
-                        status = TrackingStatus.valueOf(statusStr),
+                        status = trackingStatus,
                         createdAt = created,
                         expiresAt = expires,
-                        latestLocation = location
+                        latestLocation = location,
+                        claimedBy = claimedBy,
+                        claimedEta = claimedEta,
+                        claimedNote = claimedNote,
+                        aiSummary = aiSummary,
+                        audioTranscript = audioTranscript,
+                        lastReassurancePing = reassuranceTime
                     ))
                 } else {
                     trySend(null)

@@ -1662,6 +1662,14 @@
                         if (data.claimedBy) {
                             markClaimedUI(data.claimedBy, data.claimedEta || "8 mins", data.claimedNote || "");
                         }
+
+                        if (data.aiSummary) {
+                            const briefingEl = document.getElementById('aiBriefingText');
+                            if (briefingEl) {
+                                briefingEl.innerHTML = `<b>AI Situation Assessment:</b> ${data.aiSummary}` + 
+                                    (data.audioTranscript ? `<br><span style="font-size:0.75rem; color:#94A3B8; margin-top:6px; display:block; background:rgba(0,0,0,0.25); padding:6px 10px; border-radius:6px;">🎙️ Audio Transcript: <i>"${data.audioTranscript}"</i></span>` : '');
+                            }
+                        }
                     }
                 }, (err) => {
                     console.warn("Firestore snapshot error:", err);
@@ -1702,7 +1710,8 @@
                         claimedEta: selectedEta,
                         claimedNote: note,
                         claimedAt: new Date(),
-                        caregiverStatus: "RESPONDING"
+                        caregiverStatus: "RESPONDING",
+                        reassurancePing: firebase.firestore.FieldValue.serverTimestamp()
                     }).catch(e => console.log("Demo offline sync:", e));
                 } catch (e) {}
             }
@@ -1732,6 +1741,15 @@
             
             // Subtle sound feedback
             playTactileTone();
+
+            // Broadcast to Firestore for immediate phone/wearable response
+            if (db) {
+                try {
+                    db.collection("incidents").doc(incidentId).update({
+                        reassurancePing: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.log("Demo offline sync:", e));
+                } catch (e) {}
+            }
         }
 
         // --- 7. INCIDENT RESOLUTION ---

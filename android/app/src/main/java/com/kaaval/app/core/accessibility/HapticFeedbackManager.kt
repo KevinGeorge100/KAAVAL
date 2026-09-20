@@ -52,4 +52,25 @@ class HapticFeedbackManager(context: Context) {
             }
         }
     }
+
+    /**
+     * Soothing rhythmic double-pulse heartbeat pattern (lub-dub ... lub-dub)
+     * signaling to the user that a caregiver has acknowledged the alert and is responding.
+     */
+    fun triggerReassuranceHeartbeat() {
+        if (vibrator.hasVibrator()) {
+            val pattern = longArrayOf(0, 120, 90, 180, 500, 120, 90, 180)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val amplitudes = intArrayOf(0, 180, 0, 255, 0, 180, 0, 255)
+                try {
+                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1))
+                } catch (e: Exception) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(pattern, -1)
+            }
+        }
+    }
 }

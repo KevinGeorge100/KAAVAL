@@ -35,6 +35,9 @@ import com.kaaval.app.accessibility.VoiceFeedbackManager
 import com.kaaval.app.ai.OpenAiEmergencyAnalyzer
 import com.kaaval.app.data.KaavalDatabase
 import com.kaaval.app.data.KaavalRepository
+import com.kaaval.app.data.repository.FirebaseTrackingRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import com.kaaval.app.domain.action.EmergencyActionDispatcher
 import com.kaaval.app.domain.model.EmergencyContact
 import com.kaaval.app.domain.model.EmergencyEvent
@@ -133,9 +136,22 @@ class MainActivity : ComponentActivity() {
         hapticFeedback.initialize(this)
         locationManager = KaavalLocationManager(this)
         sosDispatcher = SosDispatcher(this)
-        openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = "")
-        audioWitness = AudioWitnessManager(this) { _ ->
-            // AI Analysis disabled for stability sprint.
+        openAiAnalyzer = OpenAiEmergencyAnalyzer(apiKey = BuildConfig.OPENAI_API_KEY)
+        val firebaseTracking = FirebaseTrackingRepository()
+        audioWitness = AudioWitnessManager(this) { recordedFile, incidentId ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    android.util.Log.i("MainActivity", "Analyzing Audio Witness via Whisper & GPT-4o-mini...")
+                    val result = openAiAnalyzer.analyzeEmergencyAudio(recordedFile)
+                    android.util.Log.i("MainActivity", "Audio Analysis Complete: ${result.summary}")
+                    val activeId = if (incidentId.isNotBlank()) incidentId else (repository.getActiveSession().first()?.incidentId ?: "")
+                    if (activeId.isNotBlank()) {
+                        firebaseTracking.updateAiSummary(activeId, result.summary, result.transcript, result.threatLevel)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Audio Witness processing error: ${e.message}", e)
+                }
+            }
         }
         batteryGuardian = BatteryGuardianManager(this) { level -> 
             viewModel.processEvent(EmergencyEvent.CriticalBatteryDetected(level))

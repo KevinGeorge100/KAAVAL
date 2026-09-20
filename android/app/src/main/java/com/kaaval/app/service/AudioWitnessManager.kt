@@ -8,22 +8,24 @@ import java.io.File
 
 /**
  * KAAVAL Audio Witness Manager
- * Automatically records a short audio snippet during an emergency.
- * Provides "ears on the ground" for caregivers.
+ * Automatically records a short ambient audio snippet during an emergency.
+ * Provides "ears on the ground" for caregivers and feeds into OpenAI Whisper/GPT-4o-mini.
  */
 class AudioWitnessManager(
     private val context: Context,
-    private val onRecordingFinished: (File) -> Unit = {}
+    private val onRecordingFinished: (File, String) -> Unit = { _, _ -> }
 ) {
 
     private var mediaRecorder: MediaRecorder? = null
     private var isRecording = false
     private var currentFile: File? = null
+    private var currentIncidentId: String = ""
 
     fun startRecording(incidentId: String) {
         if (isRecording) return
 
         try {
+            currentIncidentId = incidentId
             val file = File(context.cacheDir, "witness_$incidentId.m4a")
             currentFile = file
             
@@ -44,10 +46,10 @@ class AudioWitnessManager(
             isRecording = true
             Log.i("AudioWitness", "Emergency audio recording started: ${file.name}")
             
-            // Auto-stop after 15 seconds to save battery/data
+            // Auto-stop after 12 seconds to optimize for Whisper transmission & response latency
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 stopRecording()
-            }, 15000)
+            }, 12000)
 
         } catch (e: Exception) {
             Log.e("AudioWitness", "Failed to start recording", e)
@@ -66,10 +68,10 @@ class AudioWitnessManager(
             isRecording = false
             Log.i("AudioWitness", "Emergency audio recording stopped and saved.")
             
-            currentFile?.let { 
-                if (it.exists()) {
-                    onRecordingFinished(it) 
-                }
+            val fileToProcess = currentFile
+            val incidentId = currentIncidentId
+            if (fileToProcess != null && fileToProcess.exists()) {
+                onRecordingFinished(fileToProcess, incidentId) 
             }
         } catch (e: Exception) {
             Log.e("AudioWitness", "Error stopping recorder", e)

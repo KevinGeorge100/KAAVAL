@@ -13,6 +13,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.kaaval.app.MainActivity
 import com.kaaval.app.R
+import com.kaaval.app.accessibility.VoiceFeedbackManager
+import com.kaaval.app.core.accessibility.HapticFeedbackManager
 import com.kaaval.app.data.KaavalDatabase
 import com.kaaval.app.data.KaavalRepository
 import com.kaaval.app.data.repository.FirebaseTrackingRepository
@@ -23,7 +25,7 @@ import kotlinx.coroutines.flow.first
 /**
  * KAAVAL Emergency Foreground Service
  * The active orchestrator for continuous tracking and session life-support.
- * Owns the Android runtime location loop.
+ * Owns the Android runtime location loop and closed-loop caregiver reassurance listener.
  */
 class EmergencyForegroundService : Service() {
 
@@ -33,6 +35,9 @@ class EmergencyForegroundService : Service() {
     private lateinit var locationManager: KaavalLocationManager
     private lateinit var repository: KaavalRepository
     private lateinit var trackingRepository: LocationTrackingRepository
+    private lateinit var hapticFeedback: HapticFeedbackManager
+    private var lastClaimedBy: String? = null
+    private var lastReassuranceTimestamp: Long? = null
 
     companion object {
         const val CHANNEL_ID = "KAAVAL_EMERGENCY_CHANNEL"
@@ -61,6 +66,7 @@ class EmergencyForegroundService : Service() {
         locationManager = KaavalLocationManager(this)
         repository = KaavalRepository(KaavalDatabase.getDatabase(this))
         trackingRepository = FirebaseTrackingRepository()
+        hapticFeedback = HapticFeedbackManager(this)
         createNotificationChannel()
     }
 
@@ -75,6 +81,7 @@ class EmergencyForegroundService : Service() {
                     trackingRepository.createTrackingSession(incidentId)
                 }
                 startContinuousTracking(incidentId)
+                startCaregiverReassuranceListener(incidentId)
             } else {
                 android.util.Log.w("EmergencyService", "Duplicate service start for same session ignored.")
             }
@@ -87,6 +94,36 @@ class EmergencyForegroundService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
         return START_STICKY
+    }
+
+    private fun startCaregiverReassuranceListener(incidentId: String) {
+        serviceScope.launch {
+            trackingRepository.getTrackingSession(incidentId).collect { session ->
+                if (session == null) return@collect
+
+                // 1. Detect Caregiver Claim / Acknowledgment
+                if (!session.claimedBy.isNullOrBlank() && session.claimedBy != lastClaimedBy) {
+                    lastClaimedBy = session.claimedBy
+                    android.util.Log.i("EmergencyService", "Caregiver claim received: ${session.claimedBy} (ETA: ${session.claimedEta})")
+                    
+                    withContext(Dispatchers.Main) {
+                        VoiceFeedbackManager.announceCaregiverResponse(session.claimedBy, session.claimedEta)
+                    }
+                    hapticFeedback.triggerReassuranceHeartbeat()
+                }
+
+                // 2. Detect Manual Reassurance Ping from Caregiver Portal
+                if (session.lastReassurancePing != null && session.lastReassurancePing != lastReassuranceTimestamp) {
+                    lastReassuranceTimestamp = session.lastReassurancePing
+                    android.util.Log.i("EmergencyService", "Reassurance ping received from caregiver portal")
+                    
+                    withContext(Dispatchers.Main) {
+                        VoiceFeedbackManager.announceReassurancePing()
+                    }
+                    hapticFeedback.triggerReassuranceHeartbeat()
+                }
+            }
+        }
     }
 
     private fun startContinuousTracking(incidentId: String) {

@@ -156,4 +156,27 @@ class KaavalBleManager(
         _wearableState.value = WearableDevice(isConnected = false)
         Log.d("KaavalBleManager", "Disconnected from wearable")
     }
+
+    @SuppressLint("MissingPermission")
+    fun triggerWearableReassuranceVibration() {
+        val gatt = bluetoothGatt ?: return
+        try {
+            val service = gatt.getService(KAAVAL_SERVICE_UUID)
+            val characteristic = service?.getCharacteristic(SOS_CHARACTERISTIC_UUID)
+            if (characteristic != null) {
+                val cmd = "REASSURE".toByteArray(Charsets.UTF_8)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    gatt.writeCharacteristic(characteristic, cmd, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                } else {
+                    @Suppress("DEPRECATION")
+                    characteristic.value = cmd
+                    @Suppress("DEPRECATION")
+                    gatt.writeCharacteristic(characteristic)
+                }
+                Log.i("KaavalBleManager", "Transmitted REASSURE haptic command to BLE wearable")
+            }
+        } catch (e: Exception) {
+            Log.w("KaavalBleManager", "Failed to transmit wearable reassurance haptic: ${e.message}")
+        }
+    }
 }

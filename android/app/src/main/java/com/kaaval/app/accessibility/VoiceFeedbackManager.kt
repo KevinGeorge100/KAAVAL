@@ -222,6 +222,28 @@ object VoiceFeedbackManager : TextToSpeech.OnInitListener {
         speakPriority(msg)
     }
 
+    /**
+     * Spoken confirmation when a caregiver claims an active emergency on the web portal.
+     * Reassures the visually impaired user that someone has seen the alert and is en route.
+     */
+    fun announceCaregiverResponse(caregiverName: String, eta: String?) {
+        val etaText = if (!eta.isNullOrBlank()) eta else "a few minutes"
+        val eng = "$caregiverName has acknowledged your alert. They are responding, arriving in $etaText."
+        val mal = "$caregiverName നിങ്ങളുടെ സന്ദേശം കണ്ടു. $etaText എത്തും."
+        val text = getMessage(eng, mal)
+        speakPriority(text)
+    }
+
+    /**
+     * Spoken confirmation when caregiver transmits an explicit reassurance ping.
+     */
+    fun announceReassurancePing() {
+        val eng = "Your caregiver sent a reassurance signal. Help is on the way."
+        val mal = "സഹായം വരുന്നുണ്ട്. വീട്ടുകാർ വിവരങ്ങൾ കാണുന്നുണ്ട്."
+        val text = getMessage(eng, mal)
+        speakPriority(text)
+    }
+
     private fun speakInternal(text: String, isPriority: Boolean) {
         if (!isInitialized) {
             Log.d(TAG, "TTS not ready yet. Queuing: $text")
