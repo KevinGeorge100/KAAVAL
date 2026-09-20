@@ -47,7 +47,8 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 
 ---
 
-### 🚀 6. Operations & Deployment Runbooks (`/docs/runbooks`)
+### 🚀 6. Operations, Deployment & Presentation Runbooks (`/docs`)
+- 📄 **[PRODUCT_DEMO_RUNBOOK.md](PRODUCT_DEMO_RUNBOOK.md)** — Comprehensive online presentation playbook, judge deliverables, screen arrangements, and minute-by-minute pitch script.
 - 📄 **[LAUNCH_AND_VERIFICATION.md](runbooks/LAUNCH_AND_VERIFICATION.md)** — Step-by-step commands to build, test, flash, and verify all 4 ecosystem pillars.
 
 ---
