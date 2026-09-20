@@ -8,7 +8,7 @@ service cloud.firestore {
       // 2. Allow write (create) if the user is authenticated (later).
       // 3. Allow update (location) from the device.
 
-      allow read: if request.time < resource.data.expiresAt;
+      allow read: if resource == null || !('expiresAt' in resource.data) || request.time < resource.data.expiresAt;
 
       // Temporary open write for development - MUST be secured with Auth in Sprint 4
       allow write: if true;
