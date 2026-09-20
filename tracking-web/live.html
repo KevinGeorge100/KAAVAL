@@ -285,6 +285,26 @@
             filter: contrast(105%) brightness(95%);
         }
 
+        /* Glassmorphic Attribution Pill */
+        .leaflet-control-attribution {
+            background: rgba(11, 17, 30, 0.75) !important;
+            color: var(--text-muted) !important;
+            font-size: 10px !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            margin: 0 10px 10px 0 !important;
+            padding: 3px 8px !important;
+        }
+        .leaflet-control-attribution a {
+            color: var(--text-secondary) !important;
+            text-decoration: none !important;
+        }
+        .leaflet-control-attribution a:hover {
+            color: var(--primary) !important;
+        }
+
         /* FLOATING HUD: TELEMETRY PILL */
         .hud-telemetry {
             position: absolute;
@@ -1431,16 +1451,19 @@
         let incidentElapsedSeconds = 0;
         let timerInterval = null;
 
-        // Tile Endpoints (100% Free, Enterprise-Grade Global CDN, No API Keys Required, No 403 Tile Policy Blocks)
-        const cartoDarkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        const cartoVoyagerTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        // CARTO Basemaps Dedicated Production API Key (Free up to 5,000,000 requests/month)
+        const CARTO_API_KEY = 'cb1_3r6v_1_fbbfcb2f8d717594a6ce5f56';
+
+        // Tile Endpoints (CARTO Watermark-Free Licensed Endpoints + Esri Satellite)
+        const cartoDarkTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
+        const cartoVoyagerTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`;
         const esriSatelliteTiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
         // --- 2. MAP INITIALIZATION ---
         function initMap() {
             map = L.map('leaflet-map', {
                 zoomControl: false,
-                attributionControl: false
+                attributionControl: true
             }).setView([currentLat, currentLng], 16);
 
             L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -1489,7 +1512,8 @@
                 activeTileLayer = L.tileLayer(cartoDarkTiles, {
                     subdomains: 'abcd',
                     maxZoom: 20,
-                    className: 'tactical-dark-tiles'
+                    className: 'tactical-dark-tiles',
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
                 }).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1500,7 +1524,8 @@
             } else if (mode === 'street') {
                 activeTileLayer = L.tileLayer(cartoVoyagerTiles, {
                     subdomains: 'abcd',
-                    maxZoom: 20
+                    maxZoom: 20,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
                 }).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1510,7 +1535,8 @@
                 btn.classList.remove('active');
             } else if (mode === 'satellite') {
                 activeTileLayer = L.tileLayer(esriSatelliteTiles, {
-                    maxZoom: 19
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; <a href="https://www.esri.com" target="_blank">Esri</a>'
                 }).addTo(map);
                 btn.innerHTML = `
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
