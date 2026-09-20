@@ -43,6 +43,11 @@ Supported by the **IEEE Sensors Council Industry Mentoring Program**.
 
 ---
 
+### 🚀 6. Operations & Deployment Runbooks (`/docs/runbooks`)
+- 📄 **[LAUNCH_AND_VERIFICATION.md](runbooks/LAUNCH_AND_VERIFICATION.md)** — Step-by-step commands to build, test, flash, and verify all 4 ecosystem pillars.
+
+---
+
 ## 👥 Project Team
 - **Software & AI Lead**: Kevin George
 - **Hardware & Electrical Team**: Navami, Adwaid, Jewel *(EEE)*
