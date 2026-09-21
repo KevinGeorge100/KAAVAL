@@ -39,7 +39,7 @@ service cloud.firestore {
           // Public capability-link caregiver response
           (
             // 1. Initial claim: permitted only when currently unclaimed
-            (!('claimedBy' in resource.data) || resource.data.claimedBy == null || resource.data.claimedBy == '') &&
+            resource.data.get('claimedBy', '') == '' &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'claimedBy', 'claimedEta', 'claimedNote', 'claimedAt', 'caregiverStatus', 'reassurancePing'
             ]) &&
