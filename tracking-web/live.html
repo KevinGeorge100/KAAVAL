@@ -1567,7 +1567,7 @@
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
-                            Send Tactile Reassurance to Wristband
+                            Send Reassurance Pulse
                         </button>
                     </div>
 
@@ -2237,12 +2237,17 @@
             const name = document.getElementById('responder-name-input').value.trim() || "Priya Sharma (Mom)";
             const note = document.getElementById('responder-note-input').value.trim();
 
-            renderClaimedStateUI(name, selectedEta, note);
-            closeClaimModal();
-            showToast("You are registered as Primary Responder");
-            addTimelineEvent(`Response claimed by ${name} (ETA: ${selectedEta})`, "success");
+            if (!incidentId) {
+                showToast("Cannot claim: Invalid or missing incident session");
+                return;
+            }
 
-            // Write back to Firestore
+            const confirmBtn = document.querySelector('#claim-modal .btn-modal-confirm');
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerText = "Registering...";
+            }
+
             try {
                 if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     const db = firebase.firestore();
@@ -2254,9 +2259,23 @@
                         caregiverStatus: "RESPONDING",
                         reassurancePing: firebase.firestore.FieldValue.serverTimestamp()
                     });
+
+                    // Render claimed state only after confirmed cloud persistence
+                    renderClaimedStateUI(name, selectedEta, note);
+                    closeClaimModal();
+                    showToast("You are registered as Primary Responder");
+                    addTimelineEvent(`Response claimed by ${name} (ETA: ${selectedEta})`, "success");
+                } else {
+                    throw new Error("Firestore SDK not initialized");
                 }
             } catch (e) {
-                console.log("Firestore claim sync notice (operating offline):", e);
+                console.error("Firestore claim error:", e);
+                showToast("Failed to register response: " + (e.message || "Network or permission error"));
+            } finally {
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerText = "Confirm Response";
+                }
             }
         }
 
@@ -2271,9 +2290,10 @@
         }
 
         async function sendReassurancePulse() {
-            showToast("Tactile pulse transmitted to user wristband");
-            addTimelineEvent("Caregiver reassurance signal dispatched to BLE wearable", "success");
-            playTone(587.33, 0.2); // D5 chime
+            if (!incidentId) {
+                showToast("Cannot send reassurance: Invalid incident session");
+                return;
+            }
 
             try {
                 if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
@@ -2281,9 +2301,16 @@
                     await db.collection("incidents").doc(incidentId).update({
                         reassurancePing: firebase.firestore.FieldValue.serverTimestamp()
                     });
+
+                    showToast("Reassurance sent.");
+                    addTimelineEvent("Caregiver reassurance signal dispatched to victim device", "success");
+                    playTone(587.33, 0.2); // D5 chime
+                } else {
+                    throw new Error("Firestore SDK not initialized");
                 }
             } catch (e) {
-                console.log("Reassurance sync notice:", e);
+                console.error("Firestore reassurance error:", e);
+                showToast("Failed to send reassurance: " + (e.message || "Network error"));
             }
         }
 

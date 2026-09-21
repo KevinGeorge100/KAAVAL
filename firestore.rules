@@ -34,7 +34,24 @@ service cloud.firestore {
         (caregiver() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'claimedBy', 'claimedEta', 'claimedNote', 'claimedAt', 'caregiverStatus',
           'reassurancePing', 'status', 'resolvedAt', 'resolutionNote'
-        ]) && (request.resource.data.status == resource.data.status || request.resource.data.status == 'COMPLETED'))
+        ]) && (request.resource.data.status == resource.data.status || request.resource.data.status == 'COMPLETED')) ||
+        (
+          // Public capability-link caregiver response
+          (
+            // 1. Initial claim: permitted only when currently unclaimed
+            (!('claimedBy' in resource.data) || resource.data.claimedBy == null || resource.data.claimedBy == '') &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'claimedBy', 'claimedEta', 'claimedNote', 'claimedAt', 'caregiverStatus', 'reassurancePing'
+            ]) &&
+            request.resource.data.claimedBy is string &&
+            request.resource.data.claimedBy.size() > 0 &&
+            request.resource.data.claimedBy.size() <= 100
+          ) ||
+          (
+            // 2. Reassurance pulse: permitted on active incident without changing responder identity
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reassurancePing'])
+          )
+        )
       );
       allow delete: if false;
       // Enrollment and legacy response processing are trusted-server operations only.
