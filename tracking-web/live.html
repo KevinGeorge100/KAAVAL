@@ -1767,19 +1767,59 @@
     <script>
         // --- 1. CONFIGURATION & URL SEED DATA ---
         const urlParams = new URLSearchParams(window.location.search);
-        const pathSegments = window.location.pathname.split('/').filter(Boolean);
-        const lastSegment = pathSegments.pop();
         
-        let incidentId = urlParams.get('id') || (lastSegment && lastSegment.startsWith('KVL-') ? lastSegment : "KVL-984321");
-        document.getElementById('incident-id-badge').innerText = incidentId;
+        function resolveIncidentId() {
+            // 1. Path-based resolution: /live/{incidentId} or /live.html/{incidentId}
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            let candidatePathId = null;
+            const liveIdx = pathParts.findIndex(p => p.toLowerCase() === 'live' || p.toLowerCase() === 'live.html');
+            if (liveIdx !== -1 && pathParts.length > liveIdx + 1) {
+                candidatePathId = pathParts[liveIdx + 1];
+            } else if (pathParts.length > 0) {
+                const last = pathParts[pathParts.length - 1];
+                if (last.toLowerCase() !== 'live' && last.toLowerCase() !== 'live.html') {
+                    candidatePathId = last;
+                }
+            }
 
-        // Seed coordinates from URL or fallback to Kochi central
+            // 2. Query param resolution: ?id={incidentId}
+            const queryId = urlParams.get('id');
+
+            // ID Sanitizer: Alphanumeric, hyphens, underscores (4 - 128 characters)
+            const isValidId = (id) => typeof id === 'string' && /^[a-zA-Z0-9_-]{4,128}$/.test(id.trim());
+
+            if (candidatePathId && isValidId(candidatePathId)) {
+                return candidatePathId.trim();
+            }
+            if (queryId && isValidId(queryId)) {
+                return queryId.trim();
+            }
+            if (urlParams.get('demo') === 'true') {
+                return "KVL-984321";
+            }
+            return null;
+        }
+
+        const incidentId = resolveIncidentId();
+        const incidentBadge = document.getElementById('incident-id-badge');
+        if (incidentId) {
+            incidentBadge.innerText = incidentId;
+        } else {
+            incidentBadge.innerText = "NO ACTIVE SESSION";
+            const statusText = document.getElementById('status-text-display');
+            if (statusText) statusText.innerText = "Awaiting Incident Link";
+        }
+
+        // Seed coordinates or fallback for initial map container rendering
+        const hasExplicitSeedCoords = !!(urlParams.get('lat') && urlParams.get('lng'));
         let currentLat = parseFloat(urlParams.get('lat')) || 9.9312;
         let currentLng = parseFloat(urlParams.get('lng')) || 76.2673;
         let currentAccuracy = parseFloat(urlParams.get('accuracy')) || 4.0;
         let userName = urlParams.get('name') || "Visually Impaired User";
         let bloodGroup = urlParams.get('blood') || "O+";
         let selectedEta = "8 mins";
+        let hasCenteredOnLiveLocation = false;
+        let hasReceivedLiveLocation = hasExplicitSeedCoords;
 
         // Caregiver coordinates & tracking
         let caregiverLat = null;
@@ -1869,7 +1909,17 @@
                 dashArray: '5, 5'
             }).addTo(map);
 
-            updateTelemetryUI(currentLat, currentLng, currentAccuracy, new Date());
+            if (hasExplicitSeedCoords) {
+                updateTelemetryUI(currentLat, currentLng, currentAccuracy, new Date());
+            } else {
+                const coordEl = document.getElementById('hud-coordinates');
+                const accEl = document.getElementById('hud-accuracy');
+                const beatEl = document.getElementById('hud-heartbeat');
+                if (coordEl) coordEl.innerText = "Acquiring GPS...";
+                if (accEl) accEl.innerText = "Standby";
+                if (beatEl) beatEl.innerText = "Connecting...";
+            }
+
             startIncidentTimer();
             startCaregiverPositionWatch();
 
@@ -2071,6 +2121,11 @@
 
         // --- 4. REAL-TIME FIRESTORE SYNCHRONIZATION ---
         async function setupFirestoreListener() {
+            if (!incidentId) {
+                console.warn("No active incident ID detected in URL. Standing by.");
+                addTimelineEvent("No active incident session in URL. Awaiting valid link.", "active");
+                return;
+            }
             try {
                 if (window.firebaseReady) {
                     await window.firebaseReady;
@@ -2082,7 +2137,7 @@
                 }
 
                 const db = firebase.firestore();
-                addTimelineEvent("Connected to live telemetry stream", "active");
+                addTimelineEvent(`Connected to live telemetry stream: ${incidentId}`, "active");
 
                 db.collection("incidents").doc(incidentId).onSnapshot((doc) => {
                     if (doc.exists) {
@@ -2102,9 +2157,10 @@
         function handleRemoteIncidentUpdate(data) {
             // 1. Live Coordinates Update
             if (data.latitude && data.longitude) {
-                currentLat = data.latitude;
-                currentLng = data.longitude;
-                currentAccuracy = data.accuracy || 4;
+                currentLat = parseFloat(data.latitude);
+                currentLng = parseFloat(data.longitude);
+                currentAccuracy = parseFloat(data.accuracy) || 4.0;
+                hasReceivedLiveLocation = true;
                 const pos = [currentLat, currentLng];
 
                 if (userMarker) userMarker.setLatLng(pos);
@@ -2113,7 +2169,13 @@
                     accuracyCircle.setRadius(currentAccuracy);
                 }
 
-                const lastUpdate = data.lastUpdate ? (data.lastUpdate.toDate ? data.lastUpdate.toDate() : new Date(data.lastUpdate)) : new Date();
+                // Center map on real victim location upon first valid telemetry packet
+                if (!hasCenteredOnLiveLocation && map) {
+                    map.setView(pos, 16);
+                    hasCenteredOnLiveLocation = true;
+                }
+
+                const lastUpdate = data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt)) : (data.lastUpdate ? (data.lastUpdate.toDate ? data.lastUpdate.toDate() : new Date(data.lastUpdate)) : new Date());
                 updateTelemetryUI(currentLat, currentLng, currentAccuracy, lastUpdate);
                 computeProximity();
                 if (caregiverLat && caregiverLng) {
@@ -2348,6 +2410,10 @@
         }
 
         function copyIncidentId() {
+            if (!incidentId) {
+                showToast("No active incident session");
+                return;
+            }
             navigator.clipboard.writeText(incidentId).then(() => {
                 showToast(`Incident ID copied: ${incidentId}`);
             });
