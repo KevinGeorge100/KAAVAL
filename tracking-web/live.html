@@ -7,10 +7,10 @@
     <meta name="description" content="Emergency response and location coordination for KAAVAL.">
     <link rel="icon" type="image/png" href="kaaval-logo.png">
 
-    <!-- Typography: Inter & Plus Jakarta Sans -->
+    <!-- Typography: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
@@ -21,43 +21,40 @@
 
     <style>
         :root {
-            --bg-page: #F8FAFC;
-            --bg-card: #FFFFFF;
-            --bg-subtle: #F1F5F9;
-            --bg-muted: #E2E8F0;
+            /* KAAVAL Core Brand Tokens */
+            --kaaval-black: #000000;
+            --kaaval-ink: #111111;
+            --kaaval-white: #FFFFFF;
 
-            --border-subtle: #E2E8F0;
-            --border-medium: #CBD5E1;
-            --border-strong: #94A3B8;
+            --kaaval-yellow: #FFD600;
+            --kaaval-yellow-hover: #EFC600;
 
-            --text-primary: #0F172A;
-            --text-secondary: #475569;
-            --text-muted: #64748B;
+            --kaaval-surface: #FFFFFF;
+            --kaaval-background: #F7F7F5;
 
-            --emergency-red: #DC2626;
-            --emergency-red-hover: #B91C1C;
-            --emergency-bg: #FEF2F2;
-            --emergency-border: #FCA5A5;
+            --kaaval-border: #E2E2DE;
+            --kaaval-border-subtle: #ECECE9;
+            --kaaval-muted: #626262;
+            --kaaval-soft: #F0F0ED;
 
-            --success-green: #16A34A;
-            --success-green-hover: #15803D;
-            --success-bg: #F0FDF4;
-            --success-border: #86EFAC;
+            /* Restrained Semantic Alerts */
+            --status-red: #DC2626;
+            --status-red-soft: #FEF2F2;
+            --status-red-border: #FCA5A5;
 
-            --action-blue: #2563EB;
-            --action-blue-hover: #1D4ED8;
+            --status-green: #16A34A;
+            --status-green-soft: #F0FDF4;
+            --status-green-border: #86EFAC;
 
-            --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
             --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 14px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
             --radius-full: 9999px;
 
-            --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.05);
-            --shadow-card: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
-            --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+            --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-modal: 0 16px 24px -4px rgba(0, 0, 0, 0.12), 0 6px 10px -4px rgba(0, 0, 0, 0.08);
         }
 
         * {
@@ -67,28 +64,27 @@
         }
 
         body {
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-            font-family: var(--font-body);
+            background-color: var(--kaaval-background);
+            color: var(--kaaval-ink);
+            font-family: var(--font-sans);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             -webkit-font-smoothing: antialiased;
-            padding: 0;
         }
 
-        /* ACCESSIBILITY FOCUS */
+        /* ACCESSIBILITY FOCUS STATES */
         a:focus-visible,
         button:focus-visible,
         input:focus-visible {
-            outline: 2px solid var(--action-blue);
+            outline: 2px solid var(--kaaval-black);
             outline-offset: 2px;
         }
 
-        /* TOPBAR HEADER */
+        /* COMPACT HEADER */
         header.topbar {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border-subtle);
+            background: var(--kaaval-surface);
+            border-bottom: 1px solid var(--kaaval-border);
             padding: 12px 20px;
             display: flex;
             align-items: center;
@@ -103,202 +99,206 @@
             color: inherit;
         }
 
-        .brand-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-sm);
-            background: #000000;
-            border: 1px solid #FFD600;
+        .brand-logo-wrap {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            background: var(--kaaval-black);
+            border: 1px solid var(--kaaval-yellow);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .brand-logo img {
-            width: 22px;
-            height: 22px;
+        .brand-logo-wrap img {
+            width: 20px;
+            height: 20px;
             object-fit: contain;
         }
 
-        .brand-title {
-            font-family: var(--font-display);
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-wordmark {
             font-size: 1.05rem;
             font-weight: 800;
-            color: var(--text-primary);
+            letter-spacing: -0.3px;
+            color: var(--kaaval-black);
             line-height: 1.1;
         }
 
-        .brand-subtitle {
+        .brand-sub {
             font-size: 0.72rem;
-            color: var(--text-muted);
+            color: var(--kaaval-muted);
             font-weight: 500;
         }
 
-        .header-status-badge {
+        .header-status {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 10px;
+            padding: 4px 10px;
             border-radius: var(--radius-full);
-            background: var(--emergency-bg);
-            border: 1px solid var(--emergency-border);
+            background: var(--status-red-soft);
+            border: 1px solid var(--status-red-border);
             font-size: 0.78rem;
             font-weight: 600;
-            color: var(--emergency-red);
+            color: var(--status-red);
         }
 
-        .header-status-badge.resolved {
-            background: var(--success-bg);
-            border-color: var(--success-border);
-            color: var(--success-green);
+        .header-status.resolved {
+            background: var(--status-green-soft);
+            border-color: var(--status-green-border);
+            color: var(--status-green);
         }
 
         .status-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background-color: var(--emergency-red);
+            background-color: var(--status-red);
         }
 
-        .header-status-badge.resolved .status-dot {
-            background-color: var(--success-green);
+        .header-status.resolved .status-dot {
+            background-color: var(--status-green);
         }
 
-        /* CENTERED CONTAINER */
+        /* MAIN CENTERED CONTAINER */
         .container {
             width: 100%;
-            max-width: 720px;
+            max-width: 680px;
             margin: 0 auto;
-            padding: 24px 16px 48px;
+            padding: 24px 20px 48px;
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
 
-        /* PRIMARY EMERGENCY CARD */
-        .primary-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
+        /* PRIMARY EMERGENCY SURFACE */
+        .surface-card {
+            background: var(--kaaval-surface);
+            border: 1px solid var(--kaaval-border);
             border-radius: var(--radius-lg);
             padding: 24px;
-            box-shadow: var(--shadow-card);
+            box-shadow: var(--shadow-subtle);
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .alert-eyebrow {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--emergency-red);
+        .emergency-badge-row {
             display: flex;
             align-items: center;
             gap: 6px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--status-red);
         }
 
-        .victim-name {
-            font-family: var(--font-display);
-            font-size: 1.6rem;
+        .victim-title {
+            font-size: 1.65rem;
             font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.3px;
+            color: var(--kaaval-black);
+            letter-spacing: -0.4px;
             line-height: 1.2;
         }
 
-        .accessibility-badge {
+        .accessibility-line {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 10px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-sm);
-            font-size: 0.82rem;
+            font-size: 0.88rem;
             font-weight: 600;
-            color: var(--text-secondary);
-            width: fit-content;
+            color: var(--kaaval-muted);
         }
 
-        .location-status-row {
+        .location-info-row {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 0.86rem;
-            color: var(--text-secondary);
-            padding-top: 4px;
-            border-top: 1px solid var(--border-subtle);
+            color: var(--kaaval-muted);
+            padding-top: 6px;
+            border-top: 1px solid var(--kaaval-border-subtle);
             flex-wrap: wrap;
         }
 
-        .location-pulse-dot {
+        .loc-indicator {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: var(--emergency-red);
+            background-color: var(--status-red);
             display: inline-block;
         }
 
-        .location-pulse-dot.unavailable {
-            background-color: var(--text-muted);
+        .loc-indicator.off {
+            background-color: var(--kaaval-muted);
+        }
+
+        .loc-status-text {
+            color: var(--kaaval-ink);
+            font-weight: 600;
         }
 
         /* PRIMARY ACTION BUTTONS */
-        .actions-stack {
+        .action-stack {
             display: flex;
             flex-direction: column;
             gap: 10px;
             margin-top: 4px;
         }
 
-        .btn-maps-primary {
+        .btn-gmaps {
             width: 100%;
-            min-height: 52px;
-            background: var(--emergency-red);
-            color: #FFFFFF;
+            min-height: 50px;
+            background: var(--kaaval-ink);
+            color: var(--kaaval-white);
             border: none;
             border-radius: var(--radius-md);
-            font-family: var(--font-display);
-            font-size: 1.05rem;
+            font-size: 0.96rem;
             font-weight: 700;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             text-decoration: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             transition: background 0.15s ease;
         }
 
-        .btn-maps-primary:hover {
-            background: var(--emergency-red-hover);
+        .btn-gmaps:hover {
+            background: var(--kaaval-black);
         }
 
-        .btn-maps-primary.disabled,
-        .btn-maps-primary:disabled {
-            background: var(--bg-muted);
-            color: var(--text-muted);
+        .btn-gmaps.disabled,
+        .btn-gmaps:disabled {
+            background: var(--kaaval-soft);
+            color: var(--kaaval-muted);
+            border: 1px solid var(--kaaval-border);
             cursor: not-allowed;
             pointer-events: none;
         }
 
-        .btn-maps-primary svg {
-            width: 20px;
-            height: 20px;
+        .btn-gmaps svg {
+            width: 18px;
+            height: 18px;
         }
 
-        .btn-call-secondary {
+        .btn-call {
             width: 100%;
-            min-height: 46px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-medium);
+            min-height: 44px;
+            background: var(--kaaval-surface);
+            border: 1px solid var(--kaaval-border);
             border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-family: var(--font-body);
-            font-size: 0.92rem;
+            color: var(--kaaval-ink);
+            font-size: 0.90rem;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
@@ -309,84 +309,94 @@
             transition: background 0.15s ease, border-color 0.15s ease;
         }
 
-        .btn-call-secondary:hover {
-            background: var(--bg-subtle);
-            border-color: var(--border-strong);
+        .btn-call:hover {
+            background: var(--kaaval-soft);
+            border-color: var(--kaaval-muted);
         }
 
-        .btn-call-secondary svg {
-            width: 18px;
-            height: 18px;
-            color: var(--text-secondary);
+        .btn-call svg {
+            width: 17px;
+            height: 17px;
+            color: var(--kaaval-muted);
         }
 
-        /* SECTION CARDS */
-        .section-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 20px 24px;
-            box-shadow: var(--shadow-card);
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--kaaval-border-subtle);
+            margin: 4px 0;
+        }
+
+        /* CAREGIVER RESPONSE SECTION */
+        .respond-section {
             display: flex;
             flex-direction: column;
             gap: 14px;
         }
 
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
+        .section-header-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
-        /* CAREGIVER RESPONSE FORM */
-        .form-group {
+        .section-headline {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--kaaval-black);
+            letter-spacing: -0.2px;
+        }
+
+        .section-subcopy {
+            font-size: 0.86rem;
+            color: var(--kaaval-muted);
+        }
+
+        .field-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .form-label {
+        .field-label {
             font-size: 0.82rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--kaaval-ink);
         }
 
-        .form-input {
+        .text-input {
             width: 100%;
             height: 44px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-medium);
+            background: var(--kaaval-surface);
+            border: 1px solid var(--kaaval-border);
             border-radius: var(--radius-md);
             padding: 0 14px;
-            font-family: var(--font-body);
+            font-family: var(--font-sans);
             font-size: 0.92rem;
-            color: var(--text-primary);
+            color: var(--kaaval-ink);
             transition: border-color 0.15s ease;
         }
 
-        .form-input:focus {
-            border-color: var(--action-blue);
-            outline: none;
+        .text-input:focus {
+            border-color: var(--kaaval-ink);
+            outline: 2px solid var(--kaaval-yellow);
+            outline-offset: 1px;
         }
 
-        .eta-buttons-row {
+        .eta-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
         }
 
         .btn-eta {
-            height: 40px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-medium);
+            height: 42px;
+            background: var(--kaaval-surface);
+            border: 1px solid var(--kaaval-border);
             border-radius: var(--radius-md);
-            font-family: var(--font-body);
-            font-size: 0.84rem;
+            font-family: var(--font-sans);
+            font-size: 0.86rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--kaaval-ink);
             cursor: pointer;
             transition: all 0.15s ease;
             display: flex;
@@ -395,96 +405,129 @@
         }
 
         .btn-eta:hover {
-            border-color: var(--border-strong);
-            color: var(--text-primary);
+            border-color: var(--kaaval-muted);
+            background: var(--kaaval-soft);
         }
 
         .btn-eta.selected {
-            background: var(--emergency-bg);
-            border-color: var(--emergency-red);
-            color: var(--emergency-red);
+            background: var(--kaaval-yellow);
+            border-color: var(--kaaval-yellow);
+            color: var(--kaaval-black);
             font-weight: 700;
         }
 
-        .btn-respond {
+        .btn-eta:focus-visible {
+            outline: 2px solid var(--kaaval-black);
+        }
+
+        /* PRIMARY CTA: YELLOW + BLACK */
+        .btn-primary-respond {
             width: 100%;
-            height: 48px;
-            background: var(--text-primary);
-            color: #FFFFFF;
+            height: 52px;
+            background: var(--kaaval-yellow);
+            color: var(--kaaval-black);
             border: none;
             border-radius: var(--radius-md);
-            font-family: var(--font-display);
-            font-size: 0.96rem;
+            font-family: var(--font-sans);
+            font-size: 1rem;
             font-weight: 700;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 4px;
-            transition: background 0.15s ease;
+            margin-top: 2px;
+            transition: background 0.15s ease, transform 0.05s ease;
         }
 
-        .btn-respond:hover {
-            background: #000000;
+        .btn-primary-respond:hover {
+            background: var(--kaaval-yellow-hover);
         }
 
-        .btn-respond:disabled {
+        .btn-primary-respond:active {
+            transform: scale(0.99);
+        }
+
+        .btn-primary-respond:disabled {
             opacity: 0.65;
             cursor: not-allowed;
+            transform: none;
         }
 
-        /* RESPONSE CONFIRMED SUCCESS STATE */
-        .response-confirmed-box {
+        /* RESTRAINED ERROR DISPLAY */
+        .diagnostic-box {
             display: none;
-            background: var(--success-bg);
-            border: 1px solid var(--success-border);
+            background: var(--status-red-soft);
+            border: 1px solid var(--status-red-border);
             border-radius: var(--radius-md);
-            padding: 16px;
+            padding: 12px 14px;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .diag-main-text {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--status-red);
+        }
+
+        .diag-code-text {
+            font-size: 0.76rem;
+            color: var(--kaaval-muted);
+            word-break: break-all;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        /* CONFIRMED STATE */
+        .confirmed-box {
+            display: none;
+            background: var(--status-green-soft);
+            border: 1px solid var(--status-green-border);
+            border-radius: var(--radius-md);
+            padding: 18px;
             flex-direction: column;
             gap: 8px;
         }
 
-        .confirmed-tag {
-            font-size: 0.75rem;
+        .confirmed-badge {
+            font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--success-green);
+            color: var(--status-green);
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .confirmed-title {
-            font-family: var(--font-display);
+        .confirmed-name {
             font-size: 1.15rem;
             font-weight: 800;
-            color: var(--text-primary);
+            color: var(--kaaval-black);
         }
 
-        .confirmed-eta {
+        .confirmed-eta-text {
             font-size: 0.88rem;
-            color: var(--text-secondary);
+            color: var(--kaaval-muted);
         }
 
-        .confirmed-subtext {
+        .confirmed-notice {
             font-size: 0.82rem;
-            color: var(--success-green);
+            color: var(--status-green);
             font-weight: 600;
-            padding-top: 4px;
+            padding-top: 2px;
         }
 
-        .btn-reassurance-pulse {
+        .btn-reassurance {
             width: 100%;
-            height: 38px;
-            background: #FFFFFF;
-            border: 1px solid var(--success-border);
-            border-radius: var(--radius-sm);
-            color: var(--success-green);
-            font-family: var(--font-body);
-            font-size: 0.82rem;
+            height: 40px;
+            background: var(--kaaval-surface);
+            border: 1px solid var(--status-green-border);
+            border-radius: var(--radius-md);
+            color: var(--status-green);
+            font-family: var(--font-sans);
+            font-size: 0.84rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -495,57 +538,52 @@
             transition: background 0.15s ease;
         }
 
-        .btn-reassurance-pulse:hover {
-            background: #F0FDF4;
+        .btn-reassurance:hover {
+            background: var(--status-green-soft);
         }
 
-        /* ERROR / DIAGNOSTIC BOX */
-        .diagnostic-error-box {
-            display: none;
-            background: var(--emergency-bg);
-            border: 1px solid var(--emergency-border);
-            border-radius: var(--radius-sm);
-            padding: 10px 12px;
+        /* CLEAN SECONDARY INFORMATION LISTS (NO NESTED HEAVY CARDS) */
+        .detail-section {
+            background: var(--kaaval-surface);
+            border: 1px solid var(--kaaval-border);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            box-shadow: var(--shadow-subtle);
+            display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 12px;
         }
 
-        .error-main-msg {
-            font-size: 0.84rem;
+        .detail-section-title {
+            font-size: 0.82rem;
             font-weight: 700;
-            color: var(--emergency-red);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--kaaval-muted);
         }
 
-        .error-diag-msg {
-            font-size: 0.76rem;
-            color: var(--emergency-red-hover);
-            word-break: break-all;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        }
-
-        /* DATA LIST (FOR EMERGENCY INFO & INCIDENT DETAILS) */
-        .info-list {
+        .data-rows-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
-        .info-row {
+        .data-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 0.86rem;
-            gap: 12px;
+            font-size: 0.88rem;
+            gap: 16px;
         }
 
-        .info-label {
-            color: var(--text-muted);
+        .data-label {
+            color: var(--kaaval-muted);
             font-weight: 500;
             flex-shrink: 0;
         }
 
-        .info-val {
-            color: var(--text-primary);
+        .data-value {
+            color: var(--kaaval-ink);
             font-weight: 600;
             text-align: right;
             word-break: break-word;
@@ -555,22 +593,22 @@
         .resolution-wrap {
             text-align: center;
             padding-top: 8px;
-            border-top: 1px solid var(--border-subtle);
+            border-top: 1px solid var(--kaaval-border-subtle);
         }
 
         .btn-resolve-link {
             background: none;
             border: none;
-            color: var(--text-muted);
-            font-family: var(--font-body);
-            font-size: 0.8rem;
+            color: var(--kaaval-muted);
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
             cursor: pointer;
             text-decoration: underline;
             transition: color 0.15s ease;
         }
 
         .btn-resolve-link:hover {
-            color: var(--text-primary);
+            color: var(--kaaval-black);
         }
 
         /* RESOLVE MODAL */
@@ -578,8 +616,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            backdrop-filter: blur(3px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -587,7 +625,7 @@
         }
 
         .modal-card {
-            background: var(--bg-card);
+            background: var(--kaaval-surface);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-modal);
             width: 100%;
@@ -599,15 +637,14 @@
         }
 
         .modal-title {
-            font-family: var(--font-display);
             font-size: 1.15rem;
             font-weight: 800;
-            color: var(--text-primary);
+            color: var(--kaaval-black);
         }
 
         .modal-desc {
             font-size: 0.86rem;
-            color: var(--text-secondary);
+            color: var(--kaaval-muted);
             line-height: 1.45;
         }
 
@@ -619,26 +656,26 @@
         }
 
         .btn-modal-cancel {
-            height: 38px;
+            height: 40px;
             padding: 0 16px;
             background: none;
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-sm);
-            font-size: 0.86rem;
+            border: 1px solid var(--kaaval-border);
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--kaaval-muted);
             cursor: pointer;
         }
 
         .btn-modal-confirm {
-            height: 38px;
+            height: 40px;
             padding: 0 18px;
-            background: var(--text-primary);
+            background: var(--kaaval-black);
             border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.86rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
             font-weight: 700;
-            color: #FFFFFF;
+            color: var(--kaaval-white);
             cursor: pointer;
         }
 
@@ -649,8 +686,8 @@
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            background: #0F172A;
-            color: #FFFFFF;
+            background: var(--kaaval-ink);
+            color: var(--kaaval-white);
             padding: 10px 18px;
             border-radius: var(--radius-full);
             box-shadow: var(--shadow-modal);
@@ -661,26 +698,26 @@
             gap: 8px;
         }
 
-        /* MOBILE RESPONSIVENESS */
+        /* MOBILE OPTIMIZATIONS */
         @media (max-width: 480px) {
             .container {
-                padding: 16px 12px 36px;
+                padding: 16px 14px 36px;
                 gap: 16px;
             }
 
-            .primary-card {
-                padding: 18px 16px;
+            .surface-card {
+                padding: 20px 16px;
             }
 
-            .section-card {
+            .detail-section {
                 padding: 16px;
             }
 
-            .victim-name {
-                font-size: 1.35rem;
+            .victim-title {
+                font-size: 1.4rem;
             }
 
-            .eta-buttons-row {
+            .eta-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
@@ -688,160 +725,169 @@
 </head>
 <body>
 
-    <!-- TOP HEADER -->
+    <!-- COMPACT TOPBAR -->
     <header class="topbar">
         <div class="brand-group">
-            <div class="brand-logo" aria-hidden="true">
-                <img src="kaaval-logo.png" alt="KAAVAL emblem">
+            <div class="brand-logo-wrap" aria-hidden="true">
+                <img src="kaaval-logo.png" alt="KAAVAL" onerror="this.style.display='none'">
             </div>
-            <div>
-                <div class="brand-title">KAAVAL</div>
-                <div class="brand-subtitle">Emergency Response</div>
+            <div class="brand-text">
+                <span class="brand-wordmark">KAAVAL</span>
+                <span class="brand-sub">Emergency Response</span>
             </div>
         </div>
 
-        <div class="header-status-badge" id="header-status-badge" role="status" aria-live="polite">
+        <div class="header-status" id="header-status-badge" role="status" aria-live="polite">
             <span class="status-dot" id="status-pulse-dot" aria-hidden="true"></span>
             <span id="status-text">Emergency Active</span>
         </div>
     </header>
 
-    <!-- CENTERED EMERGENCY CONTENT COLUMN -->
+    <!-- CENTERED CONTENT CONTAINER -->
     <main class="container">
 
-        <!-- 1. PRIMARY EMERGENCY CARD -->
-        <section class="primary-card" aria-label="Primary Emergency Status">
-            <div class="alert-eyebrow">
+        <!-- PRIMARY EMERGENCY SURFACE -->
+        <section class="surface-card" aria-label="Emergency Assistance Request">
+            
+            <div class="emergency-badge-row">
                 <span class="status-dot" aria-hidden="true"></span>
-                Emergency assistance needed
+                <span>Assistance requested</span>
             </div>
 
-            <h1 class="victim-name" id="user-display-name">KAAVAL User</h1>
+            <h1 class="victim-title" id="user-display-name">KAAVAL User</h1>
 
-            <div class="accessibility-badge" id="accessibility-badge">
+            <div class="accessibility-line" id="accessibility-line">
                 Visual assistance required
             </div>
 
-            <div class="location-status-row" id="location-status-row">
-                <span class="location-pulse-dot" id="location-pulse-dot" aria-hidden="true"></span>
-                <span id="location-status-desc">Location available</span>
-                <span style="color: var(--text-muted);">•</span>
-                <span id="location-updated-desc" style="color: var(--text-muted);">Connecting...</span>
+            <div class="location-info-row" id="location-info-row">
+                <span class="loc-indicator" id="location-indicator" aria-hidden="true"></span>
+                <span class="loc-status-text" id="location-status-desc">Location available</span>
+                <span id="location-time-separator" style="color: var(--kaaval-muted);">•</span>
+                <span id="location-updated-desc" style="color: var(--kaaval-muted);">Connecting...</span>
             </div>
 
-            <div class="actions-stack">
-                <a class="btn-maps-primary disabled" id="btn-open-gmaps" target="_blank" rel="noopener" href="#" aria-disabled="true">
+            <!-- ACTION BUTTONS -->
+            <div class="action-stack">
+                <a class="btn-gmaps disabled" id="btn-open-gmaps" target="_blank" rel="noopener" href="#" aria-disabled="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                         <circle cx="12" cy="9" r="2.5"/>
                     </svg>
-                    OPEN IN GOOGLE MAPS
+                    Open in Google Maps
                 </a>
 
-                <a class="btn-call-secondary" id="btn-call-user" href="tel:+919876543210" style="display:none;">
+                <a class="btn-call" id="btn-call-user" href="tel:+919876543210" style="display:none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
                     </svg>
-                    CALL USER
+                    Call User
                 </a>
             </div>
-        </section>
 
-        <!-- 2. CAREGIVER RESPONSE SECTION -->
-        <section class="section-card" aria-label="Caregiver Response">
-            <div class="section-title">Respond to this emergency</div>
+            <hr class="section-divider">
 
-            <!-- UNCLAIMED FORM -->
-            <div id="caregiver-form-container" style="display: flex; flex-direction: column; gap: 14px;">
-                <div class="form-group">
-                    <label class="form-label" for="responder-name-input">Your name / relationship</label>
-                    <input type="text" class="form-input" id="responder-name-input" value="Primary Caregiver" autocomplete="name" placeholder="e.g. Priya Sharma (Mom)">
+            <!-- CAREGIVER RESPONSE FORM -->
+            <div class="respond-section">
+                <div class="section-header-block">
+                    <h2 class="section-headline">Respond to this emergency</h2>
+                    <p class="section-subcopy">Let the person know that help is on the way.</p>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Estimated arrival</label>
-                    <div class="eta-buttons-row" role="radiogroup" aria-label="Estimated arrival time">
-                        <button type="button" class="btn-eta" onclick="selectEta(this, '5 min')" role="radio" aria-checked="false">5 min</button>
-                        <button type="button" class="btn-eta selected" onclick="selectEta(this, '10 min')" role="radio" aria-checked="true">10 min</button>
-                        <button type="button" class="btn-eta" onclick="selectEta(this, '20 min')" role="radio" aria-checked="false">20 min</button>
-                        <button type="button" class="btn-eta" onclick="selectEta(this, '30+ min')" role="radio" aria-checked="false">30+ min</button>
+                <!-- UNCLAIMED FORM -->
+                <div id="caregiver-form-container" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="field-group">
+                        <label class="field-label" for="responder-name-input">Your name / relationship</label>
+                        <input type="text" class="text-input" id="responder-name-input" autocomplete="name" placeholder="e.g. Kajel — Brother">
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Estimated arrival</label>
+                        <div class="eta-grid" role="radiogroup" aria-label="Estimated arrival time">
+                            <button type="button" class="btn-eta" onclick="selectEta(this, '5 min')" role="radio" aria-checked="false">5 min</button>
+                            <button type="button" class="btn-eta selected" onclick="selectEta(this, '10 min')" role="radio" aria-checked="true">10 min</button>
+                            <button type="button" class="btn-eta" onclick="selectEta(this, '20 min')" role="radio" aria-checked="false">20 min</button>
+                            <button type="button" class="btn-eta" onclick="selectEta(this, '30+ min')" role="radio" aria-checked="false">30+ min</button>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="responder-note-input">Note (optional)</label>
+                        <input type="text" class="text-input" id="responder-note-input" placeholder="e.g. On my way from office">
+                    </div>
+
+                    <button type="button" class="btn-primary-respond" id="btn-submit-response" onclick="submitCaregiverResponse()">
+                        I'm Responding
+                    </button>
+
+                    <!-- RESTRAINED DIAGNOSTIC ERROR DISPLAY -->
+                    <div class="diagnostic-box" id="claim-diagnostic-error" role="alert">
+                        <div class="diag-main-text">Response couldn't be confirmed. Please try again.</div>
+                        <div class="diag-code-text" id="claim-error-details"></div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="responder-note-input">Optional note</label>
-                    <input type="text" class="form-input" id="responder-note-input" placeholder="e.g. On my way from office">
+                <!-- SUCCESS: RESPONSE CONFIRMED CARD -->
+                <div class="confirmed-box" id="caregiver-confirmed-box" role="region" aria-live="polite">
+                    <div class="confirmed-badge">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        ✓ Response confirmed
+                    </div>
+                    <div class="confirmed-name" id="confirmed-responder-name">Responder is responding</div>
+                    <div class="confirmed-eta-text" id="confirmed-eta-display">Estimated arrival: 10 min</div>
+                    <div class="confirmed-notice">The person has been notified.</div>
+
+                    <button type="button" class="btn-reassurance" onclick="sendReassurancePulse()">
+                        Send Reassurance Signal
+                    </button>
                 </div>
 
-                <button type="button" class="btn-respond" id="btn-submit-response" onclick="submitCaregiverResponse()">
-                    I'M RESPONDING
-                </button>
-
-                <!-- DIAGNOSTIC ERROR DISPLAY -->
-                <div class="diagnostic-error-box" id="claim-diagnostic-error" role="alert">
-                    <div class="error-main-msg">Response could not be confirmed.</div>
-                    <div class="error-diag-msg" id="claim-error-details"></div>
-                </div>
             </div>
 
-            <!-- SUCCESS: RESPONSE CONFIRMED CARD -->
-            <div class="response-confirmed-box" id="caregiver-confirmed-box" role="region" aria-live="polite">
-                <div class="confirmed-tag">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    ✓ RESPONSE CONFIRMED
-                </div>
-                <div class="confirmed-title" id="confirmed-responder-name">Priya Sharma is responding</div>
-                <div class="confirmed-eta" id="confirmed-eta-display">Estimated arrival: 10 min</div>
-                <div class="confirmed-subtext">The person has been notified.</div>
-
-                <button type="button" class="btn-reassurance-pulse" onclick="sendReassurancePulse()">
-                    Send Reassurance Signal
-                </button>
-            </div>
         </section>
 
-        <!-- 3. EMERGENCY INFORMATION (REAL STRUCTURED DATA ONLY) -->
-        <section class="section-card" aria-label="Emergency Information">
-            <div class="section-title">Emergency information</div>
-            <div class="info-list">
-                <div class="info-row">
-                    <span class="info-label">Accessibility need</span>
-                    <span class="info-val">Visual assistance</span>
+        <!-- EMERGENCY INFORMATION -->
+        <section class="detail-section" aria-label="Emergency Information">
+            <div class="detail-section-title">Emergency information</div>
+            <div class="data-rows-list">
+                <div class="data-row">
+                    <span class="data-label">Accessibility</span>
+                    <span class="data-value">Visual assistance required</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Emergency notes</span>
-                    <span class="info-val" id="info-emergency-notes">Not provided</span>
+                <div class="data-row">
+                    <span class="data-label">Medical information</span>
+                    <span class="data-value" id="info-medical-notes">Not provided</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Medical notes</span>
-                    <span class="info-val" id="info-medical-notes">Not provided</span>
+                <div class="data-row">
+                    <span class="data-label">Emergency notes</span>
+                    <span class="data-value" id="info-emergency-notes">Not provided</span>
                 </div>
             </div>
         </section>
 
-        <!-- 4. INCIDENT DETAILS (COMPACT & LOW PRIORITY) -->
-        <section class="section-card" aria-label="Incident Details">
-            <div class="section-title">Incident details</div>
-            <div class="info-list">
-                <div class="info-row">
-                    <span class="info-label">Incident ID</span>
-                    <span class="info-val" id="incident-id-val" onclick="copyIncidentId()" style="cursor:pointer;" title="Click to copy">Connecting...</span>
+        <!-- INCIDENT DETAILS -->
+        <section class="detail-section" aria-label="Incident Details">
+            <div class="detail-section-title">Incident details</div>
+            <div class="data-rows-list">
+                <div class="data-row">
+                    <span class="data-label">Incident ID</span>
+                    <span class="data-value" id="incident-id-val" onclick="copyIncidentId()" style="cursor:pointer;" title="Click to copy">Connecting...</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Started</span>
-                    <span class="info-val" id="incident-started-val">--</span>
+                <div class="data-row">
+                    <span class="data-label">Started</span>
+                    <span class="data-value" id="incident-started-val">--</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Last location update</span>
-                    <span class="info-val" id="incident-updated-val">--</span>
+                <div class="data-row">
+                    <span class="data-label">Last updated</span>
+                    <span class="data-value" id="incident-updated-val">--</span>
                 </div>
             </div>
 
             <div class="resolution-wrap">
                 <button type="button" class="btn-resolve-link" onclick="openResolveModal()">
-                    Mark Emergency Resolved
+                    Mark emergency as resolved
                 </button>
             </div>
         </section>
@@ -851,12 +897,12 @@
     <!-- RESOLVE MODAL -->
     <div class="modal-backdrop" id="resolve-modal" role="dialog" aria-modal="true" aria-labelledby="resolve-modal-title">
         <div class="modal-card">
-            <h2 class="modal-title" id="resolve-modal-title">Mark Emergency Resolved</h2>
+            <h2 class="modal-title" id="resolve-modal-title">Mark emergency as resolved</h2>
             <p class="modal-desc">Confirm that the person is verified safe and this emergency session can be closed.</p>
 
-            <div class="form-group">
-                <label class="form-label" for="resolve-note-input">Resolution Note (Optional)</label>
-                <input type="text" class="form-input" id="resolve-note-input" value="Person verified safe. Emergency resolved.">
+            <div class="field-group">
+                <label class="field-label" for="resolve-note-input">Resolution note (optional)</label>
+                <input type="text" class="text-input" id="resolve-note-input" value="Person verified safe. Emergency resolved.">
             </div>
 
             <div class="modal-actions">
@@ -943,7 +989,8 @@
             const mapsBtn = document.getElementById('btn-open-gmaps');
             const locDesc = document.getElementById('location-status-desc');
             const locTime = document.getElementById('location-updated-desc');
-            const locDot = document.getElementById('location-pulse-dot');
+            const locSep = document.getElementById('location-time-separator');
+            const locDot = document.getElementById('location-indicator');
             const incUpdated = document.getElementById('incident-updated-val');
 
             if (typeof lat === 'number' && !isNaN(lat) && typeof lng === 'number' && !isNaN(lng)) {
@@ -959,25 +1006,23 @@
                 }
 
                 if (locDesc) locDesc.innerText = "Location available";
-                if (locDot) {
-                    locDot.classList.remove('unavailable');
-                }
+                if (locDot) locDot.classList.remove('off');
+                if (locSep) locSep.style.display = 'inline';
 
                 const timeString = formatRelativeTime(lastLocationTime);
                 if (locTime) locTime.innerText = `Updated ${timeString}`;
                 if (incUpdated) incUpdated.innerText = lastLocationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             } else {
-                // Location Unavailable State
+                // Location Unavailable State (clean without dangling bullets)
                 if (mapsBtn) {
                     mapsBtn.href = "#";
                     mapsBtn.classList.add('disabled');
                     mapsBtn.setAttribute('aria-disabled', 'true');
                 }
-                if (locDesc) locDesc.innerText = "Location currently unavailable";
-                if (locDot) {
-                    locDot.classList.add('unavailable');
-                }
-                if (locTime) locTime.innerText = "Waiting for GPS fix";
+                if (locDesc) locDesc.innerText = "Location unavailable";
+                if (locDot) locDot.classList.add('off');
+                if (locSep) locSep.style.display = 'inline';
+                if (locTime) locTime.innerText = "Waiting for location update…";
             }
         }
 
@@ -1064,7 +1109,7 @@
                 renderClaimedStateUI(data.claimedBy, data.claimedEta || "10 min", data.claimedNote);
             }
 
-            // 6. Emergency Notes & Medical Info (Only if present)
+            // 6. Emergency Notes & Medical Info (Only real data)
             if (data.emergencyNotes || data.aiSummary) {
                 const notesEl = document.getElementById('info-emergency-notes');
                 if (notesEl) notesEl.innerText = data.emergencyNotes || data.aiSummary;
@@ -1096,7 +1141,7 @@
 
         async function submitCaregiverResponse() {
             const nameInput = document.getElementById('responder-name-input');
-            const name = nameInput ? (nameInput.value.trim() || "Primary Caregiver") : "Primary Caregiver";
+            const name = nameInput ? (nameInput.value.trim() || "Caregiver") : "Caregiver";
             const noteInput = document.getElementById('responder-note-input');
             const note = noteInput ? noteInput.value.trim() : "";
             const errBox = document.getElementById('claim-diagnostic-error');
@@ -1110,7 +1155,7 @@
             const submitBtn = document.getElementById('btn-submit-response');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerText = "Confirming...";
+                submitBtn.innerText = "Confirming response…";
             }
             if (errBox) errBox.style.display = 'none';
 
@@ -1146,7 +1191,7 @@
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.innerText = "I'M RESPONDING";
+                    submitBtn.innerText = "I'm Responding";
                 }
             }
         }
@@ -1215,7 +1260,7 @@
 
         function renderResolvedStateUI(note) {
             const badge = document.getElementById('header-status-badge');
-            if (badge) badge.className = 'header-status-badge resolved';
+            if (badge) badge.className = 'header-status resolved';
 
             const statusText = document.getElementById('status-text');
             if (statusText) statusText.innerText = 'Emergency Resolved';
