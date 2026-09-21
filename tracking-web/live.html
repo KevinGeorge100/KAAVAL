@@ -2249,6 +2249,10 @@
             }
 
             try {
+                if (window.firebaseReady) {
+                    await window.firebaseReady;
+                }
+
                 if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     const db = firebase.firestore();
                     await db.collection("incidents").doc(incidentId).update({
@@ -2270,7 +2274,8 @@
                 }
             } catch (e) {
                 console.error("Firestore claim error:", e);
-                showToast("Failed to register response: " + (e.message || "Network or permission error"));
+                const errMsg = e.code ? `[${e.code}] ${e.message}` : (e.message || "Network or permission error");
+                showToast("Failed to register response: " + errMsg);
             } finally {
                 if (confirmBtn) {
                     confirmBtn.disabled = false;
@@ -2296,6 +2301,10 @@
             }
 
             try {
+                if (window.firebaseReady) {
+                    await window.firebaseReady;
+                }
+
                 if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     const db = firebase.firestore();
                     await db.collection("incidents").doc(incidentId).update({
@@ -2310,7 +2319,8 @@
                 }
             } catch (e) {
                 console.error("Firestore reassurance error:", e);
-                showToast("Failed to send reassurance: " + (e.message || "Network error"));
+                const errMsg = e.code ? `[${e.code}] ${e.message}` : (e.message || "Network error");
+                showToast("Failed to send reassurance: " + errMsg);
             }
         }
 
