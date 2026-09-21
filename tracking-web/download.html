@@ -232,6 +232,12 @@
             flex-wrap: wrap;
         }
 
+        .cta-hint {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
         .metadata-line .bullet {
             color: var(--text-muted);
         }
@@ -636,8 +642,8 @@
             </p>
 
             <div class="download-action-wrap">
-                <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk" 
-                   download="kaaval-v1.0.0.apk" 
+                <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/kaaval-v1.0.0.zip" 
+                   download="kaaval-v1.0.0.zip" 
                    class="btn-primary-download" 
                    id="btn-download">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -645,23 +651,25 @@
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Download KAAVAL for Android
+                    Download KAAVAL for Android (.ZIP)
                 </a>
+
+                <p class="cta-hint">After downloading, extract the ZIP and open the APK to install KAAVAL.</p>
 
                 <p class="metadata-line">
                     <span>Version 1.0.0</span>
                     <span class="bullet" aria-hidden="true">•</span>
-                    <span>2.95 MB</span>
+                    <span>2.4 MB</span>
                     <span class="bullet" aria-hidden="true">•</span>
                     <span>Android 10+</span>
                 </p>
 
                 <div class="fallback-download">
-                    <span>Having trouble downloading the APK?</span>
-                    <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/kaaval-v1.0.0.zip" 
-                       download="kaaval-v1.0.0.zip" 
+                    <span>Prefer a direct APK?</span>
+                    <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk" 
+                       download="kaaval-v1.0.0.apk" 
                        class="fallback-link">
-                        Download the ZIP archive instead
+                        Download the APK instead
                     </a>
                 </div>
             </div>
@@ -673,8 +681,8 @@
             <section class="card qr-panel" aria-labelledby="qr-heading">
                 <div class="qr-image-frame">
                     <img id="qr-image" 
-                         src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fgithub.com%2FKevinGeorge100%2FKAAVAL%2Freleases%2Fdownload%2Fv1.0.0-prod%2Fapp-release.apk" 
-                         alt="QR code to download KAAVAL APK directly to your phone">
+                         src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fgithub.com%2FKevinGeorge100%2FKAAVAL%2Freleases%2Fdownload%2Fv1.0.0-prod%2Fkaaval-v1.0.0.zip" 
+                         alt="QR code to download KAAVAL ZIP archive directly to your phone">
                 </div>
                 <div class="qr-text">
                     <h2 id="qr-heading">Install from your phone</h2>
@@ -700,7 +708,7 @@
                     </div>
                     <div class="spec-row">
                         <dt>Download</dt>
-                        <dd>2.95 MB</dd>
+                        <dd>2.4 MB (.ZIP)</dd>
                     </div>
                     <div class="spec-row">
                         <dt>Package</dt>
@@ -717,21 +725,35 @@
                 <li class="step-item">
                     <span class="step-badge" aria-hidden="true">1</span>
                     <div class="step-content">
-                        <strong>Download the KAAVAL APK</strong>
+                        <strong>Download the KAAVAL ZIP</strong>
                         Tap the download button above or scan the QR code using your Android device.
                     </div>
                 </li>
                 <li class="step-item">
                     <span class="step-badge" aria-hidden="true">2</span>
                     <div class="step-content">
-                        <strong>Allow installation from your browser or file manager</strong>
-                        If Android asks for permission, tap <em>Settings</em> and enable <em>"Allow from this source"</em>.
+                        <strong>Extract the ZIP contents</strong>
+                        Open the downloaded ZIP file in your file manager and extract its contents.
                     </div>
                 </li>
                 <li class="step-item">
                     <span class="step-badge" aria-hidden="true">3</span>
                     <div class="step-content">
-                        <strong>Install KAAVAL and grant permissions</strong>
+                        <strong>Open the KAAVAL APK</strong>
+                        Tap on the extracted APK file to begin installation.
+                    </div>
+                </li>
+                <li class="step-item">
+                    <span class="step-badge" aria-hidden="true">4</span>
+                    <div class="step-content">
+                        <strong>Allow installation from file manager</strong>
+                        If Android asks for permission, tap <em>Settings</em> and enable <em>"Allow from this source"</em>.
+                    </div>
+                </li>
+                <li class="step-item">
+                    <span class="step-badge" aria-hidden="true">5</span>
+                    <div class="step-content">
+                        <strong>Install KAAVAL and complete setup</strong>
                         Tap <em>Install</em>, launch KAAVAL, and grant the permissions requested during setup (Location, Audio, and Accessibility).
                     </div>
                 </li>
@@ -824,11 +846,11 @@
     </footer>
 
     <script>
-        // Ensure dynamic QR code points to the exact production APK URL
-        const apkUrl = "https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk";
+        // Ensure dynamic QR code points to the reliable production ZIP URL
+        const zipUrl = "https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/kaaval-v1.0.0.zip";
         const qrImg = document.getElementById('qr-image');
         if (qrImg) {
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(apkUrl)}`;
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(zipUrl)}`;
         }
     </script>
 </body>
