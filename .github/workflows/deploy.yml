@@ -1,0 +1,56 @@
+name: Build & Auto-Deploy Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build APK & Update GitHub Releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        run: chmod +x ./android/gradlew
+
+      - name: Build Release APK & Run Unit Tests
+        run: |
+          cd android
+          ./gradlew assembleRelease testDebugUnitTest
+
+      - name: Package Release Assets
+        run: |
+          mkdir -p release-assets
+          cp android/app/build/outputs/apk/release/app-release.apk release-assets/app-release.apk
+          cd release-assets
+          zip kaaval-v1.0.0.zip app-release.apk
+
+      - name: Deploy to GitHub Release (v1.0.0-prod)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-prod
+          name: "KAAVAL Production Release v1.0.0"
+          draft: false
+          prerelease: false
+          files: |
+            release-assets/app-release.apk
+            release-assets/kaaval-v1.0.0.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
