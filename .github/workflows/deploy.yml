@@ -27,6 +27,41 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Configure Google Services
+        run: |
+          mkdir -p android/app
+          cat << 'EOF' > android/app/google-services.json
+          {
+            "project_info": {
+              "project_number": "146099155291",
+              "project_id": "kaaval-94c1d",
+              "storage_bucket": "kaaval-94c1d.firebasestorage.app"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:146099155291:android:faefa3ceb24ad6b09eea7e",
+                  "android_client_info": {
+                    "package_name": "com.kaaval.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyDmhSUCCVHR6ttU-rlmzAr0c5MhxpYxGF0"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Grant Execute Permission to Gradle Wrapper
         run: chmod +x ./android/gradlew
 
