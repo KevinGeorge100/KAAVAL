@@ -227,6 +227,12 @@ class EmergencyStateManager(private val logger: (String, String) -> Unit = { tag
                     )
                 } else null
             }
+            is EmergencyEvent.CaregiverAcknowledged -> {
+                if (currentState is EmergencyState.LiveTracking) {
+                    val caregiverInfo = if (!event.eta.isNullOrBlank()) "${event.caregiverName} — ETA ${event.eta}" else event.caregiverName
+                    Pair(currentState.copy(respondingCaregiver = caregiverInfo), null)
+                } else null
+            }
             is EmergencyEvent.ResetToIdle -> {
                 currentIncidentId = null
                 Pair(EmergencyState.Idle, EmergencyAction.ResetState)

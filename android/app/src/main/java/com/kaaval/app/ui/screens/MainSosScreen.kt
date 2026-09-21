@@ -311,16 +311,25 @@ fun MainSosScreen(
                                         
                                         if (emergencyState.respondingCaregiver != null) {
                                             Text(
-                                                text = "${emergencyState.respondingCaregiver} IS RESPONDING",
-                                                fontSize = 18.sp,
-                                                fontWeight = FontWeight.Bold,
+                                                text = "CAREGIVER ACKNOWLEDGED",
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Black,
                                                 color = ActiveGreen,
                                                 textAlign = TextAlign.Center
                                             )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = emergencyState.respondingCaregiver,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                textAlign = TextAlign.Center
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = "Tactile heartbeat assurance active.",
                                                 fontSize = 12.sp,
-                                                color = Color.LightGray
+                                                color = ActiveGreen
                                             )
                                         } else {
                                             Text(

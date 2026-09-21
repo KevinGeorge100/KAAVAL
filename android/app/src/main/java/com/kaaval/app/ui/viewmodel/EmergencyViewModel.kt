@@ -67,6 +67,37 @@ class EmergencyViewModel(
                 handleSimulatedActionResponse(action)
             }
         }
+
+        // Connect cloud caregiver acknowledgment to UI State
+        viewModelScope.launch {
+            emergencyState.collect { state ->
+                if (state is EmergencyState.LiveTracking) {
+                    observeTrackingSession(state.incidentId)
+                } else if (state is EmergencyState.Idle || state is EmergencyState.Completed || state is EmergencyState.Cancelled || state is EmergencyState.Resolved) {
+                    trackingObservationJob?.cancel()
+                    trackingObservationJob = null
+                }
+            }
+        }
+    }
+
+    private var trackingObservationJob: Job? = null
+
+    private fun observeTrackingSession(incidentId: String) {
+        if (trackingObservationJob?.isActive == true) return
+        trackingObservationJob = viewModelScope.launch {
+            try {
+                com.kaaval.app.data.repository.FirebaseTrackingRepository()
+                    .getTrackingSession(incidentId)
+                    .collect { session ->
+                        if (session != null && !session.claimedBy.isNullOrBlank()) {
+                            processEvent(EmergencyEvent.CaregiverAcknowledged(session.claimedBy, session.claimedEta))
+                        }
+                    }
+            } catch (e: Exception) {
+                android.util.Log.w("EmergencyViewModel", "Error observing tracking session: ${e.message}")
+            }
+        }
     }
 
     fun onSosButtonPressed() {

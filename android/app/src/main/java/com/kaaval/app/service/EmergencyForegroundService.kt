@@ -146,6 +146,7 @@ class EmergencyForegroundService : Service() {
                                 VoiceFeedbackManager.announceCaregiverResponse(session.claimedBy, session.claimedEta)
                             }
                             HapticFeedbackManager.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
+                            KaavalBleManager.sendReassuranceToWearable()
                         }
 
                         // 2. Detect Manual Reassurance Ping from Caregiver Portal
@@ -157,6 +158,7 @@ class EmergencyForegroundService : Service() {
                                 VoiceFeedbackManager.announceReassurancePing()
                             }
                             HapticFeedbackManager.vibrate(HapticFeedbackManager.HapticPattern.CAREGIVER_RESPONDING)
+                            KaavalBleManager.sendReassuranceToWearable()
                         }
                     }
             } catch (e: Exception) {

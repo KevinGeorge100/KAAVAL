@@ -49,5 +49,10 @@ sealed class EmergencyEvent {
         val longitude: Double?
     ) : EmergencyEvent()
     
+    data class CaregiverAcknowledged(
+        val caregiverName: String,
+        val eta: String? = null
+    ) : EmergencyEvent()
+    
     object ResetToIdle : EmergencyEvent()
 }

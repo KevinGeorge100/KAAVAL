@@ -31,6 +31,14 @@ class KaavalBleManager(
     private val onHardwareTrigger: () -> Unit
 ) {
     companion object {
+        @Volatile
+        var instance: KaavalBleManager? = null
+            private set
+
+        fun sendReassuranceToWearable() {
+            instance?.triggerWearableReassuranceVibration()
+        }
+
         // These must match the UUIDs used by the ESP32 Arduino sketch.
         private val KAAVAL_SERVICE_UUID: UUID =
             UUID.fromString("f0e0d0c0-b0a0-4000-8000-000000000001")
@@ -38,6 +46,10 @@ class KaavalBleManager(
             UUID.fromString("f0e0d0c0-b0a0-4000-8000-000000000002")
         private val CLIENT_CHARACTERISTIC_CONFIG_UUID: UUID =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    }
+
+    init {
+        instance = this
     }
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
