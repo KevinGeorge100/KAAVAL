@@ -4,34 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download KAAVAL for Android — Emergency Response System</title>
-    <meta name="description" content="Official production release of KAAVAL Android Client for visually impaired individuals and emergency response caregivers.">
+    <meta name="description" content="Download the KAAVAL Android application. Designed for visually impaired individuals to trigger emergency response and stay connected with caregivers.">
     <link rel="icon" type="image/png" href="kaaval-logo.png">
 
-    <!-- Fonts -->
+    <!-- Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-canvas: #000000;
-            --bg-surface: #0A0D14;
-            --bg-card: #111622;
-            --bg-card-hover: #171E2E;
-            --border: rgba(255, 255, 255, 0.1);
+            --bg-canvas: #090B0E;
+            --bg-surface: #121721;
+            --bg-surface-subtle: #171E2B;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-medium: rgba(255, 255, 255, 0.14);
             --border-strong: rgba(255, 214, 0, 0.35);
-            --text-primary: #FFFFFF;
-            --text-secondary: #A0AEC0;
-            --text-muted: #718096;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
             --kaaval-yellow: #FFD600;
+            --kaaval-yellow-hover: #E6C100;
             --kaaval-black: #000000;
-            --emerald: #10B981;
-            --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-            --font-body: 'Inter', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
             --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --container-max-w: 680px;
         }
 
         * {
@@ -48,630 +48,788 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 32px 16px;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(255, 214, 0, 0.14) 0%, transparent 60%),
-                radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+            padding: 36px 16px 48px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .header-brand {
+        /* FOCUS STYLES FOR ACCESSIBILITY */
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--kaaval-yellow);
+            outline-offset: 3px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* HEADER */
+        .site-header {
+            width: 100%;
+            max-width: var(--container-max-w);
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 32px;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            padding: 0 4px;
         }
 
-        .brand-badge {
-            width: 48px;
-            height: 48px;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
             background: #000000;
-            border: 1.5px solid #FFD600;
+            border: 1.5px solid var(--kaaval-yellow);
             border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 24px rgba(255, 214, 0, 0.4);
-            padding: 4px;
+            padding: 3px;
+            flex-shrink: 0;
         }
 
-        .brand-badge img {
-            width: 38px;
-            height: 38px;
+        .brand-logo img {
+            width: 32px;
+            height: 32px;
             object-fit: contain;
         }
 
-        .brand-title {
-            font-family: var(--font-sans);
-            font-size: 1.55rem;
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
             font-weight: 800;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.5px;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        .brand-tag {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-link {
+            font-size: 0.84rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .nav-link:hover {
             color: #FFFFFF;
         }
 
-        .brand-title span {
-            color: var(--kaaval-yellow);
-        }
-
-        .main-card {
+        /* MAIN CONTENT LAYOUT */
+        .content-container {
             width: 100%;
-            max-width: 680px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 36px 28px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 214, 0, 0.05);
+            max-width: var(--container-max-w);
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 20px;
         }
 
-        .badge-row {
+        /* HERO CARD */
+        .hero-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px 28px;
+        }
+
+        .hero-section h1 {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #FFFFFF;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-description {
+            font-size: 0.98rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* PRIMARY DOWNLOAD COMPONENT */
+        .download-action-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 6px;
+        }
+
+        .btn-primary-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--kaaval-yellow);
+            color: var(--kaaval-black);
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            min-height: 52px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+
+        .btn-primary-download:hover {
+            background: var(--kaaval-yellow-hover);
+        }
+
+        .btn-primary-download:active {
+            transform: scale(0.99);
+        }
+
+        .btn-primary-download svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .metadata-line {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             flex-wrap: wrap;
         }
 
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            font-weight: 700;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            color: #34D399;
+        .metadata-line .bullet {
+            color: var(--text-muted);
         }
 
-        .pill-accent {
-            background: rgba(6, 182, 212, 0.12);
-            border-color: rgba(6, 182, 212, 0.35);
-            color: #22D3EE;
+        .fallback-download {
+            margin-top: 8px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            text-align: center;
         }
 
-        .hero-section h1 {
-            font-family: var(--font-sans);
-            font-size: 1.85rem;
-            font-weight: 800;
-            line-height: 1.25;
-            color: #FFFFFF;
-            margin-bottom: 10px;
-        }
-
-        .hero-section p {
-            font-size: 0.95rem;
+        .fallback-link {
             color: var(--text-secondary);
-            line-height: 1.55;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            margin-left: 4px;
+            transition: color 0.15s ease;
         }
 
-        /* ACTIONS */
-        .cta-container {
+        .fallback-link:hover {
+            color: #FFFFFF;
+        }
+
+        /* TWO COLUMN GRID: QR & SPECS */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 14px;
+            letter-spacing: -0.01em;
+        }
+
+        /* QR PANEL */
+        .qr-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 14px;
+        }
+
+        .qr-image-frame {
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            display: inline-flex;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        }
+
+        .qr-image-frame img {
+            width: 120px;
+            height: 120px;
+            display: block;
+        }
+
+        .qr-text h2 {
+            font-family: var(--font-display);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .qr-text p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* SPECS PANEL */
+        .specs-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .specs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spec-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .spec-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .spec-row dt {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .spec-row dd {
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        /* HOW TO INSTALL (ORDERED STEPS) */
+        .steps-ordered {
+            list-style: none;
             display: flex;
             flex-direction: column;
             gap: 14px;
         }
 
-        .btn-download-primary {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: var(--kaaval-yellow);
-            border: 1px solid var(--kaaval-yellow);
-            color: var(--kaaval-black);
-            padding: 16px 24px;
-            border-radius: var(--radius-md);
-            font-family: var(--font-sans);
-            font-size: 1.05rem;
-            font-weight: 800;
-            text-decoration: none;
-            cursor: pointer;
-            box-shadow: 0 8px 32px rgba(255, 214, 0, 0.4);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-download-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(255, 214, 0, 0.65);
-            background: #FFE033;
-        }
-
-        .btn-download-primary svg {
-            width: 22px;
-            height: 22px;
-            stroke: #000000;
-        }
-
-        .secondary-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .btn-secondary {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 12px 16px;
-            border-radius: var(--radius-sm);
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-card-hover);
-            color: #FFFFFF;
-            border-color: var(--border-strong);
-        }
-
-        .btn-secondary svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        /* QR CODE CALLOUT */
-        .qr-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .qr-wrapper {
-            background: #FFFFFF;
-            padding: 8px;
-            border-radius: var(--radius-sm);
-            flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-        }
-
-        .qr-wrapper img {
-            width: 110px;
-            height: 110px;
-            display: block;
-        }
-
-        .qr-info h4 {
-            font-family: var(--font-sans);
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #FFFFFF;
-            margin-bottom: 4px;
-        }
-
-        .qr-info p {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.45;
-        }
-
-        /* SPECS GRID */
-        .specs-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        .spec-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .spec-label {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .spec-val {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #FFFFFF;
-        }
-
-        /* INSTALLATION GUIDE */
-        .guide-box {
-            background: rgba(13, 19, 34, 0.75);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .guide-box h3 {
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .steps-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .step-row {
+        .step-item {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
+            gap: 14px;
         }
 
-        .step-num {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            color: #FFFFFF;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
+        .step-badge {
+            width: 26px;
+            height: 26px;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-medium);
+            color: var(--kaaval-yellow);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
             font-weight: 700;
-            display: flex;
+            border-radius: 50%;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             margin-top: 2px;
         }
 
-        .step-row strong {
-            color: #FFFFFF;
+        .step-content {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
-        /* TROUBLESHOOTING BOX */
-        .troubleshoot-box {
-            background: rgba(255, 214, 0, 0.04);
-            border: 1px solid rgba(255, 214, 0, 0.3);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
+        .step-content strong {
+            color: #FFFFFF;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.9rem;
+        }
+
+        /* TROUBLESHOOTING CARD */
+        .troubleshooting-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
         }
 
         .troubleshoot-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .troubleshoot-title {
+            font-family: var(--font-display);
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-family: var(--font-sans);
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: #FFD600;
         }
 
-        .troubleshoot-badge {
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            background: rgba(255, 214, 0, 0.15);
-            border: 1px solid rgba(255, 214, 0, 0.4);
-            color: #FFD600;
+        .alert-icon {
+            width: 18px;
+            height: 18px;
+            color: var(--kaaval-yellow);
+            flex-shrink: 0;
         }
 
-        .fix-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .fix-item {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .fix-title {
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .fix-desc {
+        .troubleshoot-intro {
             font-size: 0.82rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            margin-bottom: 16px;
         }
 
-        .fix-desc strong {
+        .troubleshoot-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .troubleshoot-item {
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+        }
+
+        .troubleshoot-item h3 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .troubleshoot-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .troubleshoot-item .troubleshoot-action {
+            margin-bottom: 0;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        .troubleshoot-item .troubleshoot-action strong {
+            color: var(--kaaval-yellow);
+        }
+
+        .troubleshoot-item code {
+            font-size: 0.76rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 1px 5px;
+            border-radius: 4px;
             color: #FFFFFF;
         }
 
-        .fix-desc code {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1px 5px;
-            border-radius: 4px;
-            color: #FFD600;
+        /* SECONDARY RESOURCES SECTION */
+        .resources-section {
+            margin-top: 4px;
         }
 
-        footer {
-            margin-top: 32px;
-            font-size: 0.75rem;
+        .resource-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .resource-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            min-height: 48px;
+        }
+
+        .resource-card:hover {
+            background: var(--bg-surface-subtle);
+            border-color: var(--border-medium);
+        }
+
+        .resource-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .resource-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .resource-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .resource-label {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .resource-desc {
+            font-size: 0.74rem;
             color: var(--text-muted);
-            text-align: center;
+            line-height: 1.35;
         }
 
+        /* FOOTER */
+        .site-footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* RESPONSIVE DESIGN */
         @media (max-width: 640px) {
             body {
-                padding: 20px 12px;
+                padding: 24px 14px 36px;
             }
-            .header-brand {
-                margin-bottom: 24px;
-                gap: 10px;
-            }
-            .brand-badge {
-                width: 42px;
-                height: 42px;
-            }
-            .brand-badge img {
-                width: 32px;
-                height: 32px;
-            }
-            .brand-title {
-                font-size: 1.35rem;
-            }
-            .main-card {
-                padding: 24px 16px;
-                gap: 20px;
-                border-radius: var(--radius-md);
-            }
-            .hero-section h1 {
-                font-size: 1.45rem;
-                line-height: 1.3;
-            }
-            .hero-section p {
-                font-size: 0.88rem;
-            }
-            .btn-download-primary {
-                padding: 14px 18px;
-                font-size: 0.95rem;
-                text-align: center;
-            }
-            .secondary-actions {
-                grid-template-columns: 1fr;
-            }
-            .specs-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .qr-card {
-                flex-direction: column;
-                text-align: center;
-                gap: 14px;
-                padding: 16px;
-            }
-            .qr-wrapper img {
-                width: 120px;
-                height: 120px;
-            }
-        }
 
-        @media (max-width: 380px) {
-            .specs-grid {
+            .site-header {
+                margin-bottom: 20px;
+            }
+
+            .hero-section {
+                padding: 24px 18px 22px;
+            }
+
+            .hero-section h1 {
+                font-size: 1.4rem;
+            }
+
+            .hero-description {
+                font-size: 0.9rem;
+                margin-bottom: 20px;
+            }
+
+            .btn-primary-download {
+                font-size: 0.95rem;
+                padding: 14px 20px;
+            }
+
+            .info-grid {
                 grid-template-columns: 1fr;
+                gap: 14px;
             }
-            .pill {
-                font-size: 0.68rem;
-                padding: 3px 8px;
+
+            .qr-panel {
+                padding: 20px 16px;
             }
-            .btn-download-primary {
-                font-size: 0.88rem;
-                padding: 12px 14px;
+
+            .card {
+                padding: 20px 18px;
+            }
+
+            .resource-links {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
         }
     </style>
 </head>
 <body>
 
-    <header class="header-brand">
-        <div class="brand-badge">
-            <img src="kaaval-logo.png" alt="KAAVAL Official Logo">
+    <!-- SITE HEADER -->
+    <header class="site-header">
+        <div class="brand">
+            <div class="brand-logo" aria-hidden="true">
+                <img src="kaaval-logo.png" alt="KAAVAL emblem">
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">KAAVAL</span>
+                <span class="brand-tag">Android App</span>
+            </div>
         </div>
-        <div class="brand-title">KAAVAL <span>MOBILE</span></div>
+        <nav class="header-nav" aria-label="Main Navigation">
+            <a href="/live" class="nav-link">Caregiver Portal</a>
+            <a href="https://github.com/KevinGeorge100/KAAVAL/releases/tag/v1.0.0-prod" class="nav-link" target="_blank" rel="noopener">GitHub Release</a>
+        </nav>
     </header>
 
-    <main class="main-card">
-        <div class="badge-row">
-            <span class="pill">
-                <span style="width:6px; height:6px; border-radius:50%; background:#10B981;"></span>
-                PRODUCTION RELEASE v1.0.0
-            </span>
-            <span class="pill pill-accent">R8 MINIFIED (2.9 MB)</span>
-            <span class="pill pill-accent">ANDROID 10+</span>
-        </div>
+    <!-- MAIN CONTAINER -->
+    <main class="content-container">
 
-        <div class="hero-section">
-            <h1>Accessibility Emergency Response Ecosystem</h1>
-            <p>
-                Engineered for visually impaired individuals. Featuring rapid physical button activation, continuous background GPS telemetry, offline SMS resilience, and real-time incident command synchronization.
+        <!-- HERO SECTION & PRIMARY DOWNLOAD -->
+        <section class="hero-section" aria-labelledby="hero-title">
+            <h1 id="hero-title">Emergency assistance, built for accessibility.</h1>
+            <p class="hero-description">
+                KAAVAL helps visually impaired users trigger an emergency, share their location, and stay connected with trusted caregivers.
             </p>
-        </div>
 
-        <div class="cta-container">
-            <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk" download="kaaval-v1.0.0.apk" class="btn-download-primary" id="btn-download">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                Download Production APK (2.95 MB)
-            </a>
-
-            <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/kaaval-v1.0.0.zip" download="kaaval-v1.0.0.zip" class="btn-secondary" style="border-color: rgba(255, 214, 0, 0.4); color: #FFD600; background: rgba(255, 214, 0, 0.08);">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
-                Alternative: Download ZIP Archive (2.4 MB — Bypasses Browser Blocks)
-            </a>
-
-            <div class="secondary-actions">
-                <a href="https://github.com/KevinGeorge100/KAAVAL/releases/tag/v1.0.0-prod" target="_blank" rel="noopener" class="btn-secondary">
-                    <svg fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            <div class="download-action-wrap">
+                <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk" 
+                   download="kaaval-v1.0.0.apk" 
+                   class="btn-primary-download" 
+                   id="btn-download">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    GitHub Release
+                    Download KAAVAL for Android
                 </a>
-                <a href="/live" class="btn-secondary">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
-                    Caregiver Portal
-                </a>
-            </div>
-        </div>
 
-        <!-- QR CODE FAST SCAN -->
-        <div class="qr-card">
-            <div class="qr-wrapper">
-                <img id="qr-image" alt="Scan to download KAAVAL APK" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fgithub.com%2FKevinGeorge100%2FKAAVAL%2Freleases%2Fdownload%2Fv1.0.0-prod%2Fapp-release.apk">
-            </div>
-            <div class="qr-info">
-                <h4>Scan to Install Directly on Phone</h4>
-                <p>
-                    Point your Android camera or QR scanner at the code above. The download will start immediately on your device without needing a computer.
+                <p class="metadata-line">
+                    <span>Version 1.0.0</span>
+                    <span class="bullet" aria-hidden="true">•</span>
+                    <span>2.95 MB</span>
+                    <span class="bullet" aria-hidden="true">•</span>
+                    <span>Android 10+</span>
                 </p>
+
+                <div class="fallback-download">
+                    <span>Having trouble downloading the APK?</span>
+                    <a href="https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/kaaval-v1.0.0.zip" 
+                       download="kaaval-v1.0.0.zip" 
+                       class="fallback-link">
+                        Download the ZIP archive instead
+                    </a>
+                </div>
             </div>
+        </section>
+
+        <!-- INFO GRID: PHONE QR & TECHNICAL SPECS -->
+        <div class="info-grid">
+            <!-- QR CODE INSTALLATION -->
+            <section class="card qr-panel" aria-labelledby="qr-heading">
+                <div class="qr-image-frame">
+                    <img id="qr-image" 
+                         src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fgithub.com%2FKevinGeorge100%2FKAAVAL%2Freleases%2Fdownload%2Fv1.0.0-prod%2Fapp-release.apk" 
+                         alt="QR code to download KAAVAL APK directly to your phone">
+                </div>
+                <div class="qr-text">
+                    <h2 id="qr-heading">Install from your phone</h2>
+                    <p>Scan this QR code with your Android camera or scanner to download KAAVAL directly to your device.</p>
+                </div>
+            </section>
+
+            <!-- APPLICATION SPECIFICATIONS -->
+            <section class="card specs-panel" aria-labelledby="specs-heading">
+                <h2 id="specs-heading" class="section-title">Application Details</h2>
+                <dl class="specs-list">
+                    <div class="spec-row">
+                        <dt>Version</dt>
+                        <dd>1.0.0</dd>
+                    </div>
+                    <div class="spec-row">
+                        <dt>Platform</dt>
+                        <dd>Android</dd>
+                    </div>
+                    <div class="spec-row">
+                        <dt>Requires</dt>
+                        <dd>Android 10 or later</dd>
+                    </div>
+                    <div class="spec-row">
+                        <dt>Download</dt>
+                        <dd>2.95 MB</dd>
+                    </div>
+                    <div class="spec-row">
+                        <dt>Package</dt>
+                        <dd>com.kaaval.app</dd>
+                    </div>
+                </dl>
+            </section>
         </div>
 
-        <!-- SPECIFICATIONS -->
-        <div class="specs-grid">
-            <div class="spec-item">
-                <span class="spec-label">Package Size</span>
-                <span class="spec-val">2.95 MB</span>
-            </div>
-            <div class="spec-item">
-                <span class="spec-label">Compatibility</span>
-                <span class="spec-val">Android 10 - 14</span>
-            </div>
-            <div class="spec-item">
-                <span class="spec-label">Build Type</span>
-                <span class="spec-val">Release (R8)</span>
-            </div>
-            <div class="spec-item">
-                <span class="spec-label">Wearable Link</span>
-                <span class="spec-val">BLE Haptic</span>
-            </div>
-        </div>
-
-        <!-- INSTALLATION GUIDE -->
-        <div class="guide-box">
-            <h3>Standard Installation Guide</h3>
-            <div class="steps-list">
-                <div class="step-row">
-                    <div class="step-num">1</div>
-                    <div><strong>Download the APK</strong> by tapping the yellow button above or scanning the QR code with your phone camera.</div>
-                </div>
-                <div class="step-row">
-                    <div class="step-num">2</div>
-                    <div>When prompted by your browser or file manager, tap <strong>Settings</strong> and toggle <strong>"Allow from this source"</strong> (Install Unknown Apps).</div>
-                </div>
-                <div class="step-row">
-                    <div class="step-num">3</div>
-                    <div>Tap <strong>Install</strong> and grant <strong>Location, Audio, & Accessibility permissions</strong> when launching the app.</div>
-                </div>
-            </div>
-        </div>
+        <!-- HOW TO INSTALL -->
+        <section class="card" aria-labelledby="install-heading">
+            <h2 id="install-heading" class="section-title">How to install</h2>
+            <ol class="steps-ordered">
+                <li class="step-item">
+                    <span class="step-badge" aria-hidden="true">1</span>
+                    <div class="step-content">
+                        <strong>Download the KAAVAL APK</strong>
+                        Tap the download button above or scan the QR code using your Android device.
+                    </div>
+                </li>
+                <li class="step-item">
+                    <span class="step-badge" aria-hidden="true">2</span>
+                    <div class="step-content">
+                        <strong>Allow installation from your browser or file manager</strong>
+                        If Android asks for permission, tap <em>Settings</em> and enable <em>"Allow from this source"</em>.
+                    </div>
+                </li>
+                <li class="step-item">
+                    <span class="step-badge" aria-hidden="true">3</span>
+                    <div class="step-content">
+                        <strong>Install KAAVAL and grant permissions</strong>
+                        Tap <em>Install</em>, launch KAAVAL, and grant the permissions requested during setup (Location, Audio, and Accessibility).
+                    </div>
+                </li>
+            </ol>
+        </section>
 
         <!-- TROUBLESHOOTING: APP NOT INSTALLED -->
-        <div class="troubleshoot-box">
+        <section class="troubleshooting-card" aria-labelledby="troubleshoot-heading">
             <div class="troubleshoot-header">
-                <div class="troubleshoot-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                    Getting "App not installed"?
-                </div>
-                <span class="troubleshoot-badge">SIDELOADING FIXES</span>
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <h2 id="troubleshoot-heading" class="troubleshoot-title">Troubleshooting: Seeing "App not installed"?</h2>
             </div>
+            <p class="troubleshoot-intro">
+                Directly downloaded applications that use accessibility features for hardware triggers can encounter standard Android installation checks. If installation halts, follow these steps:
+            </p>
 
-            <div class="fix-list">
-                <div class="fix-item">
-                    <div class="fix-title">
-                        <span>1. Temporarily Disable Play Protect Scan (Most Common)</span>
-                    </div>
-                    <div class="fix-desc">
-                        Because KAAVAL contains emergency hardware key listeners, audio classification, and SMS modules, Google Play Protect may silently block sideloading outside the Play Store.<br>
-                        <strong>Fix:</strong> Open <strong>Google Play Store</strong> &rarr; tap your <strong>Profile icon</strong> (top right) &rarr; <strong>Play Protect</strong> &rarr; tap the <strong>Settings Gear ⚙️</strong> &rarr; turn <strong>OFF</strong> <code>Scan apps with Play Protect</code> and <code>Improve harmful app detection</code>. Then tap the downloaded APK to install.
-                    </div>
-                </div>
+            <div class="troubleshoot-items">
+                <article class="troubleshoot-item">
+                    <h3>1. Google Play Protect Scan</h3>
+                    <p>
+                        Play Protect may block direct sideloading of apps containing background accessibility listeners.
+                    </p>
+                    <p class="troubleshoot-action">
+                        <strong>Resolution:</strong> Open <em>Google Play Store</em> &rarr; tap your <em>Profile icon</em> &rarr; <em>Play Protect</em> &rarr; tap the <em>Settings gear (⚙️)</em> &rarr; temporarily turn off <code>Scan apps with Play Protect</code>, then install the APK.
+                    </p>
+                </article>
 
-                <div class="fix-item">
-                    <div class="fix-title">
-                        <span>2. Grant "Install Unknown Apps" to your File Manager</span>
-                    </div>
-                    <div class="fix-desc">
-                        If installing from your phone's <em>Files</em> or <em>Downloads</em> folder:<br>
-                        <strong>Fix:</strong> Go to phone <strong>Settings &rarr; Apps &rarr; Special app access &rarr; Install unknown apps</strong> &rarr; select your <strong>File Manager</strong> &rarr; enable <strong>"Allow from this source"</strong>.
-                    </div>
-                </div>
+                <article class="troubleshoot-item">
+                    <h3>2. File Manager Installation Permission</h3>
+                    <p>
+                        If installing from your phone's <em>Files</em> or <em>Downloads</em> folder, your file manager must have permission to install unknown apps.
+                    </p>
+                    <p class="troubleshoot-action">
+                        <strong>Resolution:</strong> Go to phone <em>Settings &rarr; Apps &rarr; Special app access &rarr; Install unknown apps</em> &rarr; select your <strong>File Manager</strong> &rarr; enable <em>"Allow from this source"</em>.
+                    </p>
+                </article>
 
-                <div class="fix-item">
-                    <div class="fix-title">
-                        <span>3. Completely Uninstall Any Previous / Test Version First</span>
-                    </div>
-                    <div class="fix-desc">
-                        Android strictly rejects installing an APK if an existing build is present with a conflicting certificate.<br>
-                        <strong>Fix:</strong> Go to <strong>Settings &rarr; Apps &rarr; KAAVAL &rarr; Uninstall</strong>. When prompted, make sure <strong>"Keep app data" is UNCHECKED</strong>, then install the new release.
-                    </div>
-                </div>
+                <article class="troubleshoot-item">
+                    <h3>3. Signature Conflict with an Earlier Build</h3>
+                    <p>
+                        Android will reject the installation if an older test version is already installed with a conflicting certificate.
+                    </p>
+                    <p class="troubleshoot-action">
+                        <strong>Resolution:</strong> Go to <em>Settings &rarr; Apps &rarr; KAAVAL &rarr; Uninstall</em>. When prompted, ensure <em>"Keep app data"</em> is unchecked before installing.
+                    </p>
+                </article>
             </div>
-        </div>
+        </section>
+
+        <!-- SECONDARY DESTINATIONS -->
+        <section class="resources-section" aria-label="Secondary Resources">
+            <div class="resource-links">
+                <a href="/live" class="resource-card">
+                    <div class="resource-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+                            <line x1="9" y1="3" x2="9" y2="18"></line>
+                            <line x1="15" y1="6" x2="15" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="resource-text">
+                        <span class="resource-label">Caregiver Portal</span>
+                        <span class="resource-desc">Live incident monitoring console</span>
+                    </div>
+                </a>
+
+                <a href="https://github.com/KevinGeorge100/KAAVAL/releases/tag/v1.0.0-prod" class="resource-card" target="_blank" rel="noopener">
+                    <div class="resource-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="resource-text">
+                        <span class="resource-label">GitHub Release</span>
+                        <span class="resource-desc">Cryptographic checksums &amp; source code</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        KAAVAL Production Ecosystem &copy; 2026 &bull; Accessibility Emergency Response Protocol
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <p>KAAVAL &copy; 2026. Accessibility-first emergency response.</p>
     </footer>
 
     <script>
-        // Production release direct CDN link
+        // Ensure dynamic QR code points to the exact production APK URL
         const apkUrl = "https://github.com/KevinGeorge100/KAAVAL/releases/download/v1.0.0-prod/app-release.apk";
-        document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(apkUrl)}`;
+        const qrImg = document.getElementById('qr-image');
+        if (qrImg) {
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(apkUrl)}`;
+        }
     </script>
 </body>
 </html>
