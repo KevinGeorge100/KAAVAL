@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>KAAVAL — Emergency Response</title>
-    <meta name="description" content="Live emergency tracking and caregiver response portal for KAAVAL.">
+    <meta name="description" content="Emergency response and location coordination for KAAVAL.">
     <link rel="icon" type="image/png" href="kaaval-logo.png">
 
     <!-- Typography: Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Leaflet Map Engine -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
@@ -25,11 +21,11 @@
 
     <style>
         :root {
-            --bg-canvas: #F8FAFC;
-            --bg-surface: #FFFFFF;
+            --bg-page: #F8FAFC;
+            --bg-card: #FFFFFF;
             --bg-subtle: #F1F5F9;
             --bg-muted: #E2E8F0;
-            
+
             --border-subtle: #E2E8F0;
             --border-medium: #CBD5E1;
             --border-strong: #94A3B8;
@@ -44,6 +40,7 @@
             --emergency-border: #FCA5A5;
 
             --success-green: #16A34A;
+            --success-green-hover: #15803D;
             --success-bg: #F0FDF4;
             --success-border: #86EFAC;
 
@@ -58,9 +55,9 @@
             --radius-lg: 14px;
             --radius-full: 9999px;
 
-            --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-            --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-            --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+            --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.05);
+            --shadow-card: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+            --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
         }
 
         * {
@@ -70,13 +67,14 @@
         }
 
         body {
-            background-color: var(--bg-canvas);
+            background-color: var(--bg-page);
             color: var(--text-primary);
             font-family: var(--font-body);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             -webkit-font-smoothing: antialiased;
+            padding: 0;
         }
 
         /* ACCESSIBILITY FOCUS */
@@ -87,30 +85,27 @@
             outline-offset: 2px;
         }
 
-        /* HEADER */
+        /* TOPBAR HEADER */
         header.topbar {
-            height: 60px;
-            background: var(--bg-surface);
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border-subtle);
-            padding: 0 24px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            z-index: 100;
-            flex-shrink: 0;
         }
 
         .brand-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             text-decoration: none;
             color: inherit;
         }
 
         .brand-logo {
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border-radius: var(--radius-sm);
             background: #000000;
             border: 1px solid #FFD600;
@@ -121,21 +116,15 @@
         }
 
         .brand-logo img {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
-        }
-
-        .brand-text {
-            display: flex;
-            flex-direction: column;
         }
 
         .brand-title {
             font-family: var(--font-display);
             font-size: 1.05rem;
             font-weight: 800;
-            letter-spacing: -0.2px;
             color: var(--text-primary);
             line-height: 1.1;
         }
@@ -146,162 +135,60 @@
             font-weight: 500;
         }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-badge {
+        .header-status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
+            gap: 6px;
+            padding: 5px 10px;
             border-radius: var(--radius-full);
             background: var(--emergency-bg);
             border: 1px solid var(--emergency-border);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: var(--emergency-red);
         }
 
-        .status-badge.resolved {
+        .header-status-badge.resolved {
             background: var(--success-bg);
             border-color: var(--success-border);
             color: var(--success-green);
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background-color: var(--emergency-red);
         }
 
-        .status-badge.resolved .status-dot {
+        .header-status-badge.resolved .status-dot {
             background-color: var(--success-green);
         }
 
-        .header-time {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* MAIN TWO-COLUMN WORKSPACE */
-        main.workspace {
-            flex: 1;
-            display: flex;
-            height: calc(100vh - 60px);
-            overflow: hidden;
-        }
-
-        /* MAP CONTAINER (65-70% width on desktop) */
-        .map-section {
-            flex: 1 1 65%;
-            position: relative;
-            background: var(--bg-muted);
-            min-height: 300px;
-        }
-
-        #leaflet-map {
+        /* CENTERED CONTAINER */
+        .container {
             width: 100%;
-            height: 100%;
-            background: #E5E7EB;
-        }
-
-        /* MAP OVERLAYS */
-        .map-floating-bar {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            z-index: 400;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 8px 14px;
-            box-shadow: var(--shadow-card);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-        }
-
-        .map-floating-bar strong {
-            color: var(--text-primary);
-        }
-
-        .map-floating-controls {
-            position: absolute;
-            bottom: 24px;
-            right: 16px;
-            z-index: 400;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .map-action-btn {
-            background: #FFFFFF;
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-md);
-            padding: 8px 14px;
-            font-family: var(--font-body);
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            box-shadow: var(--shadow-card);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.15s ease, border-color 0.15s ease;
-        }
-
-        .map-action-btn:hover {
-            background: var(--bg-subtle);
-            border-color: var(--border-strong);
-        }
-
-        .map-action-btn svg {
-            width: 16px;
-            height: 16px;
-            color: var(--text-secondary);
-        }
-
-        /* ACTION & DETAILS PANEL (30-35% width on desktop) */
-        aside.panel-section {
-            flex: 0 0 380px;
-            max-width: 420px;
-            background: var(--bg-surface);
-            border-left: 1px solid var(--border-subtle);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            z-index: 50;
-        }
-
-        .panel-content {
-            padding: 24px;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
 
         /* PRIMARY EMERGENCY CARD */
-        .emergency-header-card {
-            background: var(--emergency-bg);
-            border: 1px solid var(--emergency-border);
+        .primary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 18px;
+            padding: 24px;
+            box-shadow: var(--shadow-card);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 16px;
         }
 
-        .emergency-alert-tag {
+        .alert-eyebrow {
             font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -312,23 +199,41 @@
             gap: 6px;
         }
 
-        .emergency-person-name {
+        .victim-name {
             font-family: var(--font-display);
-            font-size: 1.35rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.3px;
+            line-height: 1.2;
         }
 
-        .emergency-status-text {
-            font-size: 0.84rem;
-            color: var(--text-secondary);
-            display: flex;
+        .accessibility-badge {
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            padding: 4px 10px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            width: fit-content;
         }
 
-        .live-pulse-dot {
+        .location-status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            padding-top: 4px;
+            border-top: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .location-pulse-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
@@ -336,10 +241,21 @@
             display: inline-block;
         }
 
-        /* PRIMARY ACTION CTA */
-        .btn-claim-primary {
+        .location-pulse-dot.unavailable {
+            background-color: var(--text-muted);
+        }
+
+        /* PRIMARY ACTION BUTTONS */
+        .actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .btn-maps-primary {
             width: 100%;
-            height: 54px;
+            min-height: 52px;
             background: var(--emergency-red);
             color: #FFFFFF;
             border: none;
@@ -348,40 +264,44 @@
             font-size: 1.05rem;
             font-weight: 700;
             letter-spacing: 0.2px;
+            text-decoration: none;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: background 0.15s ease, transform 0.05s ease;
+            transition: background 0.15s ease;
         }
 
-        .btn-claim-primary:hover {
+        .btn-maps-primary:hover {
             background: var(--emergency-red-hover);
         }
 
-        .btn-claim-primary:active {
-            transform: scale(0.99);
+        .btn-maps-primary.disabled,
+        .btn-maps-primary:disabled {
+            background: var(--bg-muted);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            pointer-events: none;
         }
 
-        /* SECONDARY ACTIONS */
-        .action-buttons-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .btn-maps-primary svg {
+            width: 20px;
+            height: 20px;
         }
 
-        .btn-secondary-action {
-            height: 44px;
-            background: var(--bg-surface);
+        .btn-call-secondary {
+            width: 100%;
+            min-height: 46px;
+            background: var(--bg-card);
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
             color: var(--text-primary);
             font-family: var(--font-body);
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 600;
             text-decoration: none;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -389,34 +309,144 @@
             transition: background 0.15s ease, border-color 0.15s ease;
         }
 
-        .btn-secondary-action:hover {
+        .btn-call-secondary:hover {
             background: var(--bg-subtle);
             border-color: var(--border-strong);
         }
 
-        .btn-secondary-action svg {
+        .btn-call-secondary svg {
             width: 18px;
             height: 18px;
             color: var(--text-secondary);
         }
 
-        /* CLAIMED / CONFIRMED SUCCESS CARD */
-        .claimed-success-card {
+        /* SECTION CARDS */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        /* CAREGIVER RESPONSE FORM */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 0 14px;
+            font-family: var(--font-body);
+            font-size: 0.92rem;
+            color: var(--text-primary);
+            transition: border-color 0.15s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--action-blue);
+            outline: none;
+        }
+
+        .eta-buttons-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn-eta {
+            height: 40px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-eta:hover {
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .btn-eta.selected {
+            background: var(--emergency-bg);
+            border-color: var(--emergency-red);
+            color: var(--emergency-red);
+            font-weight: 700;
+        }
+
+        .btn-respond {
+            width: 100%;
+            height: 48px;
+            background: var(--text-primary);
+            color: #FFFFFF;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: var(--font-display);
+            font-size: 0.96rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+            transition: background 0.15s ease;
+        }
+
+        .btn-respond:hover {
+            background: #000000;
+        }
+
+        .btn-respond:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        /* RESPONSE CONFIRMED SUCCESS STATE */
+        .response-confirmed-box {
             display: none;
             background: var(--success-bg);
             border: 1px solid var(--success-border);
-            border-radius: var(--radius-lg);
-            padding: 18px;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .claimed-badge-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .claimed-badge {
+        .confirmed-tag {
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -427,23 +457,28 @@
             gap: 6px;
         }
 
-        .claimed-responder-name {
+        .confirmed-title {
             font-family: var(--font-display);
             font-size: 1.15rem;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text-primary);
-            margin-bottom: 4px;
         }
 
-        .claimed-eta-text {
+        .confirmed-eta {
             font-size: 0.88rem;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+        }
+
+        .confirmed-subtext {
+            font-size: 0.82rem;
+            color: var(--success-green);
+            font-weight: 600;
+            padding-top: 4px;
         }
 
         .btn-reassurance-pulse {
             width: 100%;
-            height: 40px;
+            height: 38px;
             background: #FFFFFF;
             border: 1px solid var(--success-border);
             border-radius: var(--radius-sm);
@@ -456,6 +491,7 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
+            margin-top: 6px;
             transition: background 0.15s ease;
         }
 
@@ -463,26 +499,32 @@
             background: #F0FDF4;
         }
 
-        /* CLEAN INFORMATION CARDS */
-        .card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            display: flex;
+        /* ERROR / DIAGNOSTIC BOX */
+        .diagnostic-error-box {
+            display: none;
+            background: var(--emergency-bg);
+            border: 1px solid var(--emergency-border);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
             flex-direction: column;
-            gap: 12px;
+            gap: 4px;
         }
 
-        .card-header-title {
-            font-family: var(--font-display);
-            font-size: 0.88rem;
+        .error-main-msg {
+            font-size: 0.84rem;
             font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.1px;
+            color: var(--emergency-red);
         }
 
-        .info-data-list {
+        .error-diag-msg {
+            font-size: 0.76rem;
+            color: var(--emergency-red-hover);
+            word-break: break-all;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        /* DATA LIST (FOR EMERGENCY INFO & INCIDENT DETAILS) */
+        .info-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -492,35 +534,31 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            font-size: 0.84rem;
+            font-size: 0.86rem;
+            gap: 12px;
         }
 
         .info-label {
             color: var(--text-muted);
             font-weight: 500;
+            flex-shrink: 0;
         }
 
-        .info-value {
+        .info-val {
             color: var(--text-primary);
             font-weight: 600;
             text-align: right;
+            word-break: break-word;
         }
 
-        .empty-info-note {
-            font-size: 0.84rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        /* RESOLUTION LINK */
-        .resolution-area {
-            margin-top: 10px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-subtle);
+        /* RESOLVE ACTION */
+        .resolution-wrap {
             text-align: center;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .btn-link-resolve {
+        .btn-resolve-link {
             background: none;
             border: none;
             color: var(--text-muted);
@@ -531,31 +569,29 @@
             transition: color 0.15s ease;
         }
 
-        .btn-link-resolve:hover {
+        .btn-resolve-link:hover {
             color: var(--text-primary);
         }
 
-        /* MODAL DIALOGS */
+        /* RESOLVE MODAL */
         .modal-backdrop {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(3px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 16px;
         }
 
-        .modal-window {
-            background: var(--bg-surface);
+        .modal-card {
+            background: var(--bg-card);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-modal);
             width: 100%;
-            max-width: 440px;
-            max-height: 90vh;
-            overflow-y: auto;
+            max-width: 420px;
             padding: 24px;
             display: flex;
             flex-direction: column;
@@ -564,132 +600,46 @@
 
         .modal-title {
             font-family: var(--font-display);
-            font-size: 1.18rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--text-primary);
         }
 
-        .modal-sub {
+        .modal-desc {
             font-size: 0.86rem;
             color: var(--text-secondary);
             line-height: 1.45;
         }
 
-        .form-group {
+        .modal-actions {
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-group label {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .form-input {
-            height: 42px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-sm);
-            padding: 0 12px;
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            color: var(--text-primary);
-        }
-
-        .form-input:focus {
-            border-color: var(--action-blue);
-            outline: none;
-        }
-
-        .eta-chips-group {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        .eta-chip {
-            height: 38px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .eta-chip:hover {
-            border-color: var(--border-strong);
-            color: var(--text-primary);
-        }
-
-        .eta-chip.selected {
-            background: var(--emergency-bg);
-            border-color: var(--emergency-red);
-            color: var(--emergency-red);
-            font-weight: 700;
-        }
-
-        /* MODAL ERROR BANNER */
-        .modal-error-box {
-            display: none;
-            background: var(--emergency-bg);
-            border: 1px solid var(--emergency-border);
-            border-radius: var(--radius-sm);
-            padding: 10px 12px;
-            font-size: 0.82rem;
-            color: var(--emergency-red);
-            line-height: 1.4;
-        }
-
-        .modal-footer {
-            display: flex;
-            align-items: center;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 8px;
+            margin-top: 4px;
         }
 
         .btn-modal-cancel {
-            height: 40px;
+            height: 38px;
             padding: 0 16px;
             background: none;
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-sm);
-            font-family: var(--font-body);
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 600;
             color: var(--text-secondary);
             cursor: pointer;
         }
 
         .btn-modal-confirm {
-            height: 40px;
-            padding: 0 20px;
-            background: var(--emergency-red);
+            height: 38px;
+            padding: 0 18px;
+            background: var(--text-primary);
             border: none;
             border-radius: var(--radius-sm);
-            font-family: var(--font-body);
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 700;
             color: #FFFFFF;
             cursor: pointer;
-            transition: background 0.15s ease;
-        }
-
-        .btn-modal-confirm:hover {
-            background: var(--emergency-red-hover);
-        }
-
-        .btn-modal-confirm:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
         }
 
         /* TOAST NOTIFICATION */
@@ -711,113 +661,27 @@
             gap: 8px;
         }
 
-        /* CUSTOM MAP MARKER */
-        .user-pulse-marker {
-            position: relative;
-            width: 28px;
-            height: 28px;
-        }
-
-        .user-pulse-marker .core-dot {
-            width: 14px;
-            height: 14px;
-            background: #DC2626;
-            border: 2.5px solid #FFFFFF;
-            border-radius: 50%;
-            position: absolute;
-            top: 7px;
-            left: 7px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-        }
-
-        .user-pulse-marker .halo-ring {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(220, 38, 38, 0.25);
-            position: absolute;
-            top: 0;
-            left: 0;
-            animation: softPulse 2.2s ease-out infinite;
-        }
-
-        @keyframes softPulse {
-            0% { transform: scale(0.6); opacity: 0.8; }
-            100% { transform: scale(1.6); opacity: 0; }
-        }
-
-        /* MOBILE RESPONSIVENESS (<= 768px) */
-        @media (max-width: 768px) {
-            body {
-                overflow-y: auto;
-                height: auto;
-            }
-
-            header.topbar {
-                padding: 0 16px;
-            }
-
-            main.workspace {
-                flex-direction: column;
-                height: auto;
-                overflow: visible;
-            }
-
-            .map-section {
-                flex: none;
-                width: 100%;
-                height: 42vh;
-                min-height: 260px;
-                order: 2;
-            }
-
-            aside.panel-section {
-                flex: none;
-                width: 100%;
-                max-width: 100%;
-                border-left: none;
-                border-top: 1px solid var(--border-subtle);
-                order: 3;
-            }
-
-            .panel-content {
-                padding: 16px;
+        /* MOBILE RESPONSIVENESS */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px 12px 36px;
                 gap: 16px;
             }
 
-            /* On mobile, move emergency summary to top before map */
-            .mobile-header-summary {
-                display: block;
-                order: 1;
-                padding: 12px 16px;
-                background: var(--bg-surface);
-                border-bottom: 1px solid var(--border-subtle);
+            .primary-card {
+                padding: 18px 16px;
             }
 
-            .modal-backdrop {
-                align-items: flex-end;
-                padding: 0;
+            .section-card {
+                padding: 16px;
             }
 
-            .modal-window {
-                border-radius: 16px 16px 0 0;
-                max-width: 100%;
-                padding: 20px 18px 28px;
+            .victim-name {
+                font-size: 1.35rem;
             }
-        }
 
-        @media (min-width: 769px) {
-            .mobile-header-summary {
-                display: none;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .user-pulse-marker .halo-ring {
-                animation: none;
-            }
-            * {
-                transition-duration: 0.01ms !important;
+            .eta-buttons-row {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -830,205 +694,174 @@
             <div class="brand-logo" aria-hidden="true">
                 <img src="kaaval-logo.png" alt="KAAVAL emblem">
             </div>
-            <div class="brand-text">
-                <span class="brand-title">KAAVAL</span>
-                <span class="brand-subtitle">Emergency Response</span>
+            <div>
+                <div class="brand-title">KAAVAL</div>
+                <div class="brand-subtitle">Emergency Response</div>
             </div>
         </div>
 
-        <div class="header-actions">
-            <div class="status-badge" id="incident-status-beacon" role="status" aria-live="polite">
-                <span class="status-dot" id="status-pulse-dot" aria-hidden="true"></span>
-                <span id="status-text-display">Emergency Active</span>
-            </div>
-            <span class="header-time" id="incident-timer-display" aria-label="Incident duration">00:00</span>
+        <div class="header-status-badge" id="header-status-badge" role="status" aria-live="polite">
+            <span class="status-dot" id="status-pulse-dot" aria-hidden="true"></span>
+            <span id="status-text">Emergency Active</span>
         </div>
     </header>
 
-    <!-- MOBILE TOP SUMMARY (Visible only on screens <= 768px) -->
-    <div class="mobile-header-summary">
-        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--emergency-red); margin-bottom: 2px;">
-            Emergency Assistance Needed
-        </div>
-        <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-primary);" id="mobile-user-name">
-            Visually Impaired User
-        </div>
-    </div>
+    <!-- CENTERED EMERGENCY CONTENT COLUMN -->
+    <main class="container">
 
-    <!-- MAIN TWO-COLUMN WORKSPACE -->
-    <main class="workspace">
-        
-        <!-- MAP SECTION -->
-        <section class="map-section" aria-label="Live Emergency Location Map">
-            <div id="leaflet-map"></div>
-
-            <!-- MAP FLOATING METADATA -->
-            <div class="map-floating-bar" id="map-meta-bar" aria-live="polite">
-                <span>Location: <strong id="hud-heartbeat">Connecting...</strong></span>
-                <span>•</span>
-                <span>Accuracy: <strong id="hud-accuracy">±4 m</strong></span>
+        <!-- 1. PRIMARY EMERGENCY CARD -->
+        <section class="primary-card" aria-label="Primary Emergency Status">
+            <div class="alert-eyebrow">
+                <span class="status-dot" aria-hidden="true"></span>
+                Emergency assistance needed
             </div>
 
-            <!-- MAP CONTROLS -->
-            <div class="map-floating-controls">
-                <button class="map-action-btn" onclick="recenterOnUser()" title="Focus on emergency location">
+            <h1 class="victim-name" id="user-display-name">KAAVAL User</h1>
+
+            <div class="accessibility-badge" id="accessibility-badge">
+                Visual assistance required
+            </div>
+
+            <div class="location-status-row" id="location-status-row">
+                <span class="location-pulse-dot" id="location-pulse-dot" aria-hidden="true"></span>
+                <span id="location-status-desc">Location available</span>
+                <span style="color: var(--text-muted);">•</span>
+                <span id="location-updated-desc" style="color: var(--text-muted);">Connecting...</span>
+            </div>
+
+            <div class="actions-stack">
+                <a class="btn-maps-primary disabled" id="btn-open-gmaps" target="_blank" rel="noopener" href="#" aria-disabled="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="7"/>
-                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
                     </svg>
-                    Focus User
+                    OPEN IN GOOGLE MAPS
+                </a>
+
+                <a class="btn-call-secondary" id="btn-call-user" href="tel:+919876543210" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                    </svg>
+                    CALL USER
+                </a>
+            </div>
+        </section>
+
+        <!-- 2. CAREGIVER RESPONSE SECTION -->
+        <section class="section-card" aria-label="Caregiver Response">
+            <div class="section-title">Respond to this emergency</div>
+
+            <!-- UNCLAIMED FORM -->
+            <div id="caregiver-form-container" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label" for="responder-name-input">Your name / relationship</label>
+                    <input type="text" class="form-input" id="responder-name-input" value="Primary Caregiver" autocomplete="name" placeholder="e.g. Priya Sharma (Mom)">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Estimated arrival</label>
+                    <div class="eta-buttons-row" role="radiogroup" aria-label="Estimated arrival time">
+                        <button type="button" class="btn-eta" onclick="selectEta(this, '5 min')" role="radio" aria-checked="false">5 min</button>
+                        <button type="button" class="btn-eta selected" onclick="selectEta(this, '10 min')" role="radio" aria-checked="true">10 min</button>
+                        <button type="button" class="btn-eta" onclick="selectEta(this, '20 min')" role="radio" aria-checked="false">20 min</button>
+                        <button type="button" class="btn-eta" onclick="selectEta(this, '30+ min')" role="radio" aria-checked="false">30+ min</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="responder-note-input">Optional note</label>
+                    <input type="text" class="form-input" id="responder-note-input" placeholder="e.g. On my way from office">
+                </div>
+
+                <button type="button" class="btn-respond" id="btn-submit-response" onclick="submitCaregiverResponse()">
+                    I'M RESPONDING
+                </button>
+
+                <!-- DIAGNOSTIC ERROR DISPLAY -->
+                <div class="diagnostic-error-box" id="claim-diagnostic-error" role="alert">
+                    <div class="error-main-msg">Response could not be confirmed.</div>
+                    <div class="error-diag-msg" id="claim-error-details"></div>
+                </div>
+            </div>
+
+            <!-- SUCCESS: RESPONSE CONFIRMED CARD -->
+            <div class="response-confirmed-box" id="caregiver-confirmed-box" role="region" aria-live="polite">
+                <div class="confirmed-tag">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    ✓ RESPONSE CONFIRMED
+                </div>
+                <div class="confirmed-title" id="confirmed-responder-name">Priya Sharma is responding</div>
+                <div class="confirmed-eta" id="confirmed-eta-display">Estimated arrival: 10 min</div>
+                <div class="confirmed-subtext">The person has been notified.</div>
+
+                <button type="button" class="btn-reassurance-pulse" onclick="sendReassurancePulse()">
+                    Send Reassurance Signal
                 </button>
             </div>
         </section>
 
-        <!-- CAREGIVER ACTION & INCIDENT DETAILS PANEL -->
-        <aside class="panel-section" aria-label="Caregiver Response Controls">
-            <div class="panel-content">
-
-                <!-- 1. PRIMARY EMERGENCY HEADER & CLAIM CARD -->
-                <div class="emergency-header-card" id="primary-emergency-card">
-                    <div class="emergency-alert-tag">
-                        <span class="status-dot" aria-hidden="true"></span>
-                        Emergency Assistance Needed
-                    </div>
-                    <h1 class="emergency-person-name" id="user-display-name">Visually Impaired User</h1>
-                    <div class="emergency-status-text">
-                        <span class="live-pulse-dot" aria-hidden="true"></span>
-                        <span id="location-status-desc">Location updating live</span>
-                    </div>
+        <!-- 3. EMERGENCY INFORMATION (REAL STRUCTURED DATA ONLY) -->
+        <section class="section-card" aria-label="Emergency Information">
+            <div class="section-title">Emergency information</div>
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Accessibility need</span>
+                    <span class="info-val">Visual assistance</span>
                 </div>
-
-                <!-- 2. PRIMARY CAREGIVER ACTIONS -->
-                <div id="triage-action-container">
-                    <!-- Unclaimed State Button -->
-                    <button class="btn-claim-primary" id="btn-claim-emergency" onclick="openClaimModal()">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M5 13l4 4L19 7"/>
-                        </svg>
-                        I'm Responding
-                    </button>
-
-                    <!-- Claimed / Response Confirmed Card -->
-                    <div class="claimed-success-card" id="claimed-response-banner">
-                        <div class="claimed-badge-row">
-                            <span class="claimed-badge">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Response Confirmed
-                            </span>
-                            <span style="font-size: 0.76rem; color: var(--text-muted);" id="claimed-at-time">Just now</span>
-                        </div>
-                        <div class="claimed-responder-name" id="claimed-name-text">Priya Sharma (Mom)</div>
-                        <div class="claimed-eta-text" id="claimed-meta-text">Estimated arrival: 8 min</div>
-                        <button class="btn-reassurance-pulse" onclick="sendReassurancePulse()">
-                            Send Reassurance Signal
-                        </button>
-                    </div>
+                <div class="info-row">
+                    <span class="info-label">Emergency notes</span>
+                    <span class="info-val" id="info-emergency-notes">Not provided</span>
                 </div>
-
-                <!-- SECONDARY ACTIONS: DIRECTIONS & CALL -->
-                <div class="action-buttons-row">
-                    <a class="btn-secondary-action" id="btn-nav-gmaps" target="_blank" rel="noopener" href="#">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                        </svg>
-                        Directions
-                    </a>
-                    <a class="btn-secondary-action" id="btn-call-user" href="tel:+919876543210">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
-                        </svg>
-                        Call
-                    </a>
+                <div class="info-row">
+                    <span class="info-label">Medical notes</span>
+                    <span class="info-val" id="info-medical-notes">Not provided</span>
                 </div>
-
-                <!-- 3. EMERGENCY INFORMATION (ONLY REAL DATA) -->
-                <div class="card" id="emergency-info-card">
-                    <div class="card-header-title">Emergency Information</div>
-                    <div id="emergency-info-content" class="empty-info-note">
-                        Visually impaired user. High-priority emergency assistance requested.
-                    </div>
-                </div>
-
-                <!-- 4. INCIDENT DETAILS (COMPACT / SUBTLE) -->
-                <div class="card" id="incident-details-card">
-                    <div class="card-header-title">Incident Details</div>
-                    <div class="info-data-list">
-                        <div class="info-row">
-                            <span class="info-label">Incident ID</span>
-                            <span class="info-value" id="incident-id-badge" onclick="copyIncidentId()" style="cursor:pointer;" title="Click to copy">Connecting...</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">GPS Precision</span>
-                            <span class="info-value" id="hud-accuracy-detail">±4 m</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Coordinates</span>
-                            <span class="info-value" id="hud-coordinates">--.----°, --.----°</span>
-                        </div>
-                    </div>
-                    <div class="resolution-area" id="resolution-area">
-                        <button class="btn-link-resolve" onclick="openResolveModal()">
-                            Mark Emergency Resolved
-                        </button>
-                    </div>
-                </div>
-
             </div>
-        </aside>
+        </section>
+
+        <!-- 4. INCIDENT DETAILS (COMPACT & LOW PRIORITY) -->
+        <section class="section-card" aria-label="Incident Details">
+            <div class="section-title">Incident details</div>
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Incident ID</span>
+                    <span class="info-val" id="incident-id-val" onclick="copyIncidentId()" style="cursor:pointer;" title="Click to copy">Connecting...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Started</span>
+                    <span class="info-val" id="incident-started-val">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last location update</span>
+                    <span class="info-val" id="incident-updated-val">--</span>
+                </div>
+            </div>
+
+            <div class="resolution-wrap">
+                <button type="button" class="btn-resolve-link" onclick="openResolveModal()">
+                    Mark Emergency Resolved
+                </button>
+            </div>
+        </section>
 
     </main>
 
-    <!-- MODAL: CONFIRM YOU'RE RESPONDING -->
-    <div class="modal-backdrop" id="claim-modal" role="dialog" aria-modal="true" aria-labelledby="claim-modal-title">
-        <div class="modal-window">
-            <h2 class="modal-title" id="claim-modal-title">Confirm you're responding</h2>
-            <p class="modal-sub">Let the person and other caregivers know that help is on the way.</p>
-
-            <div class="modal-error-box" id="claim-error-box" role="alert"></div>
-
-            <div class="form-group">
-                <label for="responder-name-input">Your Name / Relationship</label>
-                <input type="text" class="form-input" id="responder-name-input" value="Primary Caregiver" autocomplete="name" placeholder="e.g. Priya Sharma (Mom)">
-            </div>
-
-            <div class="form-group">
-                <label>Estimated arrival</label>
-                <div class="eta-chips-group" role="radiogroup" aria-label="Estimated arrival time">
-                    <button type="button" class="eta-chip" onclick="selectEtaChip(this, '5 min')" role="radio" aria-checked="false">5 min</button>
-                    <button type="button" class="eta-chip selected" onclick="selectEtaChip(this, '10 min')" role="radio" aria-checked="true">10 min</button>
-                    <button type="button" class="eta-chip" onclick="selectEtaChip(this, '20 min')" role="radio" aria-checked="false">20 min</button>
-                    <button type="button" class="eta-chip" onclick="selectEtaChip(this, '30+ min')" role="radio" aria-checked="false">30+ min</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="responder-note-input">Note (Optional)</label>
-                <input type="text" class="form-input" id="responder-note-input" placeholder="e.g. On my way from home">
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-modal-cancel" onclick="closeClaimModal()">Cancel</button>
-                <button type="button" class="btn-modal-confirm" id="btn-submit-claim" onclick="submitClaimResponse()">Confirm Response</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: RESOLVE EMERGENCY -->
+    <!-- RESOLVE MODAL -->
     <div class="modal-backdrop" id="resolve-modal" role="dialog" aria-modal="true" aria-labelledby="resolve-modal-title">
-        <div class="modal-window">
+        <div class="modal-card">
             <h2 class="modal-title" id="resolve-modal-title">Mark Emergency Resolved</h2>
-            <p class="modal-sub">Confirm that the person is verified safe and this emergency session can be safely closed.</p>
+            <p class="modal-desc">Confirm that the person is verified safe and this emergency session can be closed.</p>
 
             <div class="form-group">
-                <label for="resolve-note-input">Resolution Note (Optional)</label>
+                <label class="form-label" for="resolve-note-input">Resolution Note (Optional)</label>
                 <input type="text" class="form-input" id="resolve-note-input" value="Person verified safe. Emergency resolved.">
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-actions">
                 <button type="button" class="btn-modal-cancel" onclick="closeResolveModal()">Cancel</button>
-                <button type="button" class="btn-modal-confirm" style="background:#0F172A;" onclick="confirmResolveIncident()">Confirm Resolved</button>
+                <button type="button" class="btn-modal-confirm" onclick="confirmResolveIncident()">Confirm Resolved</button>
             </div>
         </div>
     </div>
@@ -1076,121 +909,112 @@
         }
 
         const incidentId = resolveIncidentId();
-        const incidentBadge = document.getElementById('incident-id-badge');
+        const incidentIdVal = document.getElementById('incident-id-val');
         if (incidentId) {
-            incidentBadge.innerText = incidentId;
+            if (incidentIdVal) incidentIdVal.innerText = incidentId;
         } else {
-            incidentBadge.innerText = "No active session in URL";
-            const statusText = document.getElementById('status-text-display');
+            if (incidentIdVal) incidentIdVal.innerText = "No session in link";
+            const statusText = document.getElementById('status-text');
             if (statusText) statusText.innerText = "Awaiting Link";
         }
 
-        // Location State
+        // Coordinates & Telemetry State
         const hasExplicitSeedCoords = !!(urlParams.get('lat') && urlParams.get('lng'));
-        let currentLat = parseFloat(urlParams.get('lat')) || 9.9312;
-        let currentLng = parseFloat(urlParams.get('lng')) || 76.2673;
-        let currentAccuracy = parseFloat(urlParams.get('accuracy')) || 4.0;
-        let userName = urlParams.get('name') || "Visually Impaired User";
+        let currentLat = hasExplicitSeedCoords ? parseFloat(urlParams.get('lat')) : null;
+        let currentLng = hasExplicitSeedCoords ? parseFloat(urlParams.get('lng')) : null;
         let selectedEta = "10 min";
-        let hasCenteredOnLiveLocation = false;
-        let hasReceivedLiveLocation = hasExplicitSeedCoords;
+        let lastLocationTime = null;
 
-        // Map Objects
-        let map = null;
-        let userMarker = null;
-        let accuracyCircle = null;
-        let incidentElapsedSeconds = 0;
-        let timerInterval = null;
+        // User profile name resolution: Never invent a name. Default to "KAAVAL User".
+        const seedName = urlParams.get('name');
+        if (seedName && seedName.trim() && seedName !== 'Visually Impaired User') {
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl) nameEl.innerText = seedName.trim();
+        }
 
-        // --- 2. MAP INITIALIZATION ---
-        function initMap() {
-            map = L.map('leaflet-map', {
-                zoomControl: true,
-                attributionControl: true
-            }).setView([currentLat, currentLng], 16);
+        // Phone number resolution if present
+        const seedPhone = urlParams.get('phone');
+        if (seedPhone && seedPhone.trim()) {
+            setupCallButton(seedPhone.trim());
+        }
 
-            // Clean high-contrast daylight OpenStreetMap / Carto tiles
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                subdomains: 'abcd',
-                maxZoom: 20,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
-            }).addTo(map);
+        // --- 2. LOCATION & GOOGLE MAPS ACTION ---
+        function updateLocationUI(lat, lng, timestamp) {
+            const mapsBtn = document.getElementById('btn-open-gmaps');
+            const locDesc = document.getElementById('location-status-desc');
+            const locTime = document.getElementById('location-updated-desc');
+            const locDot = document.getElementById('location-pulse-dot');
+            const incUpdated = document.getElementById('incident-updated-val');
 
-            // Clean Pulse Marker for User
-            const pulseIcon = L.divIcon({
-                className: '',
-                iconSize: [28, 28],
-                iconAnchor: [14, 14],
-                html: `
-                    <div class="user-pulse-marker">
-                        <div class="halo-ring"></div>
-                        <div class="core-dot"></div>
-                    </div>
-                `
-            });
+            if (typeof lat === 'number' && !isNaN(lat) && typeof lng === 'number' && !isNaN(lng)) {
+                currentLat = lat;
+                currentLng = lng;
+                lastLocationTime = timestamp || new Date();
 
-            userMarker = L.marker([currentLat, currentLng], { icon: pulseIcon }).addTo(map);
-            userMarker.bindPopup(`<b>${userName}</b><br><span style="color:#DC2626; font-weight:600;">Emergency Location</span>`);
-
-            accuracyCircle = L.circle([currentLat, currentLng], {
-                radius: currentAccuracy,
-                color: '#DC2626',
-                fillColor: '#DC2626',
-                fillOpacity: 0.12,
-                weight: 1.5
-            }).addTo(map);
-
-            if (hasExplicitSeedCoords) {
-                updateTelemetryUI(currentLat, currentLng, currentAccuracy, new Date());
-            }
-
-            startIncidentTimer();
-            setupFirestoreListener();
-
-            window.addEventListener('resize', () => {
-                if (map) {
-                    setTimeout(() => map.invalidateSize(), 200);
+                // Enable Google Maps Action
+                if (mapsBtn) {
+                    mapsBtn.href = `https://www.google.com/maps?q=${lat},${lng}`;
+                    mapsBtn.classList.remove('disabled');
+                    mapsBtn.removeAttribute('aria-disabled');
                 }
-            });
-        }
 
-        function recenterOnUser() {
-            if (map && userMarker) {
-                map.flyTo([currentLat, currentLng], 17, { duration: 0.8 });
-                userMarker.openPopup();
+                if (locDesc) locDesc.innerText = "Location available";
+                if (locDot) {
+                    locDot.classList.remove('unavailable');
+                }
+
+                const timeString = formatRelativeTime(lastLocationTime);
+                if (locTime) locTime.innerText = `Updated ${timeString}`;
+                if (incUpdated) incUpdated.innerText = lastLocationTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } else {
+                // Location Unavailable State
+                if (mapsBtn) {
+                    mapsBtn.href = "#";
+                    mapsBtn.classList.add('disabled');
+                    mapsBtn.setAttribute('aria-disabled', 'true');
+                }
+                if (locDesc) locDesc.innerText = "Location currently unavailable";
+                if (locDot) {
+                    locDot.classList.add('unavailable');
+                }
+                if (locTime) locTime.innerText = "Waiting for GPS fix";
             }
         }
 
-        // --- 3. TELEMETRY & NAVIGATION UPDATES ---
-        function updateTelemetryUI(lat, lng, accuracy, date) {
-            const coordEl = document.getElementById('hud-coordinates');
-            if (coordEl) coordEl.innerText = `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
-            
-            const accEl = document.getElementById('hud-accuracy');
-            const accDetail = document.getElementById('hud-accuracy-detail');
-            if (accEl) accEl.innerText = `±${Math.round(accuracy || 4)} m`;
-            if (accDetail) accDetail.innerText = `±${Math.round(accuracy || 4)} m`;
-
-            const timeStr = date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Live';
-            const hbEl = document.getElementById('hud-heartbeat');
-            if (hbEl) hbEl.innerText = `Live (${timeStr})`;
-
-            // Update Directions & Call links
-            const navBtn = document.getElementById('btn-nav-gmaps');
-            if (navBtn) navBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        function formatRelativeTime(date) {
+            if (!date) return "just now";
+            const diffSeconds = Math.max(0, Math.floor((new Date() - date) / 1000));
+            if (diffSeconds < 10) return "just now";
+            if (diffSeconds < 60) return `${diffSeconds}s ago`;
+            const diffMins = Math.floor(diffSeconds / 60);
+            if (diffMins < 60) return `${diffMins} min ago`;
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // --- 4. REAL-TIME FIRESTORE SYNCHRONIZATION ---
+        function setupCallButton(phoneNumber) {
+            const callBtn = document.getElementById('btn-call-user');
+            if (callBtn && phoneNumber) {
+                callBtn.href = `tel:${phoneNumber}`;
+                callBtn.style.display = 'flex';
+            }
+        }
+
+        // Initialize seed location if passed in URL
+        if (hasExplicitSeedCoords) {
+            updateLocationUI(currentLat, currentLng, new Date());
+        } else {
+            updateLocationUI(null, null, null);
+        }
+
+        // --- 3. FIRESTORE REAL-TIME SYNCHRONIZATION ---
         async function setupFirestoreListener() {
-            if (!incidentId) {
-                console.warn("No active incident ID detected in URL.");
-                return;
-            }
+            if (!incidentId) return;
+
             try {
                 if (window.firebaseReady) {
                     await window.firebaseReady;
                 }
-                
+
                 if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
                     console.warn("Firestore SDK not initialized.");
                     return;
@@ -1206,77 +1030,62 @@
                     console.warn("Firestore telemetry subscription notice:", err);
                 });
             } catch (err) {
-                console.warn("Error establishing telemetry listener:", err);
+                console.warn("Error establishing Firestore listener:", err);
             }
         }
 
         function handleRemoteIncidentUpdate(data) {
-            // 1. Live Coordinates
-            if (data.latitude && data.longitude) {
-                currentLat = parseFloat(data.latitude);
-                currentLng = parseFloat(data.longitude);
-                currentAccuracy = parseFloat(data.accuracy) || 4.0;
-                hasReceivedLiveLocation = true;
-                const pos = [currentLat, currentLng];
-
-                if (userMarker) userMarker.setLatLng(pos);
-                if (accuracyCircle) {
-                    accuracyCircle.setLatLng(pos);
-                    accuracyCircle.setRadius(currentAccuracy);
-                }
-
-                if (!hasCenteredOnLiveLocation && map) {
-                    map.setView(pos, 16);
-                    hasCenteredOnLiveLocation = true;
-                }
-
-                const lastUpdate = data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt)) : (data.lastUpdate ? (data.lastUpdate.toDate ? data.lastUpdate.toDate() : new Date(data.lastUpdate)) : new Date());
-                updateTelemetryUI(currentLat, currentLng, currentAccuracy, lastUpdate);
+            // 1. Coordinates Update
+            if (data.latitude != null && data.longitude != null) {
+                const lat = parseFloat(data.latitude);
+                const lng = parseFloat(data.longitude);
+                const updateDate = data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt)) : (data.lastUpdate ? (data.lastUpdate.toDate ? data.lastUpdate.toDate() : new Date(data.lastUpdate)) : new Date());
+                updateLocationUI(lat, lng, updateDate);
             }
 
-            // 2. Incident Status
+            // 2. User Name (Real profile data only, never invent)
+            if (data.userName && data.userName.trim() && data.userName !== 'Visually Impaired User') {
+                const nameEl = document.getElementById('user-display-name');
+                if (nameEl) nameEl.innerText = data.userName.trim();
+            }
+
+            // 3. User Phone
+            if (data.userPhone || data.phone || data.emergencyContactPhone) {
+                setupCallButton(data.userPhone || data.phone || data.emergencyContactPhone);
+            }
+
+            // 4. Incident Status
             if (data.status === 'COMPLETED') {
-                markIncidentResolvedUI(data.resolutionNote);
+                renderResolvedStateUI(data.resolutionNote);
             }
 
-            // 3. Caregiver Claim Protocol
+            // 5. Caregiver Claim Status (Show confirmed card if claimed)
             if (data.claimedBy) {
                 renderClaimedStateUI(data.claimedBy, data.claimedEta || "10 min", data.claimedNote);
             }
 
-            // 4. User Profile
-            if (data.userName) {
-                const nameEl = document.getElementById('user-display-name');
-                const mobNameEl = document.getElementById('mobile-user-name');
-                if (nameEl) nameEl.innerText = data.userName;
-                if (mobNameEl) mobNameEl.innerText = data.userName;
-            }
-
-            // 5. Emergency Notes (Only display if actual data exists)
+            // 6. Emergency Notes & Medical Info (Only if present)
             if (data.emergencyNotes || data.aiSummary) {
-                const infoContent = document.getElementById('emergency-info-content');
-                if (infoContent) {
-                    const notes = data.emergencyNotes || data.aiSummary;
-                    infoContent.innerText = notes;
-                }
+                const notesEl = document.getElementById('info-emergency-notes');
+                if (notesEl) notesEl.innerText = data.emergencyNotes || data.aiSummary;
+            }
+            if (data.medicalNotes || data.medicalCondition) {
+                const medEl = document.getElementById('info-medical-notes');
+                if (medEl) medEl.innerText = data.medicalNotes || data.medicalCondition;
+            }
+
+            // 7. Started Time
+            if (data.createdAt || data.startTime || data.timestamp) {
+                const startRaw = data.createdAt || data.startTime || data.timestamp;
+                const startDate = startRaw.toDate ? startRaw.toDate() : new Date(startRaw);
+                const startedEl = document.getElementById('incident-started-val');
+                if (startedEl) startedEl.innerText = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
         }
 
-        // --- 5. CAREGIVER CLAIM WORKFLOW ---
-        function openClaimModal() {
-            const modal = document.getElementById('claim-modal');
-            const errBox = document.getElementById('claim-error-box');
-            if (errBox) errBox.style.display = 'none';
-            if (modal) modal.style.display = 'flex';
-        }
-
-        function closeClaimModal() {
-            const modal = document.getElementById('claim-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function selectEtaChip(element, eta) {
-            document.querySelectorAll('.eta-chip').forEach(el => {
+        // --- 4. CAREGIVER CLAIM PROTOCOL ---
+        function selectEta(element, eta) {
+            document.querySelectorAll('.btn-eta').forEach(el => {
                 el.classList.remove('selected');
                 el.setAttribute('aria-checked', 'false');
             });
@@ -1285,22 +1094,23 @@
             selectedEta = eta;
         }
 
-        async function submitClaimResponse() {
+        async function submitCaregiverResponse() {
             const nameInput = document.getElementById('responder-name-input');
             const name = nameInput ? (nameInput.value.trim() || "Primary Caregiver") : "Primary Caregiver";
             const noteInput = document.getElementById('responder-note-input');
             const note = noteInput ? noteInput.value.trim() : "";
-            const errBox = document.getElementById('claim-error-box');
+            const errBox = document.getElementById('claim-diagnostic-error');
+            const errDetails = document.getElementById('claim-error-details');
 
             if (!incidentId) {
-                showToast("Invalid or missing incident session");
+                showToast("No active incident ID in link");
                 return;
             }
 
-            const confirmBtn = document.getElementById('btn-submit-claim');
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = "Confirming...";
+            const submitBtn = document.getElementById('btn-submit-response');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Confirming...";
             }
             if (errBox) errBox.style.display = 'none';
 
@@ -1321,42 +1131,37 @@
                     });
 
                     renderClaimedStateUI(name, selectedEta, note);
-                    closeClaimModal();
                     showToast("Response registered successfully");
                 } else {
                     throw new Error("Firestore SDK not initialized");
                 }
             } catch (e) {
                 console.error("Firestore claim error:", e);
-                const errMsg = e.code ? `Unable to confirm response: [${e.code}] ${e.message}` : (e.message || "Network or permission error");
-                if (errBox) {
-                    errBox.innerText = errMsg;
-                    errBox.style.display = 'block';
+                const errorText = e.code ? `[${e.code}] ${e.message}` : (e.message || "Network or permission error");
+                if (errBox && errDetails) {
+                    errDetails.innerText = errorText;
+                    errBox.style.display = 'flex';
                 }
-                showToast("Failed to register response");
+                showToast("Response could not be confirmed");
             } finally {
-                if (confirmBtn) {
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerText = "Confirm Response";
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "I'M RESPONDING";
                 }
             }
         }
 
         function renderClaimedStateUI(name, eta, note) {
-            const claimBtn = document.getElementById('btn-claim-emergency');
-            if (claimBtn) claimBtn.style.display = 'none';
+            const formContainer = document.getElementById('caregiver-form-container');
+            const confirmedBox = document.getElementById('caregiver-confirmed-box');
+            const nameEl = document.getElementById('confirmed-responder-name');
+            const etaEl = document.getElementById('confirmed-eta-display');
 
-            const banner = document.getElementById('claimed-response-banner');
-            if (banner) banner.style.display = 'block';
+            if (formContainer) formContainer.style.display = 'none';
+            if (confirmedBox) confirmedBox.style.display = 'flex';
 
-            const nameEl = document.getElementById('claimed-name-text');
             if (nameEl) nameEl.innerText = `${name} is responding`;
-
-            const metaEl = document.getElementById('claimed-meta-text');
-            if (metaEl) metaEl.innerText = `Estimated arrival: ${eta}${note ? ' • ' + note : ''}`;
-
-            const timeEl = document.getElementById('claimed-at-time');
-            if (timeEl) timeEl.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (etaEl) etaEl.innerText = `Estimated arrival: ${eta}${note ? ' • ' + note : ''}`;
         }
 
         async function sendReassurancePulse() {
@@ -1376,7 +1181,7 @@
             }
         }
 
-        // --- 6. RESOLUTION WORKFLOW ---
+        // --- 5. RESOLUTION WORKFLOW ---
         function openResolveModal() {
             const modal = document.getElementById('resolve-modal');
             if (modal) modal.style.display = 'flex';
@@ -1391,7 +1196,7 @@
             const noteInput = document.getElementById('resolve-note-input');
             const note = noteInput ? noteInput.value.trim() : "Person verified safe.";
             closeResolveModal();
-            markIncidentResolvedUI(note);
+            renderResolvedStateUI(note);
             showToast("Emergency marked as resolved");
 
             try {
@@ -1408,33 +1213,21 @@
             }
         }
 
-        function markIncidentResolvedUI(note) {
-            const beacon = document.getElementById('incident-status-beacon');
-            if (beacon) beacon.className = 'status-badge resolved';
+        function renderResolvedStateUI(note) {
+            const badge = document.getElementById('header-status-badge');
+            if (badge) badge.className = 'header-status-badge resolved';
 
-            const statusText = document.getElementById('status-text-display');
+            const statusText = document.getElementById('status-text');
             if (statusText) statusText.innerText = 'Emergency Resolved';
 
-            const claimBtn = document.getElementById('btn-claim-emergency');
-            if (claimBtn) claimBtn.style.display = 'none';
+            const formContainer = document.getElementById('caregiver-form-container');
+            if (formContainer) formContainer.style.display = 'none';
 
             const locDesc = document.getElementById('location-status-desc');
             if (locDesc) locDesc.innerText = 'Emergency completed & verified safe';
-
-            if (timerInterval) clearInterval(timerInterval);
         }
 
-        // --- 7. TIMERS & UTILITIES ---
-        function startIncidentTimer() {
-            timerInterval = setInterval(() => {
-                incidentElapsedSeconds++;
-                const mins = Math.floor(incidentElapsedSeconds / 60).toString().padStart(2, '0');
-                const secs = (incidentElapsedSeconds % 60).toString().padStart(2, '0');
-                const timerEl = document.getElementById('incident-timer-display');
-                if (timerEl) timerEl.innerText = `${mins}:${secs}`;
-            }, 1000);
-        }
-
+        // --- 6. UTILITIES ---
         function copyIncidentId() {
             if (!incidentId) return;
             navigator.clipboard.writeText(incidentId).then(() => {
@@ -1451,7 +1244,15 @@
             setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
 
-        window.onload = initMap;
+        // Periodic relative time update
+        setInterval(() => {
+            if (lastLocationTime && currentLat != null && currentLng != null) {
+                const locTime = document.getElementById('location-updated-desc');
+                if (locTime) locTime.innerText = `Updated ${formatRelativeTime(lastLocationTime)}`;
+            }
+        }, 10000);
+
+        window.onload = setupFirestoreListener;
     </script>
 </body>
 </html>
