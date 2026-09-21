@@ -345,6 +345,91 @@
             color: #FFFFFF;
         }
 
+        /* TROUBLESHOOTING BOX */
+        .troubleshoot-box {
+            background: rgba(255, 214, 0, 0.04);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .troubleshoot-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .troubleshoot-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #FFD600;
+        }
+
+        .troubleshoot-badge {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(255, 214, 0, 0.15);
+            border: 1px solid rgba(255, 214, 0, 0.4);
+            color: #FFD600;
+        }
+
+        .fix-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fix-item {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .fix-title {
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fix-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .fix-desc strong {
+            color: #FFFFFF;
+        }
+
+        .fix-desc code {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #FFD600;
+        }
+
         footer {
             margin-top: 32px;
             font-size: 0.75rem;
@@ -512,21 +597,68 @@
             </div>
         </div>
 
-        <!-- 3-STEP INSTALLATION -->
+        <!-- INSTALLATION GUIDE -->
         <div class="guide-box">
-            <h3>Quick Installation Guide</h3>
+            <h3>Standard Installation Guide</h3>
             <div class="steps-list">
                 <div class="step-row">
                     <div class="step-num">1</div>
-                    <div><strong>Download the APK</strong> by tapping the red button or scanning the QR code.</div>
+                    <div><strong>Download the APK</strong> by tapping the yellow button above or scanning the QR code with your phone camera.</div>
                 </div>
                 <div class="step-row">
                     <div class="step-num">2</div>
-                    <div>When prompted by your browser, tap <strong>Settings</strong> and toggle <strong>"Allow from this source"</strong>.</div>
+                    <div>When prompted by your browser or file manager, tap <strong>Settings</strong> and toggle <strong>"Allow from this source"</strong> (Install Unknown Apps).</div>
                 </div>
                 <div class="step-row">
                     <div class="step-num">3</div>
-                    <div>Tap <strong>Install</strong> and grant <strong>Location & Audio permissions</strong> when opening the app.</div>
+                    <div>Tap <strong>Install</strong> and grant <strong>Location, Audio, & Accessibility permissions</strong> when launching the app.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TROUBLESHOOTING: APP NOT INSTALLED -->
+        <div class="troubleshoot-box">
+            <div class="troubleshoot-header">
+                <div class="troubleshoot-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Getting "App not installed"?
+                </div>
+                <span class="troubleshoot-badge">SIDELOADING FIXES</span>
+            </div>
+
+            <div class="fix-list">
+                <div class="fix-item">
+                    <div class="fix-title">
+                        <span>1. Temporarily Disable Play Protect Scan (Most Common)</span>
+                    </div>
+                    <div class="fix-desc">
+                        Because KAAVAL contains emergency hardware key listeners, audio classification, and SMS modules, Google Play Protect may silently block sideloading outside the Play Store.<br>
+                        <strong>Fix:</strong> Open <strong>Google Play Store</strong> &rarr; tap your <strong>Profile icon</strong> (top right) &rarr; <strong>Play Protect</strong> &rarr; tap the <strong>Settings Gear ⚙️</strong> &rarr; turn <strong>OFF</strong> <code>Scan apps with Play Protect</code> and <code>Improve harmful app detection</code>. Then tap the downloaded APK to install.
+                    </div>
+                </div>
+
+                <div class="fix-item">
+                    <div class="fix-title">
+                        <span>2. Grant "Install Unknown Apps" to your File Manager</span>
+                    </div>
+                    <div class="fix-desc">
+                        If installing from your phone's <em>Files</em> or <em>Downloads</em> folder:<br>
+                        <strong>Fix:</strong> Go to phone <strong>Settings &rarr; Apps &rarr; Special app access &rarr; Install unknown apps</strong> &rarr; select your <strong>File Manager</strong> &rarr; enable <strong>"Allow from this source"</strong>.
+                    </div>
+                </div>
+
+                <div class="fix-item">
+                    <div class="fix-title">
+                        <span>3. Completely Uninstall Any Previous / Test Version First</span>
+                    </div>
+                    <div class="fix-desc">
+                        Android strictly rejects installing an APK if an existing build is present with a conflicting certificate.<br>
+                        <strong>Fix:</strong> Go to <strong>Settings &rarr; Apps &rarr; KAAVAL &rarr; Uninstall</strong>. When prompted, make sure <strong>"Keep app data" is UNCHECKED</strong>, then install the new release.
+                    </div>
                 </div>
             </div>
         </div>
